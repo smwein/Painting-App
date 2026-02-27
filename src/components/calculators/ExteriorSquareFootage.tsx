@@ -28,38 +28,41 @@ export function ExteriorSquareFootage({ onResultChange }: ExteriorSquareFootageP
     },
   });
 
-  const formValues = watch();
+  // Watch only the specific fields needed for calculation
+  const houseSquareFootage = watch('houseSquareFootage');
+  const pricingOption = watch('pricingOption');
+  const customer = watch('customer');
 
   // Real-time calculation
   const result = useMemo(() => {
-    if (!formValues.houseSquareFootage || formValues.houseSquareFootage <= 0) {
+    if (!houseSquareFootage || houseSquareFootage <= 0) {
       return null;
     }
 
     const inputs: ExteriorSqftInputs = {
-      houseSquareFootage: formValues.houseSquareFootage,
-      pricingOption: formValues.pricingOption,
+      houseSquareFootage,
+      pricingOption,
     };
 
     const calculatedResult = calculateExteriorSquareFootage(inputs);
 
     if (onResultChange) {
       onResultChange({
-        customer: formValues.customer,
+        customer,
         inputs,
         result: calculatedResult,
       });
     }
 
     return calculatedResult;
-  }, [formValues, onResultChange]);
+  }, [houseSquareFootage, pricingOption, customer, onResultChange]);
 
   const autoCalcs = useMemo(() => {
-    if (!formValues.houseSquareFootage || formValues.houseSquareFootage <= 0) {
+    if (!houseSquareFootage || houseSquareFootage <= 0) {
       return null;
     }
-    return calculateExteriorSqftAutoMeasurements(formValues.houseSquareFootage);
-  }, [formValues.houseSquareFootage]);
+    return calculateExteriorSqftAutoMeasurements(houseSquareFootage);
+  }, [houseSquareFootage]);
 
   return (
     <div className="space-y-6">

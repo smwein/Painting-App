@@ -135,7 +135,7 @@ export function InteriorDetailed({ onResultChange }: InteriorDetailedProps) {
     }
 
     return calculatedResult;
-  }, [formValues, onResultChange]);
+  }, [formValues]);
 
   return (
     <div className="space-y-6">

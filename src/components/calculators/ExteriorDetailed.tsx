@@ -120,7 +120,7 @@ export function ExteriorDetailed({ onResultChange }: ExteriorDetailedProps) {
     }
 
     return calculatedResult;
-  }, [formValues, onResultChange]);
+  }, [formValues]);
 
   return (
     <div className="space-y-6">
