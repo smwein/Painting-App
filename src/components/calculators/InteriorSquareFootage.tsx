@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Input } from '../common/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
 import { CustomerInfoSection } from './shared/CustomerInfoSection';
 import { MarkupSelector } from './shared/MarkupSelector';
 import type { InteriorSqftInputs, InteriorSqftOption, MarkupPercentage } from '../../types/calculator.types';
-import type { CustomerInfo } from '../../types/bid.types';
+import type { CustomerInfo, Bid } from '../../types/bid.types';
 import {
   calculateInteriorSquareFootage,
   calculateInteriorSqftAutoMeasurements,
@@ -20,16 +20,30 @@ interface InteriorSqftFormData {
 
 interface InteriorSquareFootageProps {
   onResultChange?: (result: any) => void;
+  loadedBid?: Bid;
 }
 
-export function InteriorSquareFootage({ onResultChange }: InteriorSquareFootageProps) {
-  const { register, watch } = useForm<InteriorSqftFormData>({
+export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSquareFootageProps) {
+  const { register, watch, reset } = useForm<InteriorSqftFormData>({
     defaultValues: {
       houseSquareFootage: 0,
       pricingOption: 'complete',
       markup: 40,
     },
   });
+
+  // Pre-fill form when loading a saved bid
+  useEffect(() => {
+    if (loadedBid && loadedBid.calculatorType === 'interior-sqft') {
+      const inputs = loadedBid.inputs as InteriorSqftInputs;
+      reset({
+        customer: loadedBid.customer,
+        houseSquareFootage: inputs.houseSquareFootage,
+        pricingOption: inputs.pricingOption,
+        markup: inputs.markup,
+      });
+    }
+  }, [loadedBid, reset]);
 
   // Watch only the specific fields needed for calculation
   const houseSquareFootage = watch('houseSquareFootage');

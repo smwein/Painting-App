@@ -18,8 +18,10 @@ export function SavedBids() {
   const handleView = (id: string) => {
     const bid = loadBid(id);
     if (bid) {
-      // Navigate to the appropriate calculator with loaded data
-      navigate(`/calculator/${bid.calculatorType}`);
+      // Navigate to the appropriate calculator with the bid data
+      navigate(`/calculator/${bid.calculatorType}`, {
+        state: { loadedBid: bid }
+      });
     }
   };
 

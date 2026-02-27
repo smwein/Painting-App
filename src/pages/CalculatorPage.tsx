@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { InteriorSquareFootage } from '../components/calculators/InteriorSquareFootage';
 import { InteriorDetailed } from '../components/calculators/InteriorDetailed';
 import { ExteriorSquareFootage } from '../components/calculators/ExteriorSquareFootage';
@@ -14,9 +14,13 @@ import type { CalculatorType } from '../types/calculator.types';
 export function CalculatorPage() {
   const { type } = useParams<{ type: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { saveBid } = useBidStore();
   const { settings } = useSettingsStore();
   const [currentBidData, setCurrentBidData] = useState<any>(null);
+
+  // Get loaded bid from navigation state (if navigating from saved bids)
+  const loadedBid = location.state?.loadedBid as Bid | undefined;
 
   const getCalculatorTitle = () => {
     switch (type) {
@@ -110,13 +114,13 @@ export function CalculatorPage() {
   const renderCalculator = () => {
     switch (type) {
       case 'interior-sqft':
-        return <InteriorSquareFootage onResultChange={handleResultChange} />;
+        return <InteriorSquareFootage onResultChange={handleResultChange} loadedBid={loadedBid} />;
       case 'interior-detailed':
-        return <InteriorDetailed onResultChange={handleResultChange} />;
+        return <InteriorDetailed onResultChange={handleResultChange} loadedBid={loadedBid} />;
       case 'exterior-sqft':
-        return <ExteriorSquareFootage onResultChange={handleResultChange} />;
+        return <ExteriorSquareFootage onResultChange={handleResultChange} loadedBid={loadedBid} />;
       case 'exterior-detailed':
-        return <ExteriorDetailed onResultChange={handleResultChange} />;
+        return <ExteriorDetailed onResultChange={handleResultChange} loadedBid={loadedBid} />;
       default:
         return (
           <div className="text-center py-8">

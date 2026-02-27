@@ -9,7 +9,7 @@ import { MarkupSelector } from './shared/MarkupSelector';
 import { BidSummary } from '../results/BidSummary';
 import { CostBreakdown } from '../results/CostBreakdown';
 import type { ExteriorDetailedInputs } from '../../types/calculator.types';
-import type { CustomerInfo } from '../../types/bid.types';
+import type { CustomerInfo, Bid } from '../../types/bid.types';
 import { calculateExteriorDetailed } from '../../core/calculators/exteriorDetailed';
 
 interface ExteriorDetailedFormData {
@@ -48,10 +48,11 @@ const exteriorModifiers = [
 
 interface ExteriorDetailedProps {
   onResultChange?: (result: any) => void;
+  loadedBid?: Bid;
 }
 
-export function ExteriorDetailed({ onResultChange }: ExteriorDetailedProps) {
-  const { register, watch } = useForm<ExteriorDetailedFormData>({
+export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailedProps) {
+  const { register, watch, reset } = useForm<ExteriorDetailedFormData>({
     defaultValues: {
       wallSqft: 0,
       trimFasciaSoffitLF: 0,
@@ -102,6 +103,38 @@ export function ExteriorDetailed({ onResultChange }: ExteriorDetailedProps) {
   const modifierAdditionalCoat = watch('modifiers.additionalCoat');
   const modifierOneCoat = watch('modifiers.oneCoat');
   const customer = watch('customer');
+
+  // Pre-fill form when loading a saved bid
+  useEffect(() => {
+    if (loadedBid && loadedBid.calculatorType === 'exterior-detailed') {
+      const inputs = loadedBid.inputs as ExteriorDetailedInputs;
+      reset({
+        customer: loadedBid.customer,
+        wallSqft: inputs.wallSqft,
+        trimFasciaSoffitLF: inputs.trimFasciaSoffitLF,
+        doors: inputs.doors,
+        shutters: inputs.shutters,
+        doorsToRefinish: inputs.doorsToRefinish,
+        primingSqft: inputs.primingSqft,
+        primingLF: inputs.primingLF,
+        sidingReplacementSqft: inputs.sidingReplacementSqft,
+        trimReplacementLF: inputs.trimReplacementLF,
+        soffitFasciaReplacementLF: inputs.soffitFasciaReplacementLF,
+        bondoRepairs: inputs.bondoRepairs,
+        deckStainingSqft: inputs.deckStainingSqft,
+        miscPressureWashingSqft: inputs.miscPressureWashingSqft,
+        miscWorkHours: inputs.miscWorkHours,
+        miscellaneousDollars: inputs.miscellaneousDollars,
+        paintType: inputs.paintType,
+        markup: inputs.markup,
+        'modifiers.threeStory': inputs.modifiers.threeStory,
+        'modifiers.extensivePrep': inputs.modifiers.extensivePrep,
+        'modifiers.hardTerrain': inputs.modifiers.hardTerrain,
+        'modifiers.additionalCoat': inputs.modifiers.additionalCoat,
+        'modifiers.oneCoat': inputs.modifiers.oneCoat,
+      });
+    }
+  }, [loadedBid, reset]);
 
   // Real-time calculation
   const result = useMemo(() => {

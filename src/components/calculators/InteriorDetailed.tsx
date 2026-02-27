@@ -9,7 +9,7 @@ import { MarkupSelector } from './shared/MarkupSelector';
 import { BidSummary } from '../results/BidSummary';
 import { CostBreakdown } from '../results/CostBreakdown';
 import type { InteriorDetailedInputs } from '../../types/calculator.types';
-import type { CustomerInfo } from '../../types/bid.types';
+import type { CustomerInfo, Bid } from '../../types/bid.types';
 import { calculateInteriorDetailed } from '../../core/calculators/interiorDetailed';
 
 interface InteriorDetailedFormData {
@@ -53,10 +53,11 @@ const interiorModifiers = [
 
 interface InteriorDetailedProps {
   onResultChange?: (result: any) => void;
+  loadedBid?: Bid;
 }
 
-export function InteriorDetailed({ onResultChange }: InteriorDetailedProps) {
-  const { register, watch } = useForm<InteriorDetailedFormData>({
+export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailedProps) {
+  const { register, watch, reset } = useForm<InteriorDetailedFormData>({
     defaultValues: {
       wallSqft: 0,
       ceilingSqft: 0,
@@ -117,6 +118,43 @@ export function InteriorDetailed({ onResultChange }: InteriorDetailedProps) {
   const modifierAdditionalCoat = watch('modifiers.additionalCoat');
   const modifierOneCoat = watch('modifiers.oneCoat');
   const customer = watch('customer');
+
+  // Pre-fill form when loading a saved bid
+  useEffect(() => {
+    if (loadedBid && loadedBid.calculatorType === 'interior-detailed') {
+      const inputs = loadedBid.inputs as InteriorDetailedInputs;
+      reset({
+        customer: loadedBid.customer,
+        wallSqft: inputs.wallSqft,
+        ceilingSqft: inputs.ceilingSqft,
+        trimLF: inputs.trimLF,
+        doors: inputs.doors,
+        cabinetDoors: inputs.cabinetDoors,
+        cabinetDrawers: inputs.cabinetDrawers,
+        newCabinetDoors: inputs.newCabinetDoors,
+        newCabinetDrawers: inputs.newCabinetDrawers,
+        colorsAboveThree: inputs.colorsAboveThree,
+        wallpaperRemovalSqft: inputs.wallpaperRemovalSqft,
+        primingLF: inputs.primingLF,
+        primingSqft: inputs.primingSqft,
+        drywallReplacementSqft: inputs.drywallReplacementSqft,
+        popcornRemovalSqft: inputs.popcornRemovalSqft,
+        wallTextureRemovalSqft: inputs.wallTextureRemovalSqft,
+        trimReplacementLF: inputs.trimReplacementLF,
+        drywallRepairs: inputs.drywallRepairs,
+        accentWalls: inputs.accentWalls,
+        miscWorkHours: inputs.miscWorkHours,
+        miscellaneousDollars: inputs.miscellaneousDollars,
+        paintType: inputs.paintType,
+        markup: inputs.markup,
+        'modifiers.heavilyFurnished': inputs.modifiers.heavilyFurnished,
+        'modifiers.emptyHouse': inputs.modifiers.emptyHouse,
+        'modifiers.extensivePrep': inputs.modifiers.extensivePrep,
+        'modifiers.additionalCoat': inputs.modifiers.additionalCoat,
+        'modifiers.oneCoat': inputs.modifiers.oneCoat,
+      });
+    }
+  }, [loadedBid, reset]);
 
   // Real-time calculation
   const result = useMemo(() => {

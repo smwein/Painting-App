@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Input } from '../common/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
 import { CustomerInfoSection } from './shared/CustomerInfoSection';
 import { MarkupSelector } from './shared/MarkupSelector';
 import type { ExteriorSqftInputs, ExteriorSqftOption, MarkupPercentage } from '../../types/calculator.types';
-import type { CustomerInfo } from '../../types/bid.types';
+import type { CustomerInfo, Bid } from '../../types/bid.types';
 import {
   calculateExteriorSquareFootage,
   calculateExteriorSqftAutoMeasurements,
@@ -20,16 +20,30 @@ interface ExteriorSqftFormData {
 
 interface ExteriorSquareFootageProps {
   onResultChange?: (result: any) => void;
+  loadedBid?: Bid;
 }
 
-export function ExteriorSquareFootage({ onResultChange }: ExteriorSquareFootageProps) {
-  const { register, watch } = useForm<ExteriorSqftFormData>({
+export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSquareFootageProps) {
+  const { register, watch, reset } = useForm<ExteriorSqftFormData>({
     defaultValues: {
       houseSquareFootage: 0,
       pricingOption: 'full-exterior',
       markup: 40,
     },
   });
+
+  // Pre-fill form when loading a saved bid
+  useEffect(() => {
+    if (loadedBid && loadedBid.calculatorType === 'exterior-sqft') {
+      const inputs = loadedBid.inputs as ExteriorSqftInputs;
+      reset({
+        customer: loadedBid.customer,
+        houseSquareFootage: inputs.houseSquareFootage,
+        pricingOption: inputs.pricingOption,
+        markup: inputs.markup,
+      });
+    }
+  }, [loadedBid, reset]);
 
   // Watch only the specific fields needed for calculation
   const houseSquareFootage = watch('houseSquareFootage');
