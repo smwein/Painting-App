@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { InteriorSquareFootage } from '../components/calculators/InteriorSquareFootage';
 import { InteriorDetailed } from '../components/calculators/InteriorDetailed';
@@ -33,9 +33,9 @@ export function CalculatorPage() {
     }
   };
 
-  const handleResultChange = (bidData: any) => {
+  const handleResultChange = useCallback((bidData: any) => {
     setCurrentBidData(bidData);
-  };
+  }, []);
 
   const handleSave = () => {
     if (!currentBidData || !currentBidData.customer || !currentBidData.result) {
