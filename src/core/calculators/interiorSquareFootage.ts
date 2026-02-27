@@ -22,45 +22,45 @@ export function calculateInteriorSqftAutoMeasurements(
 
 /**
  * Calculate interior square footage bid
- * This is the simplest calculator - just house SF and pricing option
+ * Simple calculator with house SF, pricing option, and markup
  */
 export function calculateInteriorSquareFootage(
   inputs: InteriorSqftInputs
 ): BidResult {
-  // Calculate labor based on pricing option
-  let labor = 0;
+  // Calculate labor COST based on pricing option
+  let laborCost = 0;
 
   switch (inputs.pricingOption) {
     case 'walls-only':
-      labor = inputs.houseSquareFootage * INTERIOR_SQFT_PRICING.WALLS_ONLY;
+      laborCost = inputs.houseSquareFootage * INTERIOR_SQFT_PRICING.WALLS_ONLY;
       break;
     case 'trim-only':
-      labor = inputs.houseSquareFootage * INTERIOR_SQFT_PRICING.TRIM_ONLY;
+      laborCost = inputs.houseSquareFootage * INTERIOR_SQFT_PRICING.TRIM_ONLY;
       break;
     case 'ceilings-only':
-      labor = inputs.houseSquareFootage * INTERIOR_SQFT_PRICING.CEILINGS_ONLY;
+      laborCost = inputs.houseSquareFootage * INTERIOR_SQFT_PRICING.CEILINGS_ONLY;
       break;
     case 'complete':
-      labor = inputs.houseSquareFootage * INTERIOR_SQFT_PRICING.COMPLETE;
+      laborCost = inputs.houseSquareFootage * INTERIOR_SQFT_PRICING.COMPLETE;
       break;
   }
 
   // Calculate auto-measurements
   const autoCalcs = calculateInteriorSqftAutoMeasurements(inputs.houseSquareFootage);
 
-  // No materials calculated in this simple method
-  // User would need to add materials separately or use detailed method
+  // No materials in simple method
   const materials: MaterialBreakdown = {
     items: [],
     totalCost: 0,
   };
 
-  // No markup in this simple method - just labor
-  const profit = 0;
-  const total = labor;
+  // Calculate markup on labor cost
+  const totalCost = laborCost + materials.totalCost;
+  const profit = totalCost * (inputs.markup / 100);
+  const total = totalCost + profit;
 
   return {
-    labor,
+    labor: laborCost,
     materials,
     profit,
     total,
@@ -68,6 +68,7 @@ export function calculateInteriorSquareFootage(
       houseSquareFootage: inputs.houseSquareFootage,
       pricingOption: inputs.pricingOption,
       autoCalculations: autoCalcs,
+      markup: inputs.markup,
     },
     timestamp: new Date(),
   };

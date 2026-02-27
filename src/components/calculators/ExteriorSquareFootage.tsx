@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { Input } from '../common/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
 import { CustomerInfoSection } from './shared/CustomerInfoSection';
-import type { ExteriorSqftInputs, ExteriorSqftOption } from '../../types/calculator.types';
+import { MarkupSelector } from './shared/MarkupSelector';
+import type { ExteriorSqftInputs, ExteriorSqftOption, MarkupPercentage } from '../../types/calculator.types';
 import type { CustomerInfo } from '../../types/bid.types';
 import {
   calculateExteriorSquareFootage,
@@ -14,6 +15,7 @@ interface ExteriorSqftFormData {
   customer: CustomerInfo;
   houseSquareFootage: number;
   pricingOption: ExteriorSqftOption;
+  markup: number;
 }
 
 interface ExteriorSquareFootageProps {
@@ -25,12 +27,14 @@ export function ExteriorSquareFootage({ onResultChange }: ExteriorSquareFootageP
     defaultValues: {
       houseSquareFootage: 0,
       pricingOption: 'full-exterior',
+      markup: 40,
     },
   });
 
   // Watch only the specific fields needed for calculation
   const houseSquareFootage = watch('houseSquareFootage');
   const pricingOption = watch('pricingOption');
+  const markup = watch('markup');
   const customer = watch('customer');
 
   // Real-time calculation
@@ -42,6 +46,7 @@ export function ExteriorSquareFootage({ onResultChange }: ExteriorSquareFootageP
     const inputs: ExteriorSqftInputs = {
       houseSquareFootage,
       pricingOption,
+      markup: markup as MarkupPercentage,
     };
 
     const calculatedResult = calculateExteriorSquareFootage(inputs);
@@ -55,7 +60,7 @@ export function ExteriorSquareFootage({ onResultChange }: ExteriorSquareFootageP
     }
 
     return calculatedResult;
-  }, [houseSquareFootage, pricingOption, customer, onResultChange]);
+  }, [houseSquareFootage, pricingOption, markup, customer, onResultChange]);
 
   const autoCalcs = useMemo(() => {
     if (!houseSquareFootage || houseSquareFootage <= 0) {
@@ -118,6 +123,8 @@ export function ExteriorSquareFootage({ onResultChange }: ExteriorSquareFootageP
           </label>
         </CardContent>
       </Card>
+
+      <MarkupSelector register={register} />
 
       {autoCalcs && (
         <Card className="bg-blue-50 border-blue-200">

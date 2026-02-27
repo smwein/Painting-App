@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { Input } from '../common/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
 import { CustomerInfoSection } from './shared/CustomerInfoSection';
-import type { InteriorSqftInputs, InteriorSqftOption } from '../../types/calculator.types';
+import { MarkupSelector } from './shared/MarkupSelector';
+import type { InteriorSqftInputs, InteriorSqftOption, MarkupPercentage } from '../../types/calculator.types';
 import type { CustomerInfo } from '../../types/bid.types';
 import {
   calculateInteriorSquareFootage,
@@ -14,6 +15,7 @@ interface InteriorSqftFormData {
   customer: CustomerInfo;
   houseSquareFootage: number;
   pricingOption: InteriorSqftOption;
+  markup: number;
 }
 
 interface InteriorSquareFootageProps {
@@ -25,12 +27,14 @@ export function InteriorSquareFootage({ onResultChange }: InteriorSquareFootageP
     defaultValues: {
       houseSquareFootage: 0,
       pricingOption: 'complete',
+      markup: 40,
     },
   });
 
   // Watch only the specific fields needed for calculation
   const houseSquareFootage = watch('houseSquareFootage');
   const pricingOption = watch('pricingOption');
+  const markup = watch('markup');
   const customer = watch('customer');
 
   // Real-time calculation
@@ -42,6 +46,7 @@ export function InteriorSquareFootage({ onResultChange }: InteriorSquareFootageP
     const inputs: InteriorSqftInputs = {
       houseSquareFootage,
       pricingOption,
+      markup: markup as MarkupPercentage,
     };
 
     const calculatedResult = calculateInteriorSquareFootage(inputs);
@@ -55,7 +60,7 @@ export function InteriorSquareFootage({ onResultChange }: InteriorSquareFootageP
     }
 
     return calculatedResult;
-  }, [houseSquareFootage, pricingOption, customer, onResultChange]);
+  }, [houseSquareFootage, pricingOption, markup, customer, onResultChange]);
 
   const autoCalcs = useMemo(() => {
     if (!houseSquareFootage || houseSquareFootage <= 0) {
@@ -142,6 +147,8 @@ export function InteriorSquareFootage({ onResultChange }: InteriorSquareFootageP
           </label>
         </CardContent>
       </Card>
+
+      <MarkupSelector register={register} />
 
       {autoCalcs && (
         <Card className="bg-blue-50 border-blue-200">

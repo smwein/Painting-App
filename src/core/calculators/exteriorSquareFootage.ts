@@ -21,38 +21,39 @@ export function calculateExteriorSqftAutoMeasurements(
 
 /**
  * Calculate exterior square footage bid
- * Simple calculator - just house SF and pricing option
+ * Simple calculator with house SF, pricing option, and markup
  */
 export function calculateExteriorSquareFootage(
   inputs: ExteriorSqftInputs
 ): BidResult {
-  // Calculate labor based on pricing option
-  let labor = 0;
+  // Calculate labor COST based on pricing option
+  let laborCost = 0;
 
   switch (inputs.pricingOption) {
     case 'full-exterior':
-      labor = inputs.houseSquareFootage * EXTERIOR_SQFT_PRICING.FULL_EXTERIOR;
+      laborCost = inputs.houseSquareFootage * EXTERIOR_SQFT_PRICING.FULL_EXTERIOR;
       break;
     case 'trim-only':
-      labor = inputs.houseSquareFootage * EXTERIOR_SQFT_PRICING.TRIM_ONLY;
+      laborCost = inputs.houseSquareFootage * EXTERIOR_SQFT_PRICING.TRIM_ONLY;
       break;
   }
 
   // Calculate auto-measurements
   const autoCalcs = calculateExteriorSqftAutoMeasurements(inputs.houseSquareFootage);
 
-  // No materials calculated in this simple method
+  // No materials in simple method
   const materials: MaterialBreakdown = {
     items: [],
     totalCost: 0,
   };
 
-  // No markup in this simple method - just labor
-  const profit = 0;
-  const total = labor;
+  // Calculate markup on labor cost
+  const totalCost = laborCost + materials.totalCost;
+  const profit = totalCost * (inputs.markup / 100);
+  const total = totalCost + profit;
 
   return {
-    labor,
+    labor: laborCost,
     materials,
     profit,
     total,
@@ -60,6 +61,7 @@ export function calculateExteriorSquareFootage(
       houseSquareFootage: inputs.houseSquareFootage,
       pricingOption: inputs.pricingOption,
       autoCalculations: autoCalcs,
+      markup: inputs.markup,
     },
     timestamp: new Date(),
   };

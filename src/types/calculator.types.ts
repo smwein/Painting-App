@@ -47,6 +47,7 @@ export interface BidResult {
 export interface InteriorSqftInputs {
   houseSquareFootage: number;
   pricingOption: InteriorSqftOption;
+  markup: MarkupPercentage;
 }
 
 // Interior Square Footage Auto-calculations
@@ -118,6 +119,7 @@ export interface ExteriorModifiers {
 export interface ExteriorSqftInputs {
   houseSquareFootage: number;
   pricingOption: ExteriorSqftOption;
+  markup: MarkupPercentage;
 }
 
 // Exterior Square Footage Auto-calculations
