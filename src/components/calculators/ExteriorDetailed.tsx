@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Input } from '../common/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
@@ -78,49 +78,107 @@ export function ExteriorDetailed({ onResultChange }: ExteriorDetailedProps) {
     },
   });
 
-  const formValues = watch();
+  // Watch calculation fields separately from customer fields
+  const wallSqft = watch('wallSqft');
+  const trimFasciaSoffitLF = watch('trimFasciaSoffitLF');
+  const doors = watch('doors');
+  const shutters = watch('shutters');
+  const doorsToRefinish = watch('doorsToRefinish');
+  const primingSqft = watch('primingSqft');
+  const primingLF = watch('primingLF');
+  const sidingReplacementSqft = watch('sidingReplacementSqft');
+  const trimReplacementLF = watch('trimReplacementLF');
+  const soffitFasciaReplacementLF = watch('soffitFasciaReplacementLF');
+  const bondoRepairs = watch('bondoRepairs');
+  const deckStainingSqft = watch('deckStainingSqft');
+  const miscPressureWashingSqft = watch('miscPressureWashingSqft');
+  const miscWorkHours = watch('miscWorkHours');
+  const miscellaneousDollars = watch('miscellaneousDollars');
+  const paintType = watch('paintType');
+  const markup = watch('markup');
+  const modifierThreeStory = watch('modifiers.threeStory');
+  const modifierExtensivePrep = watch('modifiers.extensivePrep');
+  const modifierHardTerrain = watch('modifiers.hardTerrain');
+  const modifierAdditionalCoat = watch('modifiers.additionalCoat');
+  const modifierOneCoat = watch('modifiers.oneCoat');
+  const customer = watch('customer');
 
   // Real-time calculation
   const result = useMemo(() => {
     const inputs: ExteriorDetailedInputs = {
-      wallSqft: formValues.wallSqft || 0,
-      trimFasciaSoffitLF: formValues.trimFasciaSoffitLF || 0,
-      doors: formValues.doors || 0,
-      shutters: formValues.shutters || 0,
-      doorsToRefinish: formValues.doorsToRefinish || 0,
-      primingSqft: formValues.primingSqft || 0,
-      primingLF: formValues.primingLF || 0,
-      sidingReplacementSqft: formValues.sidingReplacementSqft || 0,
-      trimReplacementLF: formValues.trimReplacementLF || 0,
-      soffitFasciaReplacementLF: formValues.soffitFasciaReplacementLF || 0,
-      bondoRepairs: formValues.bondoRepairs || 0,
-      deckStainingSqft: formValues.deckStainingSqft || 0,
-      miscPressureWashingSqft: formValues.miscPressureWashingSqft || 0,
-      miscWorkHours: formValues.miscWorkHours || 0,
-      miscellaneousDollars: formValues.miscellaneousDollars || 0,
-      paintType: formValues.paintType,
-      markup: formValues.markup as import('../../types/calculator.types').MarkupPercentage,
+      wallSqft: wallSqft || 0,
+      trimFasciaSoffitLF: trimFasciaSoffitLF || 0,
+      doors: doors || 0,
+      shutters: shutters || 0,
+      doorsToRefinish: doorsToRefinish || 0,
+      primingSqft: primingSqft || 0,
+      primingLF: primingLF || 0,
+      sidingReplacementSqft: sidingReplacementSqft || 0,
+      trimReplacementLF: trimReplacementLF || 0,
+      soffitFasciaReplacementLF: soffitFasciaReplacementLF || 0,
+      bondoRepairs: bondoRepairs || 0,
+      deckStainingSqft: deckStainingSqft || 0,
+      miscPressureWashingSqft: miscPressureWashingSqft || 0,
+      miscWorkHours: miscWorkHours || 0,
+      miscellaneousDollars: miscellaneousDollars || 0,
+      paintType: paintType,
+      markup: markup as import('../../types/calculator.types').MarkupPercentage,
       modifiers: {
-        threeStory: formValues['modifiers.threeStory'] || false,
-        extensivePrep: formValues['modifiers.extensivePrep'] || false,
-        hardTerrain: formValues['modifiers.hardTerrain'] || false,
-        additionalCoat: formValues['modifiers.additionalCoat'] || false,
-        oneCoat: formValues['modifiers.oneCoat'] || false,
+        threeStory: modifierThreeStory || false,
+        extensivePrep: modifierExtensivePrep || false,
+        hardTerrain: modifierHardTerrain || false,
+        additionalCoat: modifierAdditionalCoat || false,
+        oneCoat: modifierOneCoat || false,
       },
     };
 
-    const calculatedResult = calculateExteriorDetailed(inputs);
+    return calculateExteriorDetailed(inputs);
+  }, [
+    wallSqft, trimFasciaSoffitLF, doors, shutters, doorsToRefinish,
+    primingSqft, primingLF, sidingReplacementSqft, trimReplacementLF,
+    soffitFasciaReplacementLF, bondoRepairs, deckStainingSqft,
+    miscPressureWashingSqft, miscWorkHours, miscellaneousDollars,
+    paintType, markup, modifierThreeStory, modifierExtensivePrep,
+    modifierHardTerrain, modifierAdditionalCoat, modifierOneCoat
+  ]);
 
-    if (onResultChange) {
+  // Notify parent of changes separately
+  useEffect(() => {
+    if (result && onResultChange) {
+      const inputs: ExteriorDetailedInputs = {
+        wallSqft: wallSqft || 0,
+        trimFasciaSoffitLF: trimFasciaSoffitLF || 0,
+        doors: doors || 0,
+        shutters: shutters || 0,
+        doorsToRefinish: doorsToRefinish || 0,
+        primingSqft: primingSqft || 0,
+        primingLF: primingLF || 0,
+        sidingReplacementSqft: sidingReplacementSqft || 0,
+        trimReplacementLF: trimReplacementLF || 0,
+        soffitFasciaReplacementLF: soffitFasciaReplacementLF || 0,
+        bondoRepairs: bondoRepairs || 0,
+        deckStainingSqft: deckStainingSqft || 0,
+        miscPressureWashingSqft: miscPressureWashingSqft || 0,
+        miscWorkHours: miscWorkHours || 0,
+        miscellaneousDollars: miscellaneousDollars || 0,
+        paintType: paintType,
+        markup: markup as import('../../types/calculator.types').MarkupPercentage,
+        modifiers: {
+          threeStory: modifierThreeStory || false,
+          extensivePrep: modifierExtensivePrep || false,
+          hardTerrain: modifierHardTerrain || false,
+          additionalCoat: modifierAdditionalCoat || false,
+          oneCoat: modifierOneCoat || false,
+        },
+      };
+
       onResultChange({
-        customer: formValues.customer,
+        customer,
         inputs,
-        result: calculatedResult,
+        result,
       });
     }
-
-    return calculatedResult;
-  }, [formValues]);
+  }, [result, customer, onResultChange]);
 
   return (
     <div className="space-y-6">

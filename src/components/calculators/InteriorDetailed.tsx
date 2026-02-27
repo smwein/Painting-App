@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Input } from '../common/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
@@ -88,54 +88,123 @@ export function InteriorDetailed({ onResultChange }: InteriorDetailedProps) {
     },
   });
 
-  const formValues = watch();
+  // Watch calculation fields separately from customer fields
+  const wallSqft = watch('wallSqft');
+  const ceilingSqft = watch('ceilingSqft');
+  const trimLF = watch('trimLF');
+  const doors = watch('doors');
+  const cabinetDoors = watch('cabinetDoors');
+  const cabinetDrawers = watch('cabinetDrawers');
+  const newCabinetDoors = watch('newCabinetDoors');
+  const newCabinetDrawers = watch('newCabinetDrawers');
+  const colorsAboveThree = watch('colorsAboveThree');
+  const wallpaperRemovalSqft = watch('wallpaperRemovalSqft');
+  const primingLF = watch('primingLF');
+  const primingSqft = watch('primingSqft');
+  const drywallReplacementSqft = watch('drywallReplacementSqft');
+  const popcornRemovalSqft = watch('popcornRemovalSqft');
+  const wallTextureRemovalSqft = watch('wallTextureRemovalSqft');
+  const trimReplacementLF = watch('trimReplacementLF');
+  const drywallRepairs = watch('drywallRepairs');
+  const accentWalls = watch('accentWalls');
+  const miscWorkHours = watch('miscWorkHours');
+  const miscellaneousDollars = watch('miscellaneousDollars');
+  const paintType = watch('paintType');
+  const markup = watch('markup');
+  const modifierHeavilyFurnished = watch('modifiers.heavilyFurnished');
+  const modifierEmptyHouse = watch('modifiers.emptyHouse');
+  const modifierExtensivePrep = watch('modifiers.extensivePrep');
+  const modifierAdditionalCoat = watch('modifiers.additionalCoat');
+  const modifierOneCoat = watch('modifiers.oneCoat');
+  const customer = watch('customer');
 
   // Real-time calculation
   const result = useMemo(() => {
     const inputs: InteriorDetailedInputs = {
-      wallSqft: formValues.wallSqft || 0,
-      ceilingSqft: formValues.ceilingSqft || 0,
-      trimLF: formValues.trimLF || 0,
-      doors: formValues.doors || 0,
-      cabinetDoors: formValues.cabinetDoors || 0,
-      cabinetDrawers: formValues.cabinetDrawers || 0,
-      newCabinetDoors: formValues.newCabinetDoors || 0,
-      newCabinetDrawers: formValues.newCabinetDrawers || 0,
-      colorsAboveThree: formValues.colorsAboveThree || 0,
-      wallpaperRemovalSqft: formValues.wallpaperRemovalSqft || 0,
-      primingLF: formValues.primingLF || 0,
-      primingSqft: formValues.primingSqft || 0,
-      drywallReplacementSqft: formValues.drywallReplacementSqft || 0,
-      popcornRemovalSqft: formValues.popcornRemovalSqft || 0,
-      wallTextureRemovalSqft: formValues.wallTextureRemovalSqft || 0,
-      trimReplacementLF: formValues.trimReplacementLF || 0,
-      drywallRepairs: formValues.drywallRepairs || 0,
-      accentWalls: formValues.accentWalls || 0,
-      miscWorkHours: formValues.miscWorkHours || 0,
-      miscellaneousDollars: formValues.miscellaneousDollars || 0,
-      paintType: formValues.paintType,
-      markup: formValues.markup as import('../../types/calculator.types').MarkupPercentage,
+      wallSqft: wallSqft || 0,
+      ceilingSqft: ceilingSqft || 0,
+      trimLF: trimLF || 0,
+      doors: doors || 0,
+      cabinetDoors: cabinetDoors || 0,
+      cabinetDrawers: cabinetDrawers || 0,
+      newCabinetDoors: newCabinetDoors || 0,
+      newCabinetDrawers: newCabinetDrawers || 0,
+      colorsAboveThree: colorsAboveThree || 0,
+      wallpaperRemovalSqft: wallpaperRemovalSqft || 0,
+      primingLF: primingLF || 0,
+      primingSqft: primingSqft || 0,
+      drywallReplacementSqft: drywallReplacementSqft || 0,
+      popcornRemovalSqft: popcornRemovalSqft || 0,
+      wallTextureRemovalSqft: wallTextureRemovalSqft || 0,
+      trimReplacementLF: trimReplacementLF || 0,
+      drywallRepairs: drywallRepairs || 0,
+      accentWalls: accentWalls || 0,
+      miscWorkHours: miscWorkHours || 0,
+      miscellaneousDollars: miscellaneousDollars || 0,
+      paintType: paintType,
+      markup: markup as import('../../types/calculator.types').MarkupPercentage,
       modifiers: {
-        heavilyFurnished: formValues['modifiers.heavilyFurnished'] || false,
-        emptyHouse: formValues['modifiers.emptyHouse'] || false,
-        extensivePrep: formValues['modifiers.extensivePrep'] || false,
-        additionalCoat: formValues['modifiers.additionalCoat'] || false,
-        oneCoat: formValues['modifiers.oneCoat'] || false,
+        heavilyFurnished: modifierHeavilyFurnished || false,
+        emptyHouse: modifierEmptyHouse || false,
+        extensivePrep: modifierExtensivePrep || false,
+        additionalCoat: modifierAdditionalCoat || false,
+        oneCoat: modifierOneCoat || false,
       },
     };
 
-    const calculatedResult = calculateInteriorDetailed(inputs);
+    return calculateInteriorDetailed(inputs);
+  }, [
+    wallSqft, ceilingSqft, trimLF, doors, cabinetDoors, cabinetDrawers,
+    newCabinetDoors, newCabinetDrawers, colorsAboveThree, wallpaperRemovalSqft,
+    primingLF, primingSqft, drywallReplacementSqft, popcornRemovalSqft,
+    wallTextureRemovalSqft, trimReplacementLF, drywallRepairs, accentWalls,
+    miscWorkHours, miscellaneousDollars, paintType, markup,
+    modifierHeavilyFurnished, modifierEmptyHouse, modifierExtensivePrep,
+    modifierAdditionalCoat, modifierOneCoat
+  ]);
 
-    if (onResultChange) {
+  // Notify parent of changes separately
+  useEffect(() => {
+    if (result && onResultChange) {
+      const inputs: InteriorDetailedInputs = {
+        wallSqft: wallSqft || 0,
+        ceilingSqft: ceilingSqft || 0,
+        trimLF: trimLF || 0,
+        doors: doors || 0,
+        cabinetDoors: cabinetDoors || 0,
+        cabinetDrawers: cabinetDrawers || 0,
+        newCabinetDoors: newCabinetDoors || 0,
+        newCabinetDrawers: newCabinetDrawers || 0,
+        colorsAboveThree: colorsAboveThree || 0,
+        wallpaperRemovalSqft: wallpaperRemovalSqft || 0,
+        primingLF: primingLF || 0,
+        primingSqft: primingSqft || 0,
+        drywallReplacementSqft: drywallReplacementSqft || 0,
+        popcornRemovalSqft: popcornRemovalSqft || 0,
+        wallTextureRemovalSqft: wallTextureRemovalSqft || 0,
+        trimReplacementLF: trimReplacementLF || 0,
+        drywallRepairs: drywallRepairs || 0,
+        accentWalls: accentWalls || 0,
+        miscWorkHours: miscWorkHours || 0,
+        miscellaneousDollars: miscellaneousDollars || 0,
+        paintType: paintType,
+        markup: markup as import('../../types/calculator.types').MarkupPercentage,
+        modifiers: {
+          heavilyFurnished: modifierHeavilyFurnished || false,
+          emptyHouse: modifierEmptyHouse || false,
+          extensivePrep: modifierExtensivePrep || false,
+          additionalCoat: modifierAdditionalCoat || false,
+          oneCoat: modifierOneCoat || false,
+        },
+      };
+
       onResultChange({
-        customer: formValues.customer,
+        customer,
         inputs,
-        result: calculatedResult,
+        result,
       });
     }
-
-    return calculatedResult;
-  }, [formValues]);
+  }, [result, customer, onResultChange]);
 
   return (
     <div className="space-y-6">
