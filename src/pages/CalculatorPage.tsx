@@ -7,7 +7,7 @@ import { ExteriorDetailed } from '../components/calculators/ExteriorDetailed';
 import { ExportButtons } from '../components/results/ExportButtons';
 import { useBidStore } from '../store/bidStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { downloadBidPDF } from '../utils/exportPDF';
+import { downloadBidPDF, downloadCustomerPDF } from '../utils/exportPDF';
 import type { Bid } from '../types/bid.types';
 import type { CalculatorType } from '../types/calculator.types';
 
@@ -83,6 +83,30 @@ export function CalculatorPage() {
     downloadBidPDF(bid, settings);
   };
 
+  const handleExportCustomerPDF = useCallback(() => {
+    if (!currentBidData || !currentBidData.customer || !currentBidData.result) {
+      alert('Please fill in customer information and complete the bid calculation first.');
+      return;
+    }
+
+    if (!currentBidData.customer.name || !currentBidData.customer.address || !currentBidData.customer.phone) {
+      alert('Please fill in required customer information (name, address, phone).');
+      return;
+    }
+
+    const bid: Bid = {
+      id: crypto.randomUUID(),
+      calculatorType: type as CalculatorType,
+      customer: currentBidData.customer,
+      inputs: currentBidData.inputs,
+      result: currentBidData.result,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    downloadCustomerPDF(bid, settings);
+  }, [currentBidData, type, settings]);
+
   const renderCalculator = () => {
     switch (type) {
       case 'interior-sqft':
@@ -131,6 +155,7 @@ export function CalculatorPage() {
           <ExportButtons
             onSave={handleSave}
             onExportPDF={handleExportPDF}
+            onExportCustomerPDF={handleExportCustomerPDF}
             disabled={!hasValidBid}
           />
         </div>
