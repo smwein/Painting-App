@@ -1,7 +1,7 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Input } from '../common/Input';
-import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
+import { Card, CardContent } from '../common/Card';
 import { CustomerInfoSection } from './shared/CustomerInfoSection';
 import { ModifierSection } from './shared/ModifierSection';
 import { PaintTypeSelector } from './shared/PaintTypeSelector';
@@ -58,6 +58,14 @@ interface ExteriorDetailedProps {
 export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailedProps) {
   const { settings } = useSettingsStore();
   const pricing = settings.pricing;
+
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    pricing.sections.forEach((s) => { if (s.defaultCollapsed) init[s.id] = true; });
+    return init;
+  });
+  const toggleSection = (id: string) =>
+    setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
 
   const { register, watch, reset, setValue } = useForm<ExteriorDetailedFormData>({
     defaultValues: {
@@ -238,9 +246,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
 
       {/* Requirement #1: House SF Auto-Calculate */}
       <Card className="bg-blue-50 border-blue-200">
-        <CardHeader>
-          <CardTitle>House Square Footage (Auto-Calculate)</CardTitle>
-        </CardHeader>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">House Square Footage (Auto-Calculate)</h3>
         <CardContent>
           <Input
             label="House Square Footage"
@@ -258,163 +264,188 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Measurements</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label="Wall Sq Ft ($0.70/sqft)"
-            type="number"
-            min="0"
-            step="0.1"
-            placeholder="0"
-            {...register('wallSqft', { valueAsNumber: true })}
-          />
-          <Input
-            label="Trim/Fascia/Soffit LF ($0.50/LF)"
-            type="number"
-            min="0"
-            step="0.1"
-            placeholder="0"
-            {...register('trimFasciaSoffitLF', { valueAsNumber: true })}
-          />
-        </CardContent>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900">Measurements</h3>
+          <button onClick={() => toggleSection('ext-measurements')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+            {collapsed['ext-measurements'] ? '+ Show' : '− Hide'}
+          </button>
+        </div>
+        {!collapsed['ext-measurements'] && (
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Wall Sq Ft ($0.70/sqft)"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="0"
+              {...register('wallSqft', { valueAsNumber: true })}
+            />
+            <Input
+              label="Trim/Fascia/Soffit LF ($0.50/LF)"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="0"
+              {...register('trimFasciaSoffitLF', { valueAsNumber: true })}
+            />
+          </div>
+        )}
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Doors & Shutters</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label="Doors ($40/door)"
-            type="number"
-            min="0"
-            step="1"
-            placeholder="0"
-            {...register('doors', { valueAsNumber: true })}
-          />
-          <Input
-            label="Shutters ($25/shutter)"
-            type="number"
-            min="0"
-            step="1"
-            placeholder="0"
-            {...register('shutters', { valueAsNumber: true })}
-          />
-          <Input
-            label="Doors to Refinish ($100/door)"
-            type="number"
-            min="0"
-            step="1"
-            placeholder="0"
-            {...register('doorsToRefinish', { valueAsNumber: true })}
-          />
-        </CardContent>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900">Doors & Shutters</h3>
+          <button onClick={() => toggleSection('ext-doors-shutters')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+            {collapsed['ext-doors-shutters'] ? '+ Show' : '− Hide'}
+          </button>
+        </div>
+        {!collapsed['ext-doors-shutters'] && (
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Doors ($40/door)"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="0"
+              {...register('doors', { valueAsNumber: true })}
+            />
+            <Input
+              label="Shutters ($25/shutter)"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="0"
+              {...register('shutters', { valueAsNumber: true })}
+            />
+            <Input
+              label="Doors to Refinish ($100/door)"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="0"
+              {...register('doorsToRefinish', { valueAsNumber: true })}
+            />
+          </div>
+        )}
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Prep Work</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label="Priming Sq Ft ($0.50/sqft)"
-            type="number"
-            min="0"
-            step="0.1"
-            placeholder="0"
-            {...register('primingSqft', { valueAsNumber: true })}
-          />
-          <Input
-            label="Priming LF ($0.50/LF)"
-            type="number"
-            min="0"
-            step="0.1"
-            placeholder="0"
-            {...register('primingLF', { valueAsNumber: true })}
-          />
-        </CardContent>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900">Prep Work</h3>
+          <button onClick={() => toggleSection('ext-prep-work')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+            {collapsed['ext-prep-work'] ? '+ Show' : '− Hide'}
+          </button>
+        </div>
+        {!collapsed['ext-prep-work'] && (
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Priming Sq Ft ($0.50/sqft)"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="0"
+              {...register('primingSqft', { valueAsNumber: true })}
+            />
+            <Input
+              label="Priming LF ($0.50/LF)"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="0"
+              {...register('primingLF', { valueAsNumber: true })}
+            />
+          </div>
+        )}
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Replacements & Repairs</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label="Siding Replacement Sq Ft ($2/sqft)"
-            type="number"
-            min="0"
-            step="0.1"
-            placeholder="0"
-            {...register('sidingReplacementSqft', { valueAsNumber: true })}
-          />
-          <Input
-            label="Trim Replacement LF ($4/LF)"
-            type="number"
-            min="0"
-            step="0.1"
-            placeholder="0"
-            {...register('trimReplacementLF', { valueAsNumber: true })}
-          />
-          <Input
-            label="Soffit/Fascia Replacement LF ($8/LF)"
-            type="number"
-            min="0"
-            step="0.1"
-            placeholder="0"
-            {...register('soffitFasciaReplacementLF', { valueAsNumber: true })}
-          />
-          <Input
-            label="Bondo Repairs ($30/repair)"
-            type="number"
-            min="0"
-            step="1"
-            placeholder="0"
-            {...register('bondoRepairs', { valueAsNumber: true })}
-          />
-        </CardContent>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900">Replacements & Repairs</h3>
+          <button onClick={() => toggleSection('ext-replacements-repairs')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+            {collapsed['ext-replacements-repairs'] ? '+ Show' : '− Hide'}
+          </button>
+        </div>
+        {!collapsed['ext-replacements-repairs'] && (
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Siding Replacement Sq Ft ($2/sqft)"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="0"
+              {...register('sidingReplacementSqft', { valueAsNumber: true })}
+            />
+            <Input
+              label="Trim Replacement LF ($4/LF)"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="0"
+              {...register('trimReplacementLF', { valueAsNumber: true })}
+            />
+            <Input
+              label="Soffit/Fascia Replacement LF ($8/LF)"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="0"
+              {...register('soffitFasciaReplacementLF', { valueAsNumber: true })}
+            />
+            <Input
+              label="Bondo Repairs ($30/repair)"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="0"
+              {...register('bondoRepairs', { valueAsNumber: true })}
+            />
+          </div>
+        )}
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Additional Work</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label="Deck Staining Sq Ft ($1/sqft)"
-            type="number"
-            min="0"
-            step="0.1"
-            placeholder="0"
-            {...register('deckStainingSqft', { valueAsNumber: true })}
-          />
-          <Input
-            label="Misc Pressure Washing Sq Ft ($0.50/sqft)"
-            type="number"
-            min="0"
-            step="0.1"
-            placeholder="0"
-            {...register('miscPressureWashingSqft', { valueAsNumber: true })}
-          />
-          <Input
-            label="Misc Work Hours ($50/hour)"
-            type="number"
-            min="0"
-            step="0.1"
-            placeholder="0"
-            {...register('miscWorkHours', { valueAsNumber: true })}
-          />
-          <Input
-            label="Miscellaneous $ (custom)"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="0"
-            {...register('miscellaneousDollars', { valueAsNumber: true })}
-          />
-        </CardContent>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900">Additional Work</h3>
+          <button onClick={() => toggleSection('ext-additional')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+            {collapsed['ext-additional'] ? '+ Show' : '− Hide'}
+          </button>
+        </div>
+        {!collapsed['ext-additional'] && (
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Deck Staining Sq Ft ($1/sqft)"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="0"
+              {...register('deckStainingSqft', { valueAsNumber: true })}
+            />
+            <Input
+              label="Misc Pressure Washing Sq Ft ($0.50/sqft)"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="0"
+              {...register('miscPressureWashingSqft', { valueAsNumber: true })}
+            />
+            <Input
+              label="Misc Work Hours ($50/hour)"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="0"
+              {...register('miscWorkHours', { valueAsNumber: true })}
+            />
+            <Input
+              label="Miscellaneous $ (custom)"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0"
+              {...register('miscellaneousDollars', { valueAsNumber: true })}
+            />
+          </div>
+        )}
       </Card>
 
       <PaintTypeSelector register={register} isExterior={true} />

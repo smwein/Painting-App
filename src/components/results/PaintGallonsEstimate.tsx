@@ -33,6 +33,8 @@ export function PaintGallonsEstimate({ result }: PaintGallonsEstimateProps) {
 
   const totalGallons = result.materials.items.reduce((sum, item) => sum + item.quantity, 0);
 
+  if (totalGallons === 0) return null;
+
   return (
     <Card className="bg-amber-50 border-amber-200">
       <CardHeader>

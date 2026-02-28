@@ -6,54 +6,156 @@ import { Button } from '../common/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
 import type { SectionConfig } from '../../types/settings.types';
 
+type CalcType = 'interior-detailed' | 'exterior-detailed' | 'simple-pricing';
+
+const CALC_LABELS: Record<CalcType, string> = {
+  'interior-detailed': 'Interior Detailed',
+  'exterior-detailed': 'Exterior Detailed',
+  'simple-pricing': 'Simple Pricing',
+};
+
 export function CustomSectionsManager() {
-  const { settings, addSection, deleteSection } = useSettingsStore();
+  const { settings, addSection, updateSection, deleteSection } = useSettingsStore();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
 
   const [newSection, setNewSection] = useState<Omit<SectionConfig, 'id' | 'order' | 'isDefault'>>({
     name: '',
     calculatorType: 'interior-detailed',
   });
 
-  const customSections = settings.pricing.sections.filter((section) => !section.isDefault);
+  const allSections = [...settings.pricing.sections].sort((a, b) => a.order - b.order);
+
+  const getSectionsForType = (type: CalcType) =>
+    allSections.filter((s) => s.calculatorType === type);
 
   const handleAddSection = () => {
-    if (!newSection.name) {
+    if (!newSection.name.trim()) {
       alert('Please enter a section name');
       return;
     }
-
     addSection({ ...newSection, isDefault: false });
     setNewSection({ name: '', calculatorType: 'interior-detailed' });
     setShowAddForm(false);
-    alert('Custom section added successfully!');
   };
 
-  const handleDeleteSection = (id: string) => {
-    const itemsInSection = settings.pricing.lineItems.filter((item) => item.category === id);
+  const handleDeleteSection = (section: SectionConfig) => {
+    const itemsInSection = settings.pricing.lineItems.filter((item) => item.category === section.id);
+    const msg = itemsInSection.length > 0
+      ? `This section contains ${itemsInSection.length} line item(s). Deleting it will also remove those items. Continue?`
+      : 'Delete this section?';
+    if (confirm(msg)) deleteSection(section.id);
+  };
 
-    if (itemsInSection.length > 0) {
-      const confirmMsg = `This section contains ${itemsInSection.length} line item(s). Deleting the section will also remove these items. Are you sure?`;
-      if (!confirm(confirmMsg)) {
-        return;
-      }
-    } else {
-      if (!confirm('Are you sure you want to delete this custom section?')) {
-        return;
-      }
-    }
+  const startEdit = (section: SectionConfig) => {
+    setEditingId(section.id);
+    setEditingName(section.name);
+  };
 
-    deleteSection(id);
+  const saveEdit = (id: string) => {
+    if (editingName.trim()) updateSection(id, { name: editingName.trim() });
+    setEditingId(null);
+  };
+
+  const moveSection = (section: SectionConfig, direction: 'up' | 'down') => {
+    const siblings = getSectionsForType(section.calculatorType as CalcType);
+    const idx = siblings.findIndex((s) => s.id === section.id);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= siblings.length) return;
+    const other = siblings[swapIdx];
+    updateSection(section.id, { order: other.order });
+    updateSection(other.id, { order: section.order });
+  };
+
+  const renderSectionList = (type: CalcType) => {
+    const sections = getSectionsForType(type);
+    if (sections.length === 0) return (
+      <p className="text-sm text-gray-400 text-center py-2">No sections yet.</p>
+    );
+
+    return (
+      <div className="space-y-2">
+        {sections.map((section, idx) => {
+          const itemCount = settings.pricing.lineItems.filter((i) => i.category === section.id).length;
+          const isEditing = editingId === section.id;
+
+          return (
+            <div key={section.id} className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg bg-gray-50">
+              {/* Reorder arrows */}
+              <div className="flex flex-col gap-0.5">
+                <button
+                  onClick={() => moveSection(section, 'up')}
+                  disabled={idx === 0}
+                  className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs leading-none"
+                  title="Move up"
+                >▲</button>
+                <button
+                  onClick={() => moveSection(section, 'down')}
+                  disabled={idx === sections.length - 1}
+                  className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs leading-none"
+                  title="Move down"
+                >▼</button>
+              </div>
+
+              {/* Name (editable) */}
+              <div className="flex-1 min-w-0">
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(section.id); if (e.key === 'Escape') setEditingId(null); }}
+                    autoFocus
+                    className="w-full px-2 py-1 text-sm border border-primary-400 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                ) : (
+                  <div>
+                    <span className="font-medium text-gray-900 text-sm">{section.name}</span>
+                    {section.isDefault && (
+                      <span className="ml-2 text-xs text-gray-400">(default)</span>
+                    )}
+                    <span className="ml-2 text-xs text-gray-500">· {itemCount} item{itemCount !== 1 ? 's' : ''}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-1 flex-shrink-0">
+                {isEditing ? (
+                  <>
+                    <Button onClick={() => saveEdit(section.id)} variant="primary" size="sm">Save</Button>
+                    <Button onClick={() => setEditingId(null)} variant="outline" size="sm">Cancel</Button>
+                  </>
+                ) : (
+                  <>
+                    <Button onClick={() => startEdit(section)} variant="outline" size="sm">Edit</Button>
+                    {!section.isDefault && (
+                      <Button
+                        onClick={() => handleDeleteSection(section)}
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 hover:border-red-300"
+                      >Delete</Button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-600">
-          Add custom sections to organize line items in the detailed calculators.
+          Manage sections for all calculator types. Drag to reorder using the arrows.
         </p>
         <Button onClick={() => setShowAddForm(!showAddForm)} variant="primary">
-          {showAddForm ? 'Cancel' : 'Add Custom Section'}
+          {showAddForm ? 'Cancel' : '+ Add Section'}
         </Button>
       </div>
 
@@ -71,97 +173,39 @@ export function CustomSectionsManager() {
               onChange={(e) => setNewSection({ ...newSection, name: e.target.value })}
               placeholder="e.g., Specialty Work"
             />
-
             <Select
               label="Calculator Type"
               value={newSection.calculatorType}
-              onChange={(e) =>
-                setNewSection({ ...newSection, calculatorType: e.target.value as any })
-              }
+              onChange={(e) => setNewSection({ ...newSection, calculatorType: e.target.value as CalcType })}
             >
               <option value="interior-detailed">Interior Detailed</option>
               <option value="exterior-detailed">Exterior Detailed</option>
+              <option value="simple-pricing">Simple Pricing</option>
             </Select>
-
             <div className="flex justify-end gap-2">
-              <Button onClick={() => setShowAddForm(false)} variant="outline">
-                Cancel
-              </Button>
-              <Button onClick={handleAddSection} variant="primary">
-                Add Section
-              </Button>
+              <Button onClick={() => setShowAddForm(false)} variant="outline">Cancel</Button>
+              <Button onClick={handleAddSection} variant="primary">Add Section</Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Custom Sections List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Custom Sections ({customSections.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {customSections.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-4">
-              No custom sections yet. Click "Add Custom Section" to create one.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {customSections.map((section) => {
-                const itemsInSection = settings.pricing.lineItems.filter(
-                  (item) => item.category === section.id
-                );
-
-                return (
-                  <div
-                    key={section.id}
-                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium text-gray-900">{section.name}</h4>
-                        <p className="text-sm text-gray-600">
-                          {section.calculatorType === 'interior-detailed' ? 'Interior' : 'Exterior'} Detailed •{' '}
-                          {itemsInSection.length} line item{itemsInSection.length !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => handleDeleteSection(section.id)}
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600 hover:text-red-700 hover:border-red-300"
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-
-                    {itemsInSection.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-200">
-                        <p className="text-xs font-medium text-gray-500 mb-2">Line Items:</p>
-                        <ul className="text-xs text-gray-600 space-y-1">
-                          {itemsInSection.map((item) => (
-                            <li key={item.id}>
-                              • {item.name} (${item.rate}/{item.unit})
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Sections by calculator type */}
+      {(['interior-detailed', 'exterior-detailed', 'simple-pricing'] as CalcType[]).map((type) => (
+        <Card key={type}>
+          <CardHeader>
+            <CardTitle>{CALC_LABELS[type]} Sections</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {renderSectionList(type)}
+          </CardContent>
+        </Card>
+      ))}
 
       <Card className="bg-yellow-50 border-yellow-200">
         <CardContent className="py-3">
           <p className="text-sm text-yellow-800">
-            <strong>Note:</strong> Default sections cannot be deleted. You can only delete custom sections
-            that you've created.
+            <strong>Note:</strong> Default sections cannot be deleted, but their names can be edited. Only custom sections can be deleted.
           </p>
         </CardContent>
       </Card>

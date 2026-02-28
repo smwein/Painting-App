@@ -60,10 +60,13 @@ export function createDefaultPricingSettings(): PricingSettings {
 
     // Crew rates for job duration estimates
     crewRates: [
-      { crewSize: 2, dailyRate: 1000 },
-      { crewSize: 3, dailyRate: 1500 },
-      { crewSize: 4, dailyRate: 2000 },
+      { crewSize: 2, dailyRate: 1000, description: 'Default: $1,000/day' },
+      { crewSize: 3, dailyRate: 1500, description: 'Default: $1,500/day' },
+      { crewSize: 4, dailyRate: 2000, description: 'Default: $2,000/day' },
     ],
+
+    jobDurationFormulaText: 'Estimated Days = Labor Cost ÷ Daily Rate',
+    jobDurationExampleText: 'For example, if labor cost is $3,000 and you select a 2-person crew ($1,000/day), the estimated duration is 3 days.',
 
     // Dynamic line items - Interior Detailed
     lineItems: [

@@ -46,13 +46,13 @@ export function Settings() {
             active={activeTab === 'line-items'}
             onClick={() => setActiveTab('line-items')}
           >
-            Custom Line Items
+            Add New Line Item
           </TabButton>
           <TabButton
             active={activeTab === 'sections'}
             onClick={() => setActiveTab('sections')}
           >
-            Custom Sections
+            Add New Section
           </TabButton>
           <TabButton
             active={activeTab === 'crew-rates'}

@@ -15,15 +15,17 @@ export interface LineItemConfig {
 export interface SectionConfig {
   id: string;
   name: string;
-  calculatorType: 'interior-detailed' | 'exterior-detailed';
+  calculatorType: 'interior-detailed' | 'exterior-detailed' | 'simple-pricing';
   isDefault: boolean; // Cannot be deleted if true
   order: number;
+  defaultCollapsed?: boolean; // Whether section starts collapsed on calculator page
 }
 
 // Crew rate configuration for job duration estimates
 export interface CrewRateConfig {
   crewSize: 2 | 3 | 4;
   dailyRate: number;
+  description?: string; // Editable helper text
 }
 
 // All pricing configuration (formerly hardcoded)
@@ -73,6 +75,10 @@ export interface PricingSettings {
 
   // Crew rates for job duration estimates
   crewRates: CrewRateConfig[];
+
+  // Editable job duration description text
+  jobDurationFormulaText?: string;
+  jobDurationExampleText?: string;
 
   // Dynamic configuration
   lineItems: LineItemConfig[];

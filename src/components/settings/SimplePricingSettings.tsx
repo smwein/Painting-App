@@ -3,10 +3,26 @@ import { useSettingsStore } from '../../store/settingsStore';
 import { Input } from '../common/Input';
 import { Button } from '../common/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
+import type { SectionConfig } from '../../types/settings.types';
 
 export function SimplePricingSettings() {
-  const { settings, updatePricing } = useSettingsStore();
+  const { settings, updatePricing, updateSection } = useSettingsStore();
   const [formData, setFormData] = useState(settings.pricing);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+
+  const simpleSections = settings.pricing.sections
+    .filter((s) => s.calculatorType === 'simple-pricing')
+    .sort((a, b) => a.order - b.order);
+
+  const moveSection = (section: SectionConfig, direction: 'up' | 'down') => {
+    const idx = simpleSections.findIndex((s) => s.id === section.id);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= simpleSections.length) return;
+    const other = simpleSections[swapIdx];
+    updateSection(section.id, { order: other.order });
+    updateSection(other.id, { order: section.order });
+  };
 
   const handleNumberChange = (path: string, value: number) => {
     const keys = path.split('.');
@@ -306,6 +322,58 @@ export function SimplePricingSettings() {
           />
         </CardContent>
       </Card>
+
+      {/* Simple Pricing Sections */}
+      {simpleSections.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Simple Pricing Sections</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {simpleSections.map((section, idx) => {
+              const itemCount = settings.pricing.lineItems.filter((i) => i.category === section.id).length;
+              const isEditing = editingId === section.id;
+              return (
+                <div key={section.id} className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                  <div className="flex flex-col gap-0.5">
+                    <button onClick={() => moveSection(section, 'up')} disabled={idx === 0} className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs">▲</button>
+                    <button onClick={() => moveSection(section, 'down')} disabled={idx === simpleSections.length - 1} className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs">▼</button>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') { updateSection(section.id, { name: editingName.trim() }); setEditingId(null); }
+                          if (e.key === 'Escape') setEditingId(null);
+                        }}
+                        autoFocus
+                        className="w-full px-2 py-1 text-sm border border-primary-400 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    ) : (
+                      <span className="font-medium text-gray-900 text-sm">{section.name}
+                        <span className="ml-2 text-xs text-gray-500">· {itemCount} item{itemCount !== 1 ? 's' : ''}</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-1">
+                    {isEditing ? (
+                      <>
+                        <Button onClick={() => { updateSection(section.id, { name: editingName.trim() }); setEditingId(null); }} variant="primary" size="sm">Save</Button>
+                        <Button onClick={() => setEditingId(null)} variant="outline" size="sm">Cancel</Button>
+                      </>
+                    ) : (
+                      <Button onClick={() => { setEditingId(section.id); setEditingName(section.name); }} variant="outline" size="sm">Edit</Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex justify-end">
         <Button onClick={handleSave} variant="primary">

@@ -8,6 +8,13 @@ export function JobEstimationSettings() {
   const { settings, updatePricing } = useSettingsStore();
   const [crewRates, setCrewRates] = useState(settings.pricing.crewRates);
   const [markupOptions, setMarkupOptions] = useState(settings.pricing.markupOptions);
+  const [formulaText, setFormulaText] = useState(
+    settings.pricing.jobDurationFormulaText ?? 'Estimated Days = Labor Cost ÷ Daily Rate'
+  );
+  const [exampleText, setExampleText] = useState(
+    settings.pricing.jobDurationExampleText ??
+      'For example, if labor cost is $3,000 and you select a 2-person crew ($1,000/day), the estimated duration is 3 days.'
+  );
 
   const handleCrewRateChange = (crewSize: 2 | 3 | 4, newRate: number) => {
     setCrewRates((prev) =>
@@ -15,18 +22,27 @@ export function JobEstimationSettings() {
     );
   };
 
+  const handleCrewDescriptionChange = (crewSize: 2 | 3 | 4, description: string) => {
+    setCrewRates((prev) =>
+      prev.map((crew) => (crew.crewSize === crewSize ? { ...crew, description } : crew))
+    );
+  };
+
   const handleMarkupOptionsChange = (value: string) => {
-    // Parse comma-separated values
     const options = value
       .split(',')
       .map((v) => parseFloat(v.trim()))
       .filter((v) => !isNaN(v) && v > 0);
-
     setMarkupOptions(options);
   };
 
   const handleSave = () => {
-    updatePricing({ crewRates, markupOptions });
+    updatePricing({
+      crewRates,
+      markupOptions,
+      jobDurationFormulaText: formulaText,
+      jobDurationExampleText: exampleText,
+    });
     alert('Job estimation settings saved successfully!');
   };
 
@@ -47,44 +63,45 @@ export function JobEstimationSettings() {
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Input
-              label="2-Person Crew ($/day)"
-              type="number"
-              min="0"
-              step="50"
-              value={crew2?.dailyRate || 1000}
-              onChange={(e) => handleCrewRateChange(2, parseFloat(e.target.value))}
-              helperText="Default: $1,000/day"
-            />
-            <Input
-              label="3-Person Crew ($/day)"
-              type="number"
-              min="0"
-              step="50"
-              value={crew3?.dailyRate || 1500}
-              onChange={(e) => handleCrewRateChange(3, parseFloat(e.target.value))}
-              helperText="Default: $1,500/day"
-            />
-            <Input
-              label="4-Person Crew ($/day)"
-              type="number"
-              min="0"
-              step="50"
-              value={crew4?.dailyRate || 2000}
-              onChange={(e) => handleCrewRateChange(4, parseFloat(e.target.value))}
-              helperText="Default: $2,000/day"
-            />
+            {[
+              { crew: crew2, size: 2 as const },
+              { crew: crew3, size: 3 as const },
+              { crew: crew4, size: 4 as const },
+            ].map(({ crew, size }) => (
+              <div key={size} className="space-y-2">
+                <Input
+                  label={`${size}-Person Crew ($/day)`}
+                  type="number"
+                  min="0"
+                  step="50"
+                  value={crew?.dailyRate ?? 0}
+                  onChange={(e) => handleCrewRateChange(size, parseFloat(e.target.value))}
+                />
+                <input
+                  type="text"
+                  value={crew?.description ?? ''}
+                  onChange={(e) => handleCrewDescriptionChange(size, e.target.value)}
+                  placeholder={`e.g. Default: $${(crew?.dailyRate ?? 0).toLocaleString()}/day`}
+                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-600"
+                />
+              </div>
+            ))}
           </div>
 
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="text-sm font-medium text-blue-900 mb-2">How Job Duration is Calculated</h4>
-            <p className="text-sm text-blue-800">
-              Estimated Days = Labor Cost ÷ Daily Rate
-            </p>
-            <p className="text-xs text-blue-700 mt-2">
-              For example, if labor cost is $3,000 and you select a 2-person crew ($1,000/day), the estimated
-              duration is 3 days.
-            </p>
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
+            <h4 className="text-sm font-medium text-blue-900">How Job Duration is Calculated</h4>
+            <input
+              type="text"
+              value={formulaText}
+              onChange={(e) => setFormulaText(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-blue-800"
+            />
+            <textarea
+              value={exampleText}
+              onChange={(e) => setExampleText(e.target.value)}
+              rows={2}
+              className="w-full px-3 py-2 text-xs border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-blue-700 resize-none"
+            />
           </div>
         </CardContent>
       </Card>
