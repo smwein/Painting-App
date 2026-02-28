@@ -8,9 +8,7 @@ import { PaintTypeSelector } from './shared/PaintTypeSelector';
 import { MarkupSelector } from './shared/MarkupSelector';
 import { BidSummary } from '../results/BidSummary';
 import { PaintGallonsEstimate } from '../results/PaintGallonsEstimate';
-import { PreMarkupBreakdown } from '../results/PreMarkupBreakdown';
 import { JobDurationEstimate } from '../results/JobDurationEstimate';
-import { EnhancedTotalsSection } from '../results/EnhancedTotalsSection';
 import { useSettingsStore } from '../../store/settingsStore';
 import type { InteriorDetailedInputs } from '../../types/calculator.types';
 import type { CustomerInfo, Bid } from '../../types/bid.types';
@@ -491,12 +489,6 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
         <>
           {/* Requirement #5: Paint Gallons Estimate */}
           <PaintGallonsEstimate result={result} />
-
-          {/* Requirement #6: Cost Breakdown Before Markup */}
-          <PreMarkupBreakdown result={result} />
-
-          {/* Requirement #9: Enhanced Totals with Crew Toggle */}
-          <EnhancedTotalsSection result={result} pricing={pricing} />
 
           {/* Requirement #8: Job Duration Estimate */}
           <JobDurationEstimate laborCost={result.labor} pricing={pricing} />
