@@ -155,14 +155,12 @@ export function CalculatorPage() {
       {renderCalculator()}
 
       {hasValidBid && (
-        <div className="sticky bottom-20 z-10">
-          <ExportButtons
-            onSave={handleSave}
-            onExportPDF={handleExportPDF}
-            onExportCustomerPDF={handleExportCustomerPDF}
-            disabled={!hasValidBid}
-          />
-        </div>
+        <ExportButtons
+          onSave={handleSave}
+          onExportPDF={handleExportPDF}
+          onExportCustomerPDF={handleExportCustomerPDF}
+          disabled={!hasValidBid}
+        />
       )}
     </div>
   );
