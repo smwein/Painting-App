@@ -173,13 +173,25 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
           <CardHeader>
             <CardTitle>Bid Total</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-primary-700">
-              ${result.total.toFixed(2)}
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Cost</span>
+              <span className="text-lg font-semibold text-gray-800">
+                ${(result.labor + result.materials.totalCost).toFixed(2)}
+              </span>
             </div>
-            <p className="text-sm text-gray-600 mt-2">
-              Labor cost estimate (materials not included)
-            </p>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Profit</span>
+              <span className="text-lg font-semibold text-green-700">
+                ${result.profit.toFixed(2)}
+              </span>
+            </div>
+            <div className="border-t border-primary-200 pt-3 flex justify-between items-center">
+              <span className="text-base font-semibold text-gray-700">Retail Total</span>
+              <span className="text-3xl font-bold text-primary-700">
+                ${result.total.toFixed(2)}
+              </span>
+            </div>
           </CardContent>
         </Card>
       )}
