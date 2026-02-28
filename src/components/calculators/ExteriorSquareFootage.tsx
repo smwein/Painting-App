@@ -88,7 +88,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
   }, [houseSquareFootage, pricing]);
 
   return (
-    <div className="space-y-6 pb-32">
+    <div className="space-y-6">
       <CustomerInfoSection register={register} />
 
       <Card>
@@ -160,27 +160,22 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
         </Card>
       )}
 
-      {/* Requirement #3: Fixed position auto-calc at bottom of page */}
       {autoCalcs && (
-        <div className="fixed bottom-4 left-0 right-0 px-4 z-10">
-          <div className="max-w-3xl mx-auto">
-            <Card className="bg-blue-50 border-blue-200 shadow-lg">
-              <CardHeader>
-                <CardTitle>Auto-Calculated Measurements</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <div className="text-xs text-gray-600 mb-1">Siding Sq Ft</div>
-                  <div className="text-xl font-bold text-blue-700">{autoCalcs.sidingSqft.toFixed(0)}</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xs text-gray-600 mb-1">Trim LF</div>
-                  <div className="text-xl font-bold text-blue-700">{autoCalcs.trimLF.toFixed(0)}</div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        <Card className="bg-blue-50 border-blue-200">
+          <CardHeader>
+            <CardTitle>Auto-Calculated Measurements</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <div className="text-xs text-gray-600 mb-1">Siding Sq Ft</div>
+              <div className="text-xl font-bold text-blue-700">{autoCalcs.sidingSqft.toFixed(0)}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-gray-600 mb-1">Trim LF</div>
+              <div className="text-xl font-bold text-blue-700">{autoCalcs.trimLF.toFixed(0)}</div>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
