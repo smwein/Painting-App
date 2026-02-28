@@ -4,6 +4,7 @@ import { Input } from '../common/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
 import { CustomerInfoSection } from './shared/CustomerInfoSection';
 import { MarkupSelector } from './shared/MarkupSelector';
+import { useSettingsStore } from '../../store/settingsStore';
 import type { ExteriorSqftInputs, ExteriorSqftOption, MarkupPercentage } from '../../types/calculator.types';
 import type { CustomerInfo, Bid } from '../../types/bid.types';
 import {
@@ -24,6 +25,9 @@ interface ExteriorSquareFootageProps {
 }
 
 export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSquareFootageProps) {
+  const { settings } = useSettingsStore();
+  const pricing = settings.pricing;
+
   const { register, watch, reset } = useForm<ExteriorSqftFormData>({
     defaultValues: {
       houseSquareFootage: 0,
@@ -63,7 +67,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
       markup: markup as MarkupPercentage,
     };
 
-    const calculatedResult = calculateExteriorSquareFootage(inputs);
+    const calculatedResult = calculateExteriorSquareFootage(inputs, pricing);
 
     if (onResultChange) {
       onResultChange({
@@ -74,17 +78,17 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
     }
 
     return calculatedResult;
-  }, [houseSquareFootage, pricingOption, markup, customer, onResultChange]);
+  }, [houseSquareFootage, pricingOption, markup, customer, onResultChange, pricing]);
 
   const autoCalcs = useMemo(() => {
     if (!houseSquareFootage || houseSquareFootage <= 0) {
       return null;
     }
-    return calculateExteriorSqftAutoMeasurements(houseSquareFootage);
-  }, [houseSquareFootage]);
+    return calculateExteriorSqftAutoMeasurements(houseSquareFootage, pricing);
+  }, [houseSquareFootage, pricing]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-32">
       <CustomerInfoSection register={register} />
 
       <Card>
@@ -140,24 +144,6 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
 
       <MarkupSelector register={register} />
 
-      {autoCalcs && (
-        <Card className="bg-blue-50 border-blue-200">
-          <CardHeader>
-            <CardTitle>Auto-Calculated Measurements</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-700">Siding Square Footage:</span>
-              <span className="text-sm font-semibold">{autoCalcs.sidingSqft.toFixed(0)} sqft</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-700">Trim Linear Feet:</span>
-              <span className="text-sm font-semibold">{autoCalcs.trimLF.toFixed(0)} LF</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {result && (
         <Card className="bg-primary-50 border-primary-200">
           <CardHeader>
@@ -172,6 +158,29 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Requirement #3: Fixed position auto-calc at bottom of page */}
+      {autoCalcs && (
+        <div className="fixed bottom-4 left-0 right-0 px-4 z-10">
+          <div className="max-w-3xl mx-auto">
+            <Card className="bg-blue-50 border-blue-200 shadow-lg">
+              <CardHeader>
+                <CardTitle>Auto-Calculated Measurements</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="text-xs text-gray-600 mb-1">Siding Sq Ft</div>
+                  <div className="text-xl font-bold text-blue-700">{autoCalcs.sidingSqft.toFixed(0)}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-gray-600 mb-1">Trim LF</div>
+                  <div className="text-xl font-bold text-blue-700">{autoCalcs.trimLF.toFixed(0)}</div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       )}
     </div>
   );

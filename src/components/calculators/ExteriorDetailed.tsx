@@ -8,12 +8,19 @@ import { PaintTypeSelector } from './shared/PaintTypeSelector';
 import { MarkupSelector } from './shared/MarkupSelector';
 import { BidSummary } from '../results/BidSummary';
 import { CostBreakdown } from '../results/CostBreakdown';
+import { PaintGallonsEstimate } from '../results/PaintGallonsEstimate';
+import { PreMarkupBreakdown } from '../results/PreMarkupBreakdown';
+import { JobDurationEstimate } from '../results/JobDurationEstimate';
+import { EnhancedTotalsSection } from '../results/EnhancedTotalsSection';
+import { useSettingsStore } from '../../store/settingsStore';
 import type { ExteriorDetailedInputs } from '../../types/calculator.types';
 import type { CustomerInfo, Bid } from '../../types/bid.types';
 import { calculateExteriorDetailed } from '../../core/calculators/exteriorDetailed';
+import { calculateExteriorSqftAutoMeasurements } from '../../core/calculators/exteriorSquareFootage';
 
 interface ExteriorDetailedFormData {
   customer: CustomerInfo;
+  houseSquareFootage: number;
   wallSqft: number;
   trimFasciaSoffitLF: number;
   doors: number;
@@ -52,8 +59,12 @@ interface ExteriorDetailedProps {
 }
 
 export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailedProps) {
-  const { register, watch, reset } = useForm<ExteriorDetailedFormData>({
+  const { settings } = useSettingsStore();
+  const pricing = settings.pricing;
+
+  const { register, watch, reset, setValue } = useForm<ExteriorDetailedFormData>({
     defaultValues: {
+      houseSquareFootage: 0,
       wallSqft: 0,
       trimFasciaSoffitLF: 0,
       doors: 0,
@@ -80,6 +91,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
   });
 
   // Watch calculation fields separately from customer fields
+  const houseSquareFootage = watch('houseSquareFootage');
   const wallSqft = watch('wallSqft');
   const trimFasciaSoffitLF = watch('trimFasciaSoffitLF');
   const doors = watch('doors');
@@ -165,14 +177,15 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
       },
     };
 
-    return calculateExteriorDetailed(inputs);
+    return calculateExteriorDetailed(inputs, pricing);
   }, [
     wallSqft, trimFasciaSoffitLF, doors, shutters, doorsToRefinish,
     primingSqft, primingLF, sidingReplacementSqft, trimReplacementLF,
     soffitFasciaReplacementLF, bondoRepairs, deckStainingSqft,
     miscPressureWashingSqft, miscWorkHours, miscellaneousDollars,
     paintType, markup, modifierThreeStory, modifierExtensivePrep,
-    modifierHardTerrain, modifierAdditionalCoat, modifierOneCoat
+    modifierHardTerrain, modifierAdditionalCoat, modifierOneCoat,
+    pricing
   ]);
 
   // Notify parent of changes separately
@@ -213,9 +226,39 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
     }
   }, [result, customer, onResultChange]);
 
+  // Auto-populate measurements when house SF changes (Requirement #1)
+  useEffect(() => {
+    if (houseSquareFootage && houseSquareFootage > 0) {
+      const autoCalcs = calculateExteriorSqftAutoMeasurements(houseSquareFootage, pricing);
+      setValue('wallSqft', autoCalcs.sidingSqft);
+      setValue('trimFasciaSoffitLF', autoCalcs.trimLF);
+    }
+  }, [houseSquareFootage, pricing, setValue]);
+
   return (
     <div className="space-y-6">
       <CustomerInfoSection register={register} />
+
+      {/* Requirement #1: House SF Auto-Calculate */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardHeader>
+          <CardTitle>House Square Footage (Auto-Calculate)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Input
+            label="House Square Footage"
+            type="number"
+            min="0"
+            step="1"
+            placeholder="0"
+            {...register('houseSquareFootage', { valueAsNumber: true })}
+          />
+          <p className="text-xs text-gray-500 mt-2">
+            Optional: Enter house square footage to auto-populate siding and trim measurements below.
+            You can override any auto-calculated values.
+          </p>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -383,6 +426,18 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
 
       {result && result.total > 0 && (
         <>
+          {/* Requirement #5: Paint Gallons Estimate */}
+          <PaintGallonsEstimate result={result} />
+
+          {/* Requirement #6: Cost Breakdown Before Markup */}
+          <PreMarkupBreakdown result={result} />
+
+          {/* Requirement #9: Enhanced Totals with Crew Toggle */}
+          <EnhancedTotalsSection result={result} pricing={pricing} />
+
+          {/* Requirement #8: Job Duration Estimate */}
+          <JobDurationEstimate laborCost={result.labor} pricing={pricing} />
+
           <BidSummary result={result} />
           <CostBreakdown result={result} breakdown={result.breakdown} />
         </>

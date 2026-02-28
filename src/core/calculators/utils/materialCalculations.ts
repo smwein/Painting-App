@@ -1,6 +1,5 @@
 import type { PaintType, ExteriorPaintType, MaterialBreakdown, MaterialItem } from '../../../types/calculator.types';
-import { PAINT_PRICES, EXTERIOR_PAINT_PRICES } from '../../constants/pricing';
-import { INTERIOR_COVERAGE, EXTERIOR_COVERAGE } from '../../constants/coverage';
+import type { PricingSettings } from '../../../types/settings.types';
 
 interface InteriorMaterialInputs {
   wallSqft: number;
@@ -21,13 +20,16 @@ interface ExteriorMaterialInputs {
 /**
  * Calculate interior materials needed based on coverage rates
  */
-export function calculateInteriorMaterials(inputs: InteriorMaterialInputs): MaterialBreakdown {
+export function calculateInteriorMaterials(
+  inputs: InteriorMaterialInputs,
+  pricing: PricingSettings
+): MaterialBreakdown {
   const items: MaterialItem[] = [];
-  const pricePerGallon = PAINT_PRICES[inputs.paintType];
+  const pricePerGallon = pricing.interiorPaint[inputs.paintType];
 
   // Calculate gallons needed for walls
   if (inputs.wallSqft > 0) {
-    const wallGallons = Math.ceil(inputs.wallSqft / INTERIOR_COVERAGE.WALL_SQFT_PER_GALLON);
+    const wallGallons = Math.ceil(inputs.wallSqft / pricing.interiorCoverage.wallSqftPerGallon);
     items.push({
       name: `${inputs.paintType} - Walls`,
       quantity: wallGallons,
@@ -38,7 +40,7 @@ export function calculateInteriorMaterials(inputs: InteriorMaterialInputs): Mate
 
   // Calculate gallons needed for ceilings
   if (inputs.ceilingSqft > 0) {
-    const ceilingGallons = Math.ceil(inputs.ceilingSqft / INTERIOR_COVERAGE.CEILING_SQFT_PER_GALLON);
+    const ceilingGallons = Math.ceil(inputs.ceilingSqft / pricing.interiorCoverage.ceilingSqftPerGallon);
     items.push({
       name: `${inputs.paintType} - Ceilings`,
       quantity: ceilingGallons,
@@ -49,7 +51,7 @@ export function calculateInteriorMaterials(inputs: InteriorMaterialInputs): Mate
 
   // Calculate gallons needed for trim
   if (inputs.trimLF > 0) {
-    const trimGallons = Math.ceil(inputs.trimLF / INTERIOR_COVERAGE.TRIM_LF_PER_GALLON);
+    const trimGallons = Math.ceil(inputs.trimLF / pricing.interiorCoverage.trimLfPerGallon);
     items.push({
       name: `${inputs.paintType} - Trim`,
       quantity: trimGallons,
@@ -61,7 +63,7 @@ export function calculateInteriorMaterials(inputs: InteriorMaterialInputs): Mate
   // Calculate gallons needed for cabinets
   const totalCabinetDoors = inputs.cabinetDoors + inputs.newCabinetDoors;
   if (totalCabinetDoors > 0) {
-    const cabinetGallons = Math.ceil(totalCabinetDoors * INTERIOR_COVERAGE.CABINET_GALLONS_PER_DOOR);
+    const cabinetGallons = Math.ceil(totalCabinetDoors * pricing.interiorCoverage.cabinetGallonsPerDoor);
     items.push({
       name: `${inputs.paintType} - Cabinets`,
       quantity: cabinetGallons,
@@ -81,13 +83,16 @@ export function calculateInteriorMaterials(inputs: InteriorMaterialInputs): Mate
 /**
  * Calculate exterior materials needed based on coverage rates
  */
-export function calculateExteriorMaterials(inputs: ExteriorMaterialInputs): MaterialBreakdown {
+export function calculateExteriorMaterials(
+  inputs: ExteriorMaterialInputs,
+  pricing: PricingSettings
+): MaterialBreakdown {
   const items: MaterialItem[] = [];
-  const pricePerGallon = EXTERIOR_PAINT_PRICES[inputs.paintType];
+  const pricePerGallon = pricing.exteriorPaint[inputs.paintType];
 
   // Calculate gallons needed for walls/siding
   if (inputs.wallSqft > 0) {
-    const wallGallons = Math.ceil(inputs.wallSqft / EXTERIOR_COVERAGE.WALL_SQFT_PER_GALLON);
+    const wallGallons = Math.ceil(inputs.wallSqft / pricing.exteriorCoverage.wallSqftPerGallon);
     items.push({
       name: `${inputs.paintType} - Siding`,
       quantity: wallGallons,
@@ -98,7 +103,7 @@ export function calculateExteriorMaterials(inputs: ExteriorMaterialInputs): Mate
 
   // Calculate gallons needed for trim
   if (inputs.trimLF > 0) {
-    const trimGallons = Math.ceil(inputs.trimLF / EXTERIOR_COVERAGE.TRIM_LF_PER_GALLON);
+    const trimGallons = Math.ceil(inputs.trimLF / pricing.exteriorCoverage.trimLfPerGallon);
     items.push({
       name: `${inputs.paintType} - Trim/Fascia/Soffit`,
       quantity: trimGallons,
@@ -109,7 +114,7 @@ export function calculateExteriorMaterials(inputs: ExteriorMaterialInputs): Mate
 
   // Calculate gallons needed for doors
   if (inputs.doors > 0) {
-    const doorGallons = Math.ceil(inputs.doors * EXTERIOR_COVERAGE.DOOR_GALLONS_PER_DOOR);
+    const doorGallons = Math.ceil(inputs.doors * pricing.exteriorCoverage.doorGallonsPerDoor);
     items.push({
       name: `${inputs.paintType} - Doors`,
       quantity: doorGallons,
@@ -133,11 +138,12 @@ export function calculateSimpleMaterials(
   sqft: number,
   paintType: PaintType | ExteriorPaintType,
   coverageRate: number,
+  pricing: PricingSettings,
   isExterior: boolean = false
 ): MaterialBreakdown {
   const pricePerGallon = isExterior
-    ? EXTERIOR_PAINT_PRICES[paintType as ExteriorPaintType]
-    : PAINT_PRICES[paintType as PaintType];
+    ? pricing.exteriorPaint[paintType as ExteriorPaintType]
+    : pricing.interiorPaint[paintType as PaintType];
 
   const gallons = Math.ceil(sqft / coverageRate);
   const cost = gallons * pricePerGallon;

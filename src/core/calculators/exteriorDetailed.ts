@@ -3,7 +3,7 @@ import type {
   BidResult,
   ExteriorDetailedBreakdown,
 } from '../../types/calculator.types';
-import { EXTERIOR_DETAILED_RATES } from '../constants/pricing';
+import type { PricingSettings } from '../../types/settings.types';
 import { calculateExteriorMaterials } from './utils/materialCalculations';
 import { applyExteriorModifiers } from './utils/modifierApplications';
 
@@ -12,48 +12,55 @@ import { applyExteriorModifiers } from './utils/modifierApplications';
  * Complex calculator with 21 input fields, modifiers, materials, and markup
  */
 export function calculateExteriorDetailed(
-  inputs: ExteriorDetailedInputs
+  inputs: ExteriorDetailedInputs,
+  pricing: PricingSettings
 ): BidResult {
+  // Helper function to get rate for a line item
+  const getRate = (lineItemId: string): number => {
+    const item = pricing.lineItems.find((i) => i.id === lineItemId);
+    return item?.rate || 0;
+  };
+
   // 1. Calculate base labor from all line items
   let baseLabor = 0;
 
   // Measurements
   const measurementsLabor = {
-    walls: inputs.wallSqft * EXTERIOR_DETAILED_RATES.WALL_SQFT,
-    trimFasciaSoffit: inputs.trimFasciaSoffitLF * EXTERIOR_DETAILED_RATES.TRIM_FASCIA_SOFFIT_LF,
+    walls: inputs.wallSqft * getRate('ext-wall-sqft'),
+    trimFasciaSoffit: inputs.trimFasciaSoffitLF * getRate('ext-trim-fascia-soffit-lf'),
   };
   baseLabor += measurementsLabor.walls + measurementsLabor.trimFasciaSoffit;
 
   // Doors & Shutters
   const doorsAndShuttersLabor = {
-    doors: inputs.doors * EXTERIOR_DETAILED_RATES.DOOR,
-    shutters: inputs.shutters * EXTERIOR_DETAILED_RATES.SHUTTER,
-    doorsToRefinish: inputs.doorsToRefinish * EXTERIOR_DETAILED_RATES.DOOR_REFINISH,
+    doors: inputs.doors * getRate('ext-door'),
+    shutters: inputs.shutters * getRate('ext-shutter'),
+    doorsToRefinish: inputs.doorsToRefinish * getRate('ext-door-refinish'),
   };
   baseLabor += Object.values(doorsAndShuttersLabor).reduce((sum, val) => sum + val, 0);
 
   // Prep work
   const prepWorkLabor = {
-    priming: (inputs.primingSqft * EXTERIOR_DETAILED_RATES.PRIMING_SQFT) +
-             (inputs.primingLF * EXTERIOR_DETAILED_RATES.PRIMING_LF),
+    priming: (inputs.primingSqft * getRate('ext-priming-sqft')) +
+             (inputs.primingLF * getRate('ext-priming-lf')),
   };
   baseLabor += prepWorkLabor.priming;
 
   // Replacements & Repairs
   const replacementsAndRepairsLabor = {
-    sidingReplacement: inputs.sidingReplacementSqft * EXTERIOR_DETAILED_RATES.SIDING_REPLACEMENT_SQFT,
-    trimReplacement: inputs.trimReplacementLF * EXTERIOR_DETAILED_RATES.TRIM_REPLACEMENT_LF,
-    soffitFasciaReplacement: inputs.soffitFasciaReplacementLF * EXTERIOR_DETAILED_RATES.SOFFIT_FASCIA_REPLACEMENT_LF,
-    bondoRepairs: inputs.bondoRepairs * EXTERIOR_DETAILED_RATES.BONDO_REPAIR,
+    sidingReplacement: inputs.sidingReplacementSqft * getRate('ext-siding-replacement-sqft'),
+    trimReplacement: inputs.trimReplacementLF * getRate('ext-trim-replacement-lf'),
+    soffitFasciaReplacement: inputs.soffitFasciaReplacementLF * getRate('ext-soffit-fascia-replacement-lf'),
+    bondoRepairs: inputs.bondoRepairs * getRate('ext-bondo-repair'),
   };
   baseLabor += Object.values(replacementsAndRepairsLabor).reduce((sum, val) => sum + val, 0);
 
   // Additional work
   const additionalLabor = {
-    deckStaining: inputs.deckStainingSqft * EXTERIOR_DETAILED_RATES.DECK_STAINING_SQFT,
-    miscPressureWashing: inputs.miscPressureWashingSqft * EXTERIOR_DETAILED_RATES.MISC_PRESSURE_WASHING_SQFT,
-    miscWork: inputs.miscWorkHours * EXTERIOR_DETAILED_RATES.MISC_WORK_HOUR,
-    miscellaneous: inputs.miscellaneousDollars,
+    deckStaining: inputs.deckStainingSqft * getRate('ext-deck-staining-sqft'),
+    miscPressureWashing: inputs.miscPressureWashingSqft * getRate('ext-misc-pressure-washing-sqft'),
+    miscWork: inputs.miscWorkHours * getRate('ext-misc-work-hour'),
+    miscellaneous: inputs.miscellaneousDollars * getRate('ext-miscellaneous-dollars'),
   };
   baseLabor += Object.values(additionalLabor).reduce((sum, val) => sum + val, 0);
 
@@ -66,7 +73,7 @@ export function calculateExteriorDetailed(
     trimLF: inputs.trimFasciaSoffitLF,
     doors: inputs.doors,
     paintType: inputs.paintType,
-  });
+  }, pricing);
 
   // 4. Calculate profit (markup applied to labor + materials)
   const subtotal = modifiedLabor + materials.totalCost;

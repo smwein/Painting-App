@@ -4,19 +4,19 @@ import type {
   BidResult,
   MaterialBreakdown,
 } from '../../types/calculator.types';
-import { INTERIOR_SQFT_PRICING } from '../constants/pricing';
-import { INTERIOR_SQFT_MULTIPLIERS } from '../constants/coverage';
+import type { PricingSettings } from '../../types/settings.types';
 
 /**
  * Calculate auto-measurements based on house square footage
  */
 export function calculateInteriorSqftAutoMeasurements(
-  houseSquareFootage: number
+  houseSquareFootage: number,
+  pricing: PricingSettings
 ): InteriorSqftAutoCalcs {
   return {
-    wallSqft: houseSquareFootage * INTERIOR_SQFT_MULTIPLIERS.WALL_MULTIPLIER,
-    ceilingSqft: houseSquareFootage * INTERIOR_SQFT_MULTIPLIERS.CEILING_MULTIPLIER,
-    trimLF: houseSquareFootage * INTERIOR_SQFT_MULTIPLIERS.TRIM_MULTIPLIER,
+    wallSqft: houseSquareFootage * pricing.interiorMultipliers.wall,
+    ceilingSqft: houseSquareFootage * pricing.interiorMultipliers.ceiling,
+    trimLF: houseSquareFootage * pricing.interiorMultipliers.trim,
   };
 }
 
@@ -25,28 +25,29 @@ export function calculateInteriorSqftAutoMeasurements(
  * Simple calculator with house SF, pricing option, and markup
  */
 export function calculateInteriorSquareFootage(
-  inputs: InteriorSqftInputs
+  inputs: InteriorSqftInputs,
+  pricing: PricingSettings
 ): BidResult {
   // Calculate labor COST based on pricing option
   let laborCost = 0;
 
   switch (inputs.pricingOption) {
     case 'walls-only':
-      laborCost = inputs.houseSquareFootage * INTERIOR_SQFT_PRICING.WALLS_ONLY;
+      laborCost = inputs.houseSquareFootage * pricing.interiorSqft.wallsOnly;
       break;
     case 'trim-only':
-      laborCost = inputs.houseSquareFootage * INTERIOR_SQFT_PRICING.TRIM_ONLY;
+      laborCost = inputs.houseSquareFootage * pricing.interiorSqft.trimOnly;
       break;
     case 'ceilings-only':
-      laborCost = inputs.houseSquareFootage * INTERIOR_SQFT_PRICING.CEILINGS_ONLY;
+      laborCost = inputs.houseSquareFootage * pricing.interiorSqft.ceilingsOnly;
       break;
     case 'complete':
-      laborCost = inputs.houseSquareFootage * INTERIOR_SQFT_PRICING.COMPLETE;
+      laborCost = inputs.houseSquareFootage * pricing.interiorSqft.complete;
       break;
   }
 
   // Calculate auto-measurements
-  const autoCalcs = calculateInteriorSqftAutoMeasurements(inputs.houseSquareFootage);
+  const autoCalcs = calculateInteriorSqftAutoMeasurements(inputs.houseSquareFootage, pricing);
 
   // No materials in simple method
   const materials: MaterialBreakdown = {

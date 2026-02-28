@@ -8,12 +8,19 @@ import { PaintTypeSelector } from './shared/PaintTypeSelector';
 import { MarkupSelector } from './shared/MarkupSelector';
 import { BidSummary } from '../results/BidSummary';
 import { CostBreakdown } from '../results/CostBreakdown';
+import { PaintGallonsEstimate } from '../results/PaintGallonsEstimate';
+import { PreMarkupBreakdown } from '../results/PreMarkupBreakdown';
+import { JobDurationEstimate } from '../results/JobDurationEstimate';
+import { EnhancedTotalsSection } from '../results/EnhancedTotalsSection';
+import { useSettingsStore } from '../../store/settingsStore';
 import type { InteriorDetailedInputs } from '../../types/calculator.types';
 import type { CustomerInfo, Bid } from '../../types/bid.types';
 import { calculateInteriorDetailed } from '../../core/calculators/interiorDetailed';
+import { calculateInteriorSqftAutoMeasurements } from '../../core/calculators/interiorSquareFootage';
 
 interface InteriorDetailedFormData {
   customer: CustomerInfo;
+  houseSquareFootage: number;
   wallSqft: number;
   ceilingSqft: number;
   trimLF: number;
@@ -57,8 +64,12 @@ interface InteriorDetailedProps {
 }
 
 export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailedProps) {
-  const { register, watch, reset } = useForm<InteriorDetailedFormData>({
+  const { settings } = useSettingsStore();
+  const pricing = settings.pricing;
+
+  const { register, watch, reset, setValue } = useForm<InteriorDetailedFormData>({
     defaultValues: {
+      houseSquareFootage: 0,
       wallSqft: 0,
       ceilingSqft: 0,
       trimLF: 0,
@@ -90,6 +101,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
   });
 
   // Watch calculation fields separately from customer fields
+  const houseSquareFootage = watch('houseSquareFootage');
   const wallSqft = watch('wallSqft');
   const ceilingSqft = watch('ceilingSqft');
   const trimLF = watch('trimLF');
@@ -190,7 +202,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
       },
     };
 
-    return calculateInteriorDetailed(inputs);
+    return calculateInteriorDetailed(inputs, pricing);
   }, [
     wallSqft, ceilingSqft, trimLF, doors, cabinetDoors, cabinetDrawers,
     newCabinetDoors, newCabinetDrawers, colorsAboveThree, wallpaperRemovalSqft,
@@ -198,6 +210,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
     wallTextureRemovalSqft, trimReplacementLF, drywallRepairs, accentWalls,
     miscWorkHours, miscellaneousDollars, paintType, markup,
     modifierHeavilyFurnished, modifierEmptyHouse, modifierExtensivePrep,
+    pricing,
     modifierAdditionalCoat, modifierOneCoat
   ]);
 
@@ -244,9 +257,40 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
     }
   }, [result, customer, onResultChange]);
 
+  // Auto-populate measurements when house SF changes (Requirement #1)
+  useEffect(() => {
+    if (houseSquareFootage && houseSquareFootage > 0) {
+      const autoCalcs = calculateInteriorSqftAutoMeasurements(houseSquareFootage, pricing);
+      setValue('wallSqft', autoCalcs.wallSqft);
+      setValue('ceilingSqft', autoCalcs.ceilingSqft);
+      setValue('trimLF', autoCalcs.trimLF);
+    }
+  }, [houseSquareFootage, pricing, setValue]);
+
   return (
     <div className="space-y-6">
       <CustomerInfoSection register={register} />
+
+      {/* Requirement #1: House SF Auto-Calculate */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardHeader>
+          <CardTitle>House Square Footage (Auto-Calculate)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Input
+            label="House Square Footage"
+            type="number"
+            min="0"
+            step="1"
+            placeholder="0"
+            {...register('houseSquareFootage', { valueAsNumber: true })}
+          />
+          <p className="text-xs text-gray-500 mt-2">
+            Optional: Enter house square footage to auto-populate wall, ceiling, and trim measurements below.
+            You can override any auto-calculated values.
+          </p>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -446,6 +490,18 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
 
       {result && result.total > 0 && (
         <>
+          {/* Requirement #5: Paint Gallons Estimate */}
+          <PaintGallonsEstimate result={result} />
+
+          {/* Requirement #6: Cost Breakdown Before Markup */}
+          <PreMarkupBreakdown result={result} />
+
+          {/* Requirement #9: Enhanced Totals with Crew Toggle */}
+          <EnhancedTotalsSection result={result} pricing={pricing} />
+
+          {/* Requirement #8: Job Duration Estimate */}
+          <JobDurationEstimate laborCost={result.labor} pricing={pricing} />
+
           <BidSummary result={result} />
           <CostBreakdown result={result} breakdown={result.breakdown} />
         </>

@@ -4,18 +4,18 @@ import type {
   BidResult,
   MaterialBreakdown,
 } from '../../types/calculator.types';
-import { EXTERIOR_SQFT_PRICING } from '../constants/pricing';
-import { EXTERIOR_SQFT_MULTIPLIERS } from '../constants/coverage';
+import type { PricingSettings } from '../../types/settings.types';
 
 /**
  * Calculate auto-measurements based on house square footage
  */
 export function calculateExteriorSqftAutoMeasurements(
-  houseSquareFootage: number
+  houseSquareFootage: number,
+  pricing: PricingSettings
 ): ExteriorSqftAutoCalcs {
   return {
-    sidingSqft: houseSquareFootage * EXTERIOR_SQFT_MULTIPLIERS.SIDING_MULTIPLIER,
-    trimLF: houseSquareFootage * EXTERIOR_SQFT_MULTIPLIERS.TRIM_MULTIPLIER,
+    sidingSqft: houseSquareFootage * pricing.exteriorMultipliers.siding,
+    trimLF: houseSquareFootage * pricing.exteriorMultipliers.trim,
   };
 }
 
@@ -24,22 +24,23 @@ export function calculateExteriorSqftAutoMeasurements(
  * Simple calculator with house SF, pricing option, and markup
  */
 export function calculateExteriorSquareFootage(
-  inputs: ExteriorSqftInputs
+  inputs: ExteriorSqftInputs,
+  pricing: PricingSettings
 ): BidResult {
   // Calculate labor COST based on pricing option
   let laborCost = 0;
 
   switch (inputs.pricingOption) {
     case 'full-exterior':
-      laborCost = inputs.houseSquareFootage * EXTERIOR_SQFT_PRICING.FULL_EXTERIOR;
+      laborCost = inputs.houseSquareFootage * pricing.exteriorSqft.fullExterior;
       break;
     case 'trim-only':
-      laborCost = inputs.houseSquareFootage * EXTERIOR_SQFT_PRICING.TRIM_ONLY;
+      laborCost = inputs.houseSquareFootage * pricing.exteriorSqft.trimOnly;
       break;
   }
 
   // Calculate auto-measurements
-  const autoCalcs = calculateExteriorSqftAutoMeasurements(inputs.houseSquareFootage);
+  const autoCalcs = calculateExteriorSqftAutoMeasurements(inputs.houseSquareFootage, pricing);
 
   // No materials in simple method
   const materials: MaterialBreakdown = {

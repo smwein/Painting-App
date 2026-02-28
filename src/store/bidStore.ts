@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Bid, BidListItem } from '../types/bid.types';
+import { migrateBidToCurrentVersion } from '../utils/bidMigration';
+import { useSettingsStore } from './settingsStore';
 
 interface BidState {
   bids: Bid[];
@@ -41,8 +43,11 @@ export const useBidStore = create<BidState>()(
       loadBid: (id) => {
         const bid = get().bids.find((b) => b.id === id);
         if (bid) {
-          set({ currentBid: bid });
-          return bid;
+          // Migrate bid to current version for backward compatibility
+          const pricing = useSettingsStore.getState().settings.pricing;
+          const migratedBid = migrateBidToCurrentVersion(bid, pricing);
+          set({ currentBid: migratedBid });
+          return migratedBid;
         }
         return null;
       },
