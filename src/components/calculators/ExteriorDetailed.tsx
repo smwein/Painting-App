@@ -7,7 +7,6 @@ import { ModifierSection } from './shared/ModifierSection';
 import { PaintTypeSelector } from './shared/PaintTypeSelector';
 import { MarkupSelector } from './shared/MarkupSelector';
 import { BidSummary } from '../results/BidSummary';
-import { CostBreakdown } from '../results/CostBreakdown';
 import { PaintGallonsEstimate } from '../results/PaintGallonsEstimate';
 import { PreMarkupBreakdown } from '../results/PreMarkupBreakdown';
 import { JobDurationEstimate } from '../results/JobDurationEstimate';
@@ -439,7 +438,6 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
           <JobDurationEstimate laborCost={result.labor} pricing={pricing} />
 
           <BidSummary result={result} />
-          <CostBreakdown result={result} breakdown={result.breakdown} />
         </>
       )}
     </div>
