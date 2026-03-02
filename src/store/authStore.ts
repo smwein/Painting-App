@@ -5,7 +5,7 @@ import {
   onAuthStateChanged,
   type User,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../config/firebase';
 
 export type UserRole = 'admin' | 'user';
@@ -18,6 +18,13 @@ export interface AuthUser {
   role: UserRole;
 }
 
+export interface UserRecord {
+  uid: string;
+  email: string;
+  role: UserRole;
+  createdAt: string;
+}
+
 interface AuthState {
   user: AuthUser | null;
   loading: boolean;
@@ -26,6 +33,8 @@ interface AuthState {
   signOut: () => Promise<void>;
   clearError: () => void;
   initialize: () => () => void; // returns unsubscribe function
+  fetchAllUsers: () => Promise<UserRecord[]>;
+  updateUserRole: (uid: string, role: UserRole) => Promise<void>;
 }
 
 const ALLOWED_DOMAIN = 'texpainting.com';
@@ -122,4 +131,18 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   clearError: () => set({ error: null }),
+
+  fetchAllUsers: async () => {
+    const snapshot = await getDocs(collection(db, 'users'));
+    return snapshot.docs.map((d) => ({
+      uid: d.id,
+      email: d.data().email ?? '',
+      role: (d.data().role ?? 'user') as UserRole,
+      createdAt: d.data().createdAt ?? '',
+    }));
+  },
+
+  updateUserRole: async (uid: string, role: UserRole) => {
+    await updateDoc(doc(db, 'users', uid), { role });
+  },
 }));

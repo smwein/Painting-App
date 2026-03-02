@@ -5,6 +5,7 @@ import { DetailedPricingSettings } from '../components/settings/DetailedPricingS
 import { CustomLineItemsManager } from '../components/settings/CustomLineItemsManager';
 import { CustomSectionsManager } from '../components/settings/CustomSectionsManager';
 import { JobEstimationSettings } from '../components/settings/JobEstimationSettings';
+import { UsersSettings } from '../components/settings/UsersSettings';
 
 type SettingsTab =
   | 'company'
@@ -12,7 +13,8 @@ type SettingsTab =
   | 'detailed-pricing'
   | 'line-items'
   | 'sections'
-  | 'crew-rates';
+  | 'crew-rates'
+  | 'users';
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('company');
@@ -60,6 +62,12 @@ export function Settings() {
           >
             Job Estimation
           </TabButton>
+          <TabButton
+            active={activeTab === 'users'}
+            onClick={() => setActiveTab('users')}
+          >
+            Users
+          </TabButton>
         </nav>
       </div>
 
@@ -71,6 +79,7 @@ export function Settings() {
         {activeTab === 'line-items' && <CustomLineItemsManager />}
         {activeTab === 'sections' && <CustomSectionsManager />}
         {activeTab === 'crew-rates' && <JobEstimationSettings />}
+        {activeTab === 'users' && <UsersSettings />}
       </div>
     </div>
   );
