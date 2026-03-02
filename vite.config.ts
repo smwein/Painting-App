@@ -8,6 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      devOptions: { enabled: false }, // never register SW in dev mode
       includeAssets: ['favicon.ico', 'icons/*.png'],
       manifest: {
         name: 'Painting Bid Calculator',
