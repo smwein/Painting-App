@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
+import { useAuthStore } from '../../store/authStore';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,19 +9,46 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
+  const { user, signOut } = useAuthStore();
+  const isAdmin = user?.role === 'admin';
 
   const navItems = [
     { path: '/', label: 'Home', icon: '🏠' },
     { path: '/saved-bids', label: 'Bids', icon: '📋' },
-    { path: '/settings', label: 'Settings', icon: '⚙️' },
+    ...(isAdmin ? [{ path: '/settings', label: 'Settings', icon: '⚙️' }] : []),
   ];
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-primary-700 text-white shadow-md sticky top-0 z-10">
-        <div className="px-4 py-3">
+        <div className="px-4 py-3 flex items-center justify-between">
           <h1 className="text-xl font-bold">Bid Calculator</h1>
+
+          {/* User info + sign out */}
+          {user && (
+            <div className="flex items-center gap-2">
+              {user.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt={user.displayName}
+                  className="w-7 h-7 rounded-full border-2 border-white/30"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-sm font-semibold">
+                  {user.displayName.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <button
+                onClick={signOut}
+                className="text-xs text-white/70 hover:text-white transition-colors"
+                title="Sign out"
+              >
+                Sign out
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
