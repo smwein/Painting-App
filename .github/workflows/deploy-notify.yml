@@ -1,0 +1,82 @@
+name: Notify on DigitalOcean Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  wait-and-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for DigitalOcean deployment to finish
+        id: wait
+        env:
+          DO_API_TOKEN: ${{ secrets.DO_API_TOKEN }}
+          DO_APP_ID: ${{ secrets.DO_APP_ID }}
+        run: |
+          echo "Waiting for DigitalOcean to start the deployment..."
+          sleep 15
+
+          MAX_ATTEMPTS=30   # 30 × 30s = 15 minutes max
+          ATTEMPT=0
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            RESPONSE=$(curl -sf -X GET \
+              -H "Authorization: Bearer $DO_API_TOKEN" \
+              "https://api.digitalocean.com/v2/apps/$DO_APP_ID/deployments?page=1&per_page=1")
+
+            PHASE=$(echo "$RESPONSE" | jq -r '.deployments[0].phase')
+            DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.deployments[0].id')
+
+            echo "Attempt $((ATTEMPT+1)): Deployment $DEPLOY_ID phase = $PHASE"
+
+            case "$PHASE" in
+              ACTIVE)
+                echo "status=success" >> "$GITHUB_OUTPUT"
+                echo "phase=$PHASE" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+              ERROR|CANCELED|FAILED)
+                echo "status=failure" >> "$GITHUB_OUTPUT"
+                echo "phase=$PHASE" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+            esac
+
+            ATTEMPT=$((ATTEMPT+1))
+            sleep 30
+          done
+
+          echo "status=timeout" >> "$GITHUB_OUTPUT"
+
+      - name: Send ntfy notification
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          STATUS: ${{ steps.wait.outputs.status }}
+          PHASE: ${{ steps.wait.outputs.phase }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          PUSHER: ${{ github.event.pusher.name }}
+        run: |
+          if [ "$STATUS" = "success" ]; then
+            TITLE="✅ Deployment Complete"
+            TAGS="white_check_mark"
+            PRIORITY="default"
+          elif [ "$STATUS" = "timeout" ]; then
+            TITLE="⏱️ Deployment Timed Out"
+            TAGS="hourglass"
+            PRIORITY="high"
+          else
+            TITLE="❌ Deployment Failed ($PHASE)"
+            TAGS="x"
+            PRIORITY="high"
+          fi
+
+          # Trim commit message to first line
+          SHORT_MSG=$(echo "$COMMIT_MSG" | head -1 | cut -c1-80)
+
+          curl -sf \
+            -H "Title: $TITLE" \
+            -H "Tags: $TAGS" \
+            -H "Priority: $PRIORITY" \
+            -d "By $PUSHER: $SHORT_MSG" \
+            "https://ntfy.sh/$NTFY_TOPIC"
