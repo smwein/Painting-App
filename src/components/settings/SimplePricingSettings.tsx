@@ -10,10 +10,20 @@ export function SimplePricingSettings() {
   const [formData, setFormData] = useState(settings.pricing);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  // New paint type inputs
+  const [newIntPaintName, setNewIntPaintName] = useState('');
+  const [newIntPaintPrice, setNewIntPaintPrice] = useState('');
+  const [newExtPaintName, setNewExtPaintName] = useState('');
+  const [newExtPaintPrice, setNewExtPaintPrice] = useState('');
 
   const simpleSections = settings.pricing.sections
     .filter((s) => s.calculatorType === 'simple-pricing')
     .sort((a, b) => a.order - b.order);
+
+  const toggleCollapse = (id: string) =>
+    setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
 
   const moveSection = (section: SectionConfig, direction: 'up' | 'down') => {
     const idx = simpleSections.findIndex((s) => s.id === section.id);
@@ -40,6 +50,40 @@ export function SimplePricingSettings() {
     });
   };
 
+  const handlePaintPriceChange = (type: 'interior' | 'exterior', name: string, value: number) => {
+    const key = type === 'interior' ? 'interiorPaint' : 'exteriorPaint';
+    setFormData((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [name]: value },
+    }));
+  };
+
+  const handleAddPaintType = (type: 'interior' | 'exterior') => {
+    const name = type === 'interior' ? newIntPaintName.trim() : newExtPaintName.trim();
+    const priceStr = type === 'interior' ? newIntPaintPrice : newExtPaintPrice;
+    const price = parseFloat(priceStr);
+    if (!name || isNaN(price) || price <= 0) {
+      alert('Please enter a valid paint name and price.');
+      return;
+    }
+    const key = type === 'interior' ? 'interiorPaint' : 'exteriorPaint';
+    setFormData((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [name]: price },
+    }));
+    if (type === 'interior') { setNewIntPaintName(''); setNewIntPaintPrice(''); }
+    else { setNewExtPaintName(''); setNewExtPaintPrice(''); }
+  };
+
+  const handleRemovePaintType = (type: 'interior' | 'exterior', name: string) => {
+    const key = type === 'interior' ? 'interiorPaint' : 'exteriorPaint';
+    setFormData((prev) => {
+      const updated = { ...prev[key] };
+      delete updated[name];
+      return { ...prev, [key]: updated };
+    });
+  };
+
   const handleSave = () => {
     updatePricing(formData);
     alert('Simple pricing settings saved successfully!');
@@ -55,33 +99,25 @@ export function SimplePricingSettings() {
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="Walls Only"
-            type="number"
-            min="0"
-            step="0.01"
+            type="number" min="0" step="0.01"
             value={formData.interiorSqft.wallsOnly}
             onChange={(e) => handleNumberChange('interiorSqft.wallsOnly', parseFloat(e.target.value))}
           />
           <Input
             label="Trim Only"
-            type="number"
-            min="0"
-            step="0.01"
+            type="number" min="0" step="0.01"
             value={formData.interiorSqft.trimOnly}
             onChange={(e) => handleNumberChange('interiorSqft.trimOnly', parseFloat(e.target.value))}
           />
           <Input
             label="Ceilings Only"
-            type="number"
-            min="0"
-            step="0.01"
+            type="number" min="0" step="0.01"
             value={formData.interiorSqft.ceilingsOnly}
             onChange={(e) => handleNumberChange('interiorSqft.ceilingsOnly', parseFloat(e.target.value))}
           />
           <Input
             label="Complete Interior"
-            type="number"
-            min="0"
-            step="0.01"
+            type="number" min="0" step="0.01"
             value={formData.interiorSqft.complete}
             onChange={(e) => handleNumberChange('interiorSqft.complete', parseFloat(e.target.value))}
           />
@@ -96,33 +132,25 @@ export function SimplePricingSettings() {
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="Walls Only"
-            type="number"
-            min="0"
-            step="0.01"
+            type="number" min="0" step="0.01"
             value={formData.interiorSqftEmpty?.wallsOnly ?? 1.25}
             onChange={(e) => handleNumberChange('interiorSqftEmpty.wallsOnly', parseFloat(e.target.value))}
           />
           <Input
             label="Trim Only"
-            type="number"
-            min="0"
-            step="0.01"
+            type="number" min="0" step="0.01"
             value={formData.interiorSqftEmpty?.trimOnly ?? 1.00}
             onChange={(e) => handleNumberChange('interiorSqftEmpty.trimOnly', parseFloat(e.target.value))}
           />
           <Input
             label="Ceilings Only"
-            type="number"
-            min="0"
-            step="0.01"
+            type="number" min="0" step="0.01"
             value={formData.interiorSqftEmpty?.ceilingsOnly ?? 0.75}
             onChange={(e) => handleNumberChange('interiorSqftEmpty.ceilingsOnly', parseFloat(e.target.value))}
           />
           <Input
             label="Complete Interior"
-            type="number"
-            min="0"
-            step="0.01"
+            type="number" min="0" step="0.01"
             value={formData.interiorSqftEmpty?.complete ?? 2.00}
             onChange={(e) => handleNumberChange('interiorSqftEmpty.complete', parseFloat(e.target.value))}
           />
@@ -137,17 +165,13 @@ export function SimplePricingSettings() {
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="Full Exterior"
-            type="number"
-            min="0"
-            step="0.01"
+            type="number" min="0" step="0.01"
             value={formData.exteriorSqft.fullExterior}
             onChange={(e) => handleNumberChange('exteriorSqft.fullExterior', parseFloat(e.target.value))}
           />
           <Input
             label="Trim Only"
-            type="number"
-            min="0"
-            step="0.01"
+            type="number" min="0" step="0.01"
             value={formData.exteriorSqft.trimOnly}
             onChange={(e) => handleNumberChange('exteriorSqft.trimOnly', parseFloat(e.target.value))}
           />
@@ -159,39 +183,47 @@ export function SimplePricingSettings() {
         <CardHeader>
           <CardTitle>Interior Paint Prices (per gallon)</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <Input
-            label="ProMar"
-            type="number"
-            min="0"
-            step="1"
-            value={formData.interiorPaint.ProMar}
-            onChange={(e) => handleNumberChange('interiorPaint.ProMar', parseFloat(e.target.value))}
-          />
-          <Input
-            label="SuperPaint"
-            type="number"
-            min="0"
-            step="1"
-            value={formData.interiorPaint.SuperPaint}
-            onChange={(e) => handleNumberChange('interiorPaint.SuperPaint', parseFloat(e.target.value))}
-          />
-          <Input
-            label="Duration"
-            type="number"
-            min="0"
-            step="1"
-            value={formData.interiorPaint.Duration}
-            onChange={(e) => handleNumberChange('interiorPaint.Duration', parseFloat(e.target.value))}
-          />
-          <Input
-            label="Emerald"
-            type="number"
-            min="0"
-            step="1"
-            value={formData.interiorPaint.Emerald}
-            onChange={(e) => handleNumberChange('interiorPaint.Emerald', parseFloat(e.target.value))}
-          />
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {Object.entries(formData.interiorPaint).map(([name, price]) => (
+              <div key={name} className="relative">
+                <Input
+                  label={name}
+                  type="number" min="0" step="1"
+                  value={price}
+                  onChange={(e) => handlePaintPriceChange('interior', name, parseFloat(e.target.value))}
+                />
+                <button
+                  onClick={() => handleRemovePaintType('interior', name)}
+                  className="absolute top-0 right-0 text-red-400 hover:text-red-600 text-xs px-1"
+                  title="Remove paint type"
+                >✕</button>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2 items-end pt-2 border-t border-gray-100">
+            <div className="flex-1">
+              <Input
+                label="New Paint Name"
+                type="text"
+                value={newIntPaintName}
+                onChange={(e) => setNewIntPaintName(e.target.value)}
+                placeholder="e.g., Cashmere"
+              />
+            </div>
+            <div className="w-28">
+              <Input
+                label="Price ($/gal)"
+                type="number" min="0" step="1"
+                value={newIntPaintPrice}
+                onChange={(e) => setNewIntPaintPrice(e.target.value)}
+                placeholder="55"
+              />
+            </div>
+            <Button onClick={() => handleAddPaintType('interior')} variant="outline" size="sm" className="mb-0.5">
+              + Add
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -200,31 +232,47 @@ export function SimplePricingSettings() {
         <CardHeader>
           <CardTitle>Exterior Paint Prices (per gallon)</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Input
-            label="SuperPaint"
-            type="number"
-            min="0"
-            step="1"
-            value={formData.exteriorPaint.SuperPaint}
-            onChange={(e) => handleNumberChange('exteriorPaint.SuperPaint', parseFloat(e.target.value))}
-          />
-          <Input
-            label="Duration"
-            type="number"
-            min="0"
-            step="1"
-            value={formData.exteriorPaint.Duration}
-            onChange={(e) => handleNumberChange('exteriorPaint.Duration', parseFloat(e.target.value))}
-          />
-          <Input
-            label="Emerald"
-            type="number"
-            min="0"
-            step="1"
-            value={formData.exteriorPaint.Emerald}
-            onChange={(e) => handleNumberChange('exteriorPaint.Emerald', parseFloat(e.target.value))}
-          />
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {Object.entries(formData.exteriorPaint).map(([name, price]) => (
+              <div key={name} className="relative">
+                <Input
+                  label={name}
+                  type="number" min="0" step="1"
+                  value={price}
+                  onChange={(e) => handlePaintPriceChange('exterior', name, parseFloat(e.target.value))}
+                />
+                <button
+                  onClick={() => handleRemovePaintType('exterior', name)}
+                  className="absolute top-0 right-0 text-red-400 hover:text-red-600 text-xs px-1"
+                  title="Remove paint type"
+                >✕</button>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2 items-end pt-2 border-t border-gray-100">
+            <div className="flex-1">
+              <Input
+                label="New Paint Name"
+                type="text"
+                value={newExtPaintName}
+                onChange={(e) => setNewExtPaintName(e.target.value)}
+                placeholder="e.g., A-100"
+              />
+            </div>
+            <div className="w-28">
+              <Input
+                label="Price ($/gal)"
+                type="number" min="0" step="1"
+                value={newExtPaintPrice}
+                onChange={(e) => setNewExtPaintPrice(e.target.value)}
+                placeholder="40"
+              />
+            </div>
+            <Button onClick={() => handleAddPaintType('exterior')} variant="outline" size="sm" className="mb-0.5">
+              + Add
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -236,33 +284,25 @@ export function SimplePricingSettings() {
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="Wall Sq Ft per Gallon"
-            type="number"
-            min="0"
-            step="1"
+            type="number" min="0" step="1"
             value={formData.interiorCoverage.wallSqftPerGallon}
             onChange={(e) => handleNumberChange('interiorCoverage.wallSqftPerGallon', parseFloat(e.target.value))}
           />
           <Input
             label="Ceiling Sq Ft per Gallon"
-            type="number"
-            min="0"
-            step="1"
+            type="number" min="0" step="1"
             value={formData.interiorCoverage.ceilingSqftPerGallon}
             onChange={(e) => handleNumberChange('interiorCoverage.ceilingSqftPerGallon', parseFloat(e.target.value))}
           />
           <Input
             label="Trim LF per Gallon"
-            type="number"
-            min="0"
-            step="1"
+            type="number" min="0" step="1"
             value={formData.interiorCoverage.trimLfPerGallon}
             onChange={(e) => handleNumberChange('interiorCoverage.trimLfPerGallon', parseFloat(e.target.value))}
           />
           <Input
             label="Cabinet Gallons per Door"
-            type="number"
-            min="0"
-            step="0.01"
+            type="number" min="0" step="0.01"
             value={formData.interiorCoverage.cabinetGallonsPerDoor}
             onChange={(e) => handleNumberChange('interiorCoverage.cabinetGallonsPerDoor', parseFloat(e.target.value))}
           />
@@ -277,25 +317,19 @@ export function SimplePricingSettings() {
         <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Input
             label="Wall Sq Ft per Gallon"
-            type="number"
-            min="0"
-            step="1"
+            type="number" min="0" step="1"
             value={formData.exteriorCoverage.wallSqftPerGallon}
             onChange={(e) => handleNumberChange('exteriorCoverage.wallSqftPerGallon', parseFloat(e.target.value))}
           />
           <Input
             label="Trim LF per Gallon"
-            type="number"
-            min="0"
-            step="1"
+            type="number" min="0" step="1"
             value={formData.exteriorCoverage.trimLfPerGallon}
             onChange={(e) => handleNumberChange('exteriorCoverage.trimLfPerGallon', parseFloat(e.target.value))}
           />
           <Input
             label="Door Gallons per Door"
-            type="number"
-            min="0"
-            step="0.01"
+            type="number" min="0" step="0.01"
             value={formData.exteriorCoverage.doorGallonsPerDoor}
             onChange={(e) => handleNumberChange('exteriorCoverage.doorGallonsPerDoor', parseFloat(e.target.value))}
           />
@@ -310,27 +344,21 @@ export function SimplePricingSettings() {
         <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Input
             label="Wall Multiplier"
-            type="number"
-            min="0"
-            step="0.1"
+            type="number" min="0" step="0.1"
             value={formData.interiorMultipliers.wall}
             onChange={(e) => handleNumberChange('interiorMultipliers.wall', parseFloat(e.target.value))}
             helperText="House SF × this = Wall SF"
           />
           <Input
             label="Ceiling Multiplier"
-            type="number"
-            min="0"
-            step="0.1"
+            type="number" min="0" step="0.1"
             value={formData.interiorMultipliers.ceiling}
             onChange={(e) => handleNumberChange('interiorMultipliers.ceiling', parseFloat(e.target.value))}
             helperText="House SF × this = Ceiling SF"
           />
           <Input
             label="Trim Multiplier"
-            type="number"
-            min="0"
-            step="0.01"
+            type="number" min="0" step="0.01"
             value={formData.interiorMultipliers.trim}
             onChange={(e) => handleNumberChange('interiorMultipliers.trim', parseFloat(e.target.value))}
             helperText="House SF × this = Trim LF"
@@ -345,18 +373,14 @@ export function SimplePricingSettings() {
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="Siding Multiplier"
-            type="number"
-            min="0"
-            step="0.1"
+            type="number" min="0" step="0.1"
             value={formData.exteriorMultipliers.siding}
             onChange={(e) => handleNumberChange('exteriorMultipliers.siding', parseFloat(e.target.value))}
             helperText="House SF × this = Siding SF"
           />
           <Input
             label="Trim Multiplier"
-            type="number"
-            min="0"
-            step="0.01"
+            type="number" min="0" step="0.01"
             value={formData.exteriorMultipliers.trim}
             onChange={(e) => handleNumberChange('exteriorMultipliers.trim', parseFloat(e.target.value))}
             helperText="House SF × this = Trim LF"
@@ -364,7 +388,7 @@ export function SimplePricingSettings() {
         </CardContent>
       </Card>
 
-      {/* Simple Pricing Sections */}
+      {/* Simple Pricing Sections with collapse */}
       {simpleSections.length > 0 && (
         <Card>
           <CardHeader>
@@ -374,40 +398,49 @@ export function SimplePricingSettings() {
             {simpleSections.map((section, idx) => {
               const itemCount = settings.pricing.lineItems.filter((i) => i.category === section.id).length;
               const isEditing = editingId === section.id;
+              const isCollapsed = collapsed[section.id];
               return (
-                <div key={section.id} className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg bg-gray-50">
-                  <div className="flex flex-col gap-0.5">
-                    <button onClick={() => moveSection(section, 'up')} disabled={idx === 0} className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs">▲</button>
-                    <button onClick={() => moveSection(section, 'down')} disabled={idx === simpleSections.length - 1} className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs">▼</button>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') { updateSection(section.id, { name: editingName.trim() }); setEditingId(null); }
-                          if (e.key === 'Escape') setEditingId(null);
-                        }}
-                        autoFocus
-                        className="w-full px-2 py-1 text-sm border border-primary-400 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      />
-                    ) : (
-                      <span className="font-medium text-gray-900 text-sm">{section.name}
-                        <span className="ml-2 text-xs text-gray-500">· {itemCount} item{itemCount !== 1 ? 's' : ''}</span>
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex gap-1">
-                    {isEditing ? (
-                      <>
-                        <Button onClick={() => { updateSection(section.id, { name: editingName.trim() }); setEditingId(null); }} variant="primary" size="sm">Save</Button>
-                        <Button onClick={() => setEditingId(null)} variant="outline" size="sm">Cancel</Button>
-                      </>
-                    ) : (
-                      <Button onClick={() => { setEditingId(section.id); setEditingName(section.name); }} variant="outline" size="sm">Edit</Button>
-                    )}
+                <div key={section.id} className="border border-gray-200 rounded-lg bg-gray-50">
+                  <div className="flex items-center gap-2 p-3">
+                    <div className="flex flex-col gap-0.5">
+                      <button onClick={() => moveSection(section, 'up')} disabled={idx === 0} className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs">▲</button>
+                      <button onClick={() => moveSection(section, 'down')} disabled={idx === simpleSections.length - 1} className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs">▼</button>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') { updateSection(section.id, { name: editingName.trim() }); setEditingId(null); }
+                            if (e.key === 'Escape') setEditingId(null);
+                          }}
+                          autoFocus
+                          className="w-full px-2 py-1 text-sm border border-primary-400 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        />
+                      ) : (
+                        <span className="font-medium text-gray-900 text-sm">{section.name}
+                          <span className="ml-2 text-xs text-gray-500">· {itemCount} item{itemCount !== 1 ? 's' : ''}</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => toggleCollapse(section.id)}
+                        className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded border border-gray-200 bg-white"
+                      >
+                        {isCollapsed ? '+ Show' : '− Hide'}
+                      </button>
+                      {isEditing ? (
+                        <>
+                          <Button onClick={() => { updateSection(section.id, { name: editingName.trim() }); setEditingId(null); }} variant="primary" size="sm">Save</Button>
+                          <Button onClick={() => setEditingId(null)} variant="outline" size="sm">Cancel</Button>
+                        </>
+                      ) : (
+                        <Button onClick={() => { setEditingId(section.id); setEditingName(section.name); }} variant="outline" size="sm">Edit</Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

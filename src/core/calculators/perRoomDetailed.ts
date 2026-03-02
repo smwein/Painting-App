@@ -110,8 +110,9 @@ export function calculatePerRoom(
   };
 
   const subtotal = totalLabor + totalMaterialCost;
-  const profit = subtotal * (inputs.markup / 100);
-  const total = subtotal + profit;
+  const marginFactor = Math.max(1 - inputs.markup / 100, 0.01);
+  const total = subtotal / marginFactor;
+  const profit = total - subtotal;
 
   return {
     labor: totalLabor,

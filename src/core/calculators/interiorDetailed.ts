@@ -84,12 +84,11 @@ export function calculateInteriorDetailed(
     paintType: inputs.paintType,
   }, pricing);
 
-  // 4. Calculate profit (markup applied to labor + materials)
+  // 4. Calculate total using margin formula: total = cost / (1 - margin%)
   const subtotal = modifiedLabor + materials.totalCost;
-  const profit = subtotal * (inputs.markup / 100);
-
-  // 5. Calculate total
-  const total = subtotal + profit;
+  const marginFactor = Math.max(1 - inputs.markup / 100, 0.01);
+  const total = subtotal / marginFactor;
+  const profit = total - subtotal;
 
   // Build detailed breakdown
   const breakdown: InteriorDetailedBreakdown = {

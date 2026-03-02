@@ -1,7 +1,7 @@
 import type { UseFormRegister } from 'react-hook-form';
 import { Select } from '../../common/Select';
 import { Card, CardHeader, CardTitle, CardContent } from '../../common/Card';
-import { MARKUP_OPTIONS } from '../../../core/constants/pricing';
+import { useSettingsStore } from '../../../store/settingsStore';
 
 interface MarkupSelectorProps {
   register: UseFormRegister<any>;
@@ -12,7 +12,8 @@ export function MarkupSelector({
   register,
   fieldName = 'markup'
 }: MarkupSelectorProps) {
-  const markupOptions = MARKUP_OPTIONS.map((value) => ({
+  const { settings } = useSettingsStore();
+  const marginOptions = (settings.pricing.markupOptions ?? [30, 35, 40, 45, 50]).map((value) => ({
     value: value.toString(),
     label: `${value}%`,
   }));
@@ -20,19 +21,20 @@ export function MarkupSelector({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Profit Markup</CardTitle>
+        <CardTitle>Margin Calculator</CardTitle>
       </CardHeader>
       <CardContent>
         <Select
-          label="Markup Percentage"
-          options={markupOptions}
+          label="Margin %"
+          options={marginOptions}
           {...register(fieldName, {
             required: true,
             setValueAs: (value) => parseInt(value, 10)
           })}
         />
         <p className="mt-2 text-xs text-gray-500">
-          Markup is applied to the sum of labor and materials
+          Margin is the percentage of the total price that is profit.
+          e.g. 50% margin: $1,000 cost → $2,000 price (50% of price is profit)
         </p>
       </CardContent>
     </Card>

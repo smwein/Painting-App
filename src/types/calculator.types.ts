@@ -1,10 +1,10 @@
-// Paint types available
-export type PaintType = 'ProMar' | 'SuperPaint' | 'Duration' | 'Emerald';
+// Paint types available (string to support dynamic custom types)
+export type PaintType = string;
 
-export type ExteriorPaintType = 'SuperPaint' | 'Duration' | 'Emerald';
+export type ExteriorPaintType = string;
 
-// Markup percentage options
-export type MarkupPercentage = 35 | 40 | 45 | 50 | 55 | 60;
+// Margin percentage (as number, e.g. 50 = 50% margin)
+export type MarkupPercentage = number;
 
 // Calculator type identifiers
 export type CalculatorType =

@@ -47,7 +47,7 @@ export function CustomLineItemsManager() {
   };
 
   const addRow = () => {
-    if (rows.length < 10) setRows((prev) => [...prev, emptyRow()]);
+    if (rows.length < 5) setRows((prev) => [...prev, emptyRow()]);
   };
 
   const removeRow = (idx: number) => {
@@ -81,7 +81,7 @@ export function CustomLineItemsManager() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-600">
-          Add custom line items to the detailed calculators. Add up to 10 at a time.
+          Add custom line items to the detailed calculators. Add up to 5 at a time.
         </p>
         <Button onClick={() => setShowAddForm(!showAddForm)} variant="primary">
           {showAddForm ? 'Cancel' : '+ Add Line Items'}
@@ -121,7 +121,7 @@ export function CustomLineItemsManager() {
 
             {/* Item rows */}
             <div className="space-y-3">
-              <p className="text-sm font-medium text-gray-700">Line Items ({rows.length}/10)</p>
+              <p className="text-sm font-medium text-gray-700">Line Items ({rows.length}/5)</p>
               {rows.map((row, idx) => (
                 <div key={idx} className="flex items-end gap-2 p-3 bg-white border border-gray-200 rounded-lg">
                   <div className="flex-1">
@@ -172,7 +172,7 @@ export function CustomLineItemsManager() {
                 onClick={addRow}
                 variant="outline"
                 size="sm"
-                disabled={rows.length >= 10}
+                disabled={rows.length >= 5}
               >
                 + Add Another Item
               </Button>

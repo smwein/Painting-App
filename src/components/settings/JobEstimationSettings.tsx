@@ -108,20 +108,21 @@ export function JobEstimationSettings() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Markup Percentage Options</CardTitle>
+          <CardTitle>Margin Calculator Options</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-gray-600">
-            Configure which markup percentages appear in calculator dropdowns (comma-separated).
+            Configure which margin percentages appear in calculator dropdowns (comma-separated).
+            Margin formula: Price = Cost ÷ (1 − Margin%). e.g. 50% margin on $1,000 cost = $2,000 price.
           </p>
 
           <Input
-            label="Markup Options (%)"
+            label="Margin Options (%)"
             type="text"
             value={markupOptions.join(', ')}
             onChange={(e) => handleMarkupOptionsChange(e.target.value)}
-            helperText="Default: 35, 40, 45, 50, 55, 60"
-            placeholder="35, 40, 45, 50, 55, 60"
+            helperText="Default: 30, 35, 40, 45, 50"
+            placeholder="30, 35, 40, 45, 50"
           />
 
           <div className="p-4 bg-gray-50 rounded-lg">

@@ -33,7 +33,7 @@ interface ExteriorDetailedFormData {
   miscPressureWashingSqft: number;
   miscWorkHours: number;
   miscellaneousDollars: number;
-  paintType: 'SuperPaint' | 'Duration' | 'Emerald';
+  paintType: string;
   markup: number;
   'modifiers.threeStory': boolean;
   'modifiers.extensivePrep': boolean;
@@ -164,9 +164,9 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
     (miscWorkHours || 0) * getRate('ext-misc-work-hour') +
     (miscellaneousDollars || 0) * getRate('ext-miscellaneous-dollars');
 
-  // Custom (non-default) sections for exterior-detailed
-  const customSections = pricing.sections
-    .filter((s) => s.calculatorType === 'exterior-detailed' && !s.isDefault)
+  // All sections for exterior-detailed sorted by order
+  const allExtSections = pricing.sections
+    .filter((s) => s.calculatorType === 'exterior-detailed')
     .sort((a, b) => a.order - b.order);
 
   useEffect(() => {
@@ -301,108 +301,116 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
         </CardContent>
       </Card>
 
-      {/* Measurements */}
-      <Card>
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Measurements</h3>
-          <button onClick={() => toggleSection('ext-measurements')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-            {collapsed['ext-measurements'] ? '+ Show' : '− Hide'}
-          </button>
-        </div>
-        {!collapsed['ext-measurements'] && (
-          <div className="mt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label={`Wall/Siding Sq Ft ($${getRate('ext-wall-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallSqft', { valueAsNumber: true })} />
-              <Input label={`Trim/Fascia/Soffit LF ($${getRate('ext-trim-fascia-soffit-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimFasciaSoffitLF', { valueAsNumber: true })} />
-            </div>
-            <SectionSubtotal total={measurementsSubtotal} />
-          </div>
-        )}
-      </Card>
+      {/* All sections rendered in dynamic sorted order */}
+      {allExtSections.map((section) => {
+        const unitLabel: Record<string, string> = { sqft: '/sqft', lf: '/LF', each: '/each', hour: '/hour', dollars: '' };
 
-      {/* Doors & Shutters */}
-      <Card>
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Doors & Shutters</h3>
-          <button onClick={() => toggleSection('ext-doors-shutters')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-            {collapsed['ext-doors-shutters'] ? '+ Show' : '− Hide'}
-          </button>
-        </div>
-        {!collapsed['ext-doors-shutters'] && (
-          <div className="mt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label={`Doors ($${getRate('ext-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doors', { valueAsNumber: true })} />
-              <Input label={`Shutters ($${getRate('ext-shutter').toFixed(0)}/shutter)`} type="number" min="0" step="1" placeholder="0" {...register('shutters', { valueAsNumber: true })} />
-              <Input label={`Doors to Refinish ($${getRate('ext-door-refinish').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doorsToRefinish', { valueAsNumber: true })} />
+        if (section.id === 'ext-measurements') return (
+          <Card key={section.id}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
+              <button onClick={() => toggleSection('ext-measurements')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+                {collapsed['ext-measurements'] ? '+ Show' : '− Hide'}
+              </button>
             </div>
-            <SectionSubtotal total={doorsSubtotal} />
-          </div>
-        )}
-      </Card>
+            {!collapsed['ext-measurements'] && (
+              <div className="mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input label={`Wall/Siding Sq Ft ($${getRate('ext-wall-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallSqft', { valueAsNumber: true })} />
+                  <Input label={`Trim/Fascia/Soffit LF ($${getRate('ext-trim-fascia-soffit-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimFasciaSoffitLF', { valueAsNumber: true })} />
+                </div>
+                <SectionSubtotal total={measurementsSubtotal} />
+              </div>
+            )}
+          </Card>
+        );
 
-      {/* Prep Work */}
-      <Card>
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Prep Work</h3>
-          <button onClick={() => toggleSection('ext-prep-work')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-            {collapsed['ext-prep-work'] ? '+ Show' : '− Hide'}
-          </button>
-        </div>
-        {!collapsed['ext-prep-work'] && (
-          <div className="mt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label={`Priming Sq Ft ($${getRate('ext-priming-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingSqft', { valueAsNumber: true })} />
-              <Input label={`Priming LF ($${getRate('ext-priming-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingLF', { valueAsNumber: true })} />
+        if (section.id === 'ext-doors-shutters') return (
+          <Card key={section.id}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
+              <button onClick={() => toggleSection('ext-doors-shutters')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+                {collapsed['ext-doors-shutters'] ? '+ Show' : '− Hide'}
+              </button>
             </div>
-            <SectionSubtotal total={prepSubtotal} />
-          </div>
-        )}
-      </Card>
+            {!collapsed['ext-doors-shutters'] && (
+              <div className="mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input label={`Doors ($${getRate('ext-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doors', { valueAsNumber: true })} />
+                  <Input label={`Shutters ($${getRate('ext-shutter').toFixed(0)}/shutter)`} type="number" min="0" step="1" placeholder="0" {...register('shutters', { valueAsNumber: true })} />
+                  <Input label={`Doors to Refinish ($${getRate('ext-door-refinish').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doorsToRefinish', { valueAsNumber: true })} />
+                </div>
+                <SectionSubtotal total={doorsSubtotal} />
+              </div>
+            )}
+          </Card>
+        );
 
-      {/* Replacements & Repairs */}
-      <Card>
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Replacements & Repairs</h3>
-          <button onClick={() => toggleSection('ext-replacements-repairs')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-            {collapsed['ext-replacements-repairs'] ? '+ Show' : '− Hide'}
-          </button>
-        </div>
-        {!collapsed['ext-replacements-repairs'] && (
-          <div className="mt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label={`Siding Replacement Sq Ft ($${getRate('ext-siding-replacement-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('sidingReplacementSqft', { valueAsNumber: true })} />
-              <Input label={`Trim Replacement LF ($${getRate('ext-trim-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimReplacementLF', { valueAsNumber: true })} />
-              <Input label={`Soffit/Fascia Replacement LF ($${getRate('ext-soffit-fascia-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('soffitFasciaReplacementLF', { valueAsNumber: true })} />
-              <Input label={`Bondo Repairs ($${getRate('ext-bondo-repair').toFixed(0)}/repair)`} type="number" min="0" step="1" placeholder="0" {...register('bondoRepairs', { valueAsNumber: true })} />
+        if (section.id === 'ext-prep-work') return (
+          <Card key={section.id}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
+              <button onClick={() => toggleSection('ext-prep-work')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+                {collapsed['ext-prep-work'] ? '+ Show' : '− Hide'}
+              </button>
             </div>
-            <SectionSubtotal total={replacementsSubtotal} />
-          </div>
-        )}
-      </Card>
+            {!collapsed['ext-prep-work'] && (
+              <div className="mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input label={`Priming Sq Ft ($${getRate('ext-priming-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingSqft', { valueAsNumber: true })} />
+                  <Input label={`Priming LF ($${getRate('ext-priming-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingLF', { valueAsNumber: true })} />
+                </div>
+                <SectionSubtotal total={prepSubtotal} />
+              </div>
+            )}
+          </Card>
+        );
 
-      {/* Additional Work */}
-      <Card>
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Additional Work</h3>
-          <button onClick={() => toggleSection('ext-additional')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-            {collapsed['ext-additional'] ? '+ Show' : '− Hide'}
-          </button>
-        </div>
-        {!collapsed['ext-additional'] && (
-          <div className="mt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label={`Deck Staining Sq Ft ($${getRate('ext-deck-staining-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('deckStainingSqft', { valueAsNumber: true })} />
-              <Input label={`Misc Pressure Washing Sq Ft ($${getRate('ext-misc-pressure-washing-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscPressureWashingSqft', { valueAsNumber: true })} />
-              <Input label={`Misc Work Hours ($${getRate('ext-misc-work-hour').toFixed(0)}/hour)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscWorkHours', { valueAsNumber: true })} />
-              <Input label="Miscellaneous $ (custom)" type="number" min="0" step="0.01" placeholder="0" {...register('miscellaneousDollars', { valueAsNumber: true })} />
+        if (section.id === 'ext-replacements-repairs') return (
+          <Card key={section.id}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
+              <button onClick={() => toggleSection('ext-replacements-repairs')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+                {collapsed['ext-replacements-repairs'] ? '+ Show' : '− Hide'}
+              </button>
             </div>
-            <SectionSubtotal total={additionalSubtotal} />
-          </div>
-        )}
-      </Card>
+            {!collapsed['ext-replacements-repairs'] && (
+              <div className="mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input label={`Siding Replacement Sq Ft ($${getRate('ext-siding-replacement-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('sidingReplacementSqft', { valueAsNumber: true })} />
+                  <Input label={`Trim Replacement LF ($${getRate('ext-trim-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimReplacementLF', { valueAsNumber: true })} />
+                  <Input label={`Soffit/Fascia Replacement LF ($${getRate('ext-soffit-fascia-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('soffitFasciaReplacementLF', { valueAsNumber: true })} />
+                  <Input label={`Bondo Repairs ($${getRate('ext-bondo-repair').toFixed(0)}/repair)`} type="number" min="0" step="1" placeholder="0" {...register('bondoRepairs', { valueAsNumber: true })} />
+                </div>
+                <SectionSubtotal total={replacementsSubtotal} />
+              </div>
+            )}
+          </Card>
+        );
 
-      {/* Dynamic custom sections */}
-      {customSections.map((section) => {
+        if (section.id === 'ext-additional') return (
+          <Card key={section.id}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
+              <button onClick={() => toggleSection('ext-additional')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+                {collapsed['ext-additional'] ? '+ Show' : '− Hide'}
+              </button>
+            </div>
+            {!collapsed['ext-additional'] && (
+              <div className="mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input label={`Deck Staining Sq Ft ($${getRate('ext-deck-staining-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('deckStainingSqft', { valueAsNumber: true })} />
+                  <Input label={`Misc Pressure Washing Sq Ft ($${getRate('ext-misc-pressure-washing-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscPressureWashingSqft', { valueAsNumber: true })} />
+                  <Input label={`Misc Work Hours ($${getRate('ext-misc-work-hour').toFixed(0)}/hour)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscWorkHours', { valueAsNumber: true })} />
+                  <Input label="Miscellaneous $ (custom)" type="number" min="0" step="0.01" placeholder="0" {...register('miscellaneousDollars', { valueAsNumber: true })} />
+                </div>
+                <SectionSubtotal total={additionalSubtotal} />
+              </div>
+            )}
+          </Card>
+        );
+
+        // Custom section
         const sectionItems = pricing.lineItems
           .filter((item) => item.category === section.id)
           .sort((a, b) => a.order - b.order);
@@ -411,8 +419,6 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
         const sectionSubtotal = sectionItems.reduce(
           (sum, item) => sum + (customValues[item.id] || 0) * item.rate, 0
         );
-
-        const unitLabel: Record<string, string> = { sqft: '/sqft', lf: '/LF', each: '/each', hour: '/hour', dollars: '' };
 
         return (
           <Card key={section.id}>
@@ -429,8 +435,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
                     <Input
                       key={item.id}
                       label={`${item.name} ($${item.rate.toFixed(item.unit === 'sqft' || item.unit === 'lf' ? 2 : 0)}${unitLabel[item.unit] || ''})`}
-                      type="number"
-                      min="0"
+                      type="number" min="0"
                       step={item.unit === 'sqft' || item.unit === 'lf' ? '0.1' : '1'}
                       placeholder="0"
                       value={customValues[item.id] ?? 0}

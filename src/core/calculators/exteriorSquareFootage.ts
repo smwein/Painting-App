@@ -48,10 +48,11 @@ export function calculateExteriorSquareFootage(
     totalCost: 0,
   };
 
-  // Calculate markup on labor cost
+  // Calculate total using margin formula: total = cost / (1 - margin%)
   const totalCost = laborCost + materials.totalCost;
-  const profit = totalCost * (inputs.markup / 100);
-  const total = totalCost + profit;
+  const marginFactor = Math.max(1 - inputs.markup / 100, 0.01);
+  const total = totalCost / marginFactor;
+  const profit = total - totalCost;
 
   return {
     labor: laborCost,

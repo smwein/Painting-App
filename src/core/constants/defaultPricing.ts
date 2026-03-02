@@ -62,8 +62,8 @@ export function createDefaultPricingSettings(): PricingSettings {
       trim: 0.30,
     },
 
-    // Markup options (from pricing.ts)
-    markupOptions: [35, 40, 45, 50, 55, 60],
+    // Margin options (from pricing.ts)
+    markupOptions: [30, 35, 40, 45, 50],
 
     // Crew rates for job duration estimates
     crewRates: [

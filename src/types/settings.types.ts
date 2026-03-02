@@ -1,5 +1,3 @@
-import type { PaintType, ExteriorPaintType } from './calculator.types';
-
 // Line item configuration for dynamic calculators
 export interface LineItemConfig {
   id: string;
@@ -67,9 +65,9 @@ export interface PricingSettings {
     trimOnly: number;
   };
 
-  // Paint prices
-  interiorPaint: Record<PaintType, number>;
-  exteriorPaint: Record<ExteriorPaintType, number>;
+  // Paint prices (Record<string, number> to support dynamic custom paint types)
+  interiorPaint: Record<string, number>;
+  exteriorPaint: Record<string, number>;
 
   // Coverage rates
   interiorCoverage: {

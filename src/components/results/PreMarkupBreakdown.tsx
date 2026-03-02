@@ -15,7 +15,7 @@ export function PreMarkupBreakdown({ result }: PreMarkupBreakdownProps) {
   return (
     <Card className="bg-slate-50 border-slate-300">
       <CardHeader>
-        <CardTitle>Cost Breakdown (Before Markup)</CardTitle>
+        <CardTitle>Cost Breakdown (Before Margin)</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
@@ -34,7 +34,7 @@ export function PreMarkupBreakdown({ result }: PreMarkupBreakdownProps) {
             </div>
           </div>
           <p className="text-xs text-gray-500 mt-3">
-            This is the base cost before profit markup is applied.
+            This is the base cost before margin is applied.
           </p>
         </div>
       </CardContent>

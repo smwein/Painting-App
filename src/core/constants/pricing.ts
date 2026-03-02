@@ -87,5 +87,5 @@ export const EXTERIOR_PAINT_PRICES: Record<ExteriorPaintType, number> = {
   Emerald: 65,
 };
 
-// Markup percentage options (displayed as percentages, used as multipliers)
-export const MARKUP_OPTIONS = [35, 40, 45, 50, 55, 60] as const;
+// Margin percentage options (displayed as percentages, margin-based formula)
+export const MARKUP_OPTIONS = [30, 35, 40, 45, 50] as const;

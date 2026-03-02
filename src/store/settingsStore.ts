@@ -6,7 +6,23 @@ import type {
   LineItemConfig,
   SectionConfig,
 } from '../types/settings.types';
-import { getDefaultCompanySettings } from '../core/constants/defaultPricing';
+import { getDefaultCompanySettings, createDefaultPricingSettings } from '../core/constants/defaultPricing';
+
+/** Ensure all default sections exist — adds any that are missing (migration for older stored data) */
+function ensureDefaultSections(settings: CompanySettings): CompanySettings {
+  const defaults = createDefaultPricingSettings();
+  const defaultSections = defaults.sections.filter((s) => s.isDefault);
+  const existingIds = new Set(settings.pricing.sections.map((s) => s.id));
+  const missing = defaultSections.filter((s) => !existingIds.has(s.id));
+  if (missing.length === 0) return settings;
+  return {
+    ...settings,
+    pricing: {
+      ...settings.pricing,
+      sections: [...settings.pricing.sections, ...missing],
+    },
+  };
+}
 
 interface SettingsState {
   settings: CompanySettings;
@@ -24,7 +40,7 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      settings: getDefaultCompanySettings(),
+      settings: ensureDefaultSections(getDefaultCompanySettings()),
 
       updateSettings: (updates) =>
         set((state) => ({
@@ -101,11 +117,17 @@ export const useSettingsStore = create<SettingsState>()(
       addSection: (section) =>
         set((state) => {
           const currentSections = state.settings.pricing.sections;
-          const maxOrder = Math.max(...currentSections.map((s) => s.order), 0);
+          // Use per-type max order so sections are numbered within their calculator type
+          const typeMaxOrder = Math.max(
+            ...currentSections
+              .filter((s) => s.calculatorType === section.calculatorType)
+              .map((s) => s.order),
+            0
+          );
           const newSection: SectionConfig = {
             ...section,
             id: `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            order: maxOrder + 1,
+            order: typeMaxOrder + 1,
           };
 
           return {
@@ -162,6 +184,12 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'painting-company-settings',
+      onRehydrateStorage: () => (state) => {
+        // Run migration after loading persisted state to add any missing default sections
+        if (state) {
+          state.settings = ensureDefaultSections(state.settings);
+        }
+      },
     }
   )
 );

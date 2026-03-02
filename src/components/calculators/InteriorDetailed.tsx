@@ -38,7 +38,7 @@ interface InteriorDetailedFormData {
   accentWalls: number;
   miscWorkHours: number;
   miscellaneousDollars: number;
-  paintType: 'ProMar' | 'SuperPaint' | 'Duration' | 'Emerald';
+  paintType: string;
   markup: number;
   'modifiers.heavilyFurnished': boolean;
   'modifiers.emptyHouse': boolean;
@@ -183,9 +183,9 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
     (miscWorkHours || 0) * getRate('int-misc-work-hour') +
     (miscellaneousDollars || 0) * getRate('int-miscellaneous-dollars');
 
-  // Custom (non-default) sections for interior-detailed
-  const customSections = pricing.sections
-    .filter((s) => s.calculatorType === 'interior-detailed' && !s.isDefault)
+  // All sections for interior-detailed sorted by order (enables user-defined ordering)
+  const allIntSections = pricing.sections
+    .filter((s) => s.calculatorType === 'interior-detailed')
     .sort((a, b) => a.order - b.order);
 
   // Pre-fill form when loading a saved bid
@@ -345,108 +345,103 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
         </CardContent>
       </Card>
 
-      {/* Measurements */}
-      <Card>
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Measurements</h3>
-          <button onClick={() => toggleSection('int-measurements')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-            {collapsed['int-measurements'] ? '+ Show' : '− Hide'}
-          </button>
-        </div>
-        {!collapsed['int-measurements'] && (
-          <div className="mt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label={`Wall Sq Ft ($${getRate('int-wall-sqft').toFixed(2)}/sqft)`}
-                type="number" min="0" step="0.1" placeholder="0"
-                {...register('wallSqft', { valueAsNumber: true })}
-              />
-              <Input
-                label={`Ceiling Sq Ft ($${getRate('int-ceiling-sqft').toFixed(2)}/sqft)`}
-                type="number" min="0" step="0.1" placeholder="0"
-                {...register('ceilingSqft', { valueAsNumber: true })}
-              />
-              <Input
-                label={`Trim LF ($${getRate('int-trim-lf').toFixed(2)}/LF)`}
-                type="number" min="0" step="0.1" placeholder="0"
-                {...register('trimLF', { valueAsNumber: true })}
-              />
-            </div>
-            <SectionSubtotal total={measurementsSubtotal} />
-          </div>
-        )}
-      </Card>
+      {/* All sections rendered in dynamic sorted order */}
+      {allIntSections.map((section) => {
+        const unitLabel: Record<string, string> = { sqft: '/sqft', lf: '/LF', each: '/each', hour: '/hour', dollars: '' };
 
-      {/* Doors & Cabinets */}
-      <Card>
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Doors & Cabinets</h3>
-          <button onClick={() => toggleSection('int-doors-cabinets')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-            {collapsed['int-doors-cabinets'] ? '+ Show' : '− Hide'}
-          </button>
-        </div>
-        {!collapsed['int-doors-cabinets'] && (
-          <div className="mt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label={`Doors ($${getRate('int-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doors', { valueAsNumber: true })} />
-              <Input label={`Cabinet Doors ($${getRate('int-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDoors', { valueAsNumber: true })} />
-              <Input label={`Cabinet Drawers ($${getRate('int-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDrawers', { valueAsNumber: true })} />
-              <Input label={`New Cabinet Doors ($${getRate('int-new-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDoors', { valueAsNumber: true })} />
-              <Input label={`New Cabinet Drawers ($${getRate('int-new-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDrawers', { valueAsNumber: true })} />
+        if (section.id === 'int-measurements') return (
+          <Card key={section.id}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
+              <button onClick={() => toggleSection('int-measurements')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+                {collapsed['int-measurements'] ? '+ Show' : '− Hide'}
+              </button>
             </div>
-            <SectionSubtotal total={doorsSubtotal} />
-          </div>
-        )}
-      </Card>
+            {!collapsed['int-measurements'] && (
+              <div className="mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input label={`Wall Sq Ft ($${getRate('int-wall-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallSqft', { valueAsNumber: true })} />
+                  <Input label={`Ceiling Sq Ft ($${getRate('int-ceiling-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('ceilingSqft', { valueAsNumber: true })} />
+                  <Input label={`Trim LF ($${getRate('int-trim-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimLF', { valueAsNumber: true })} />
+                </div>
+                <SectionSubtotal total={measurementsSubtotal} />
+              </div>
+            )}
+          </Card>
+        );
 
-      {/* Prep Work */}
-      <Card>
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Prep Work</h3>
-          <button onClick={() => toggleSection('int-prep-work')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-            {collapsed['int-prep-work'] ? '+ Show' : '− Hide'}
-          </button>
-        </div>
-        {!collapsed['int-prep-work'] && (
-          <div className="mt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label={`Wallpaper Removal Sq Ft ($${getRate('int-wallpaper-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallpaperRemovalSqft', { valueAsNumber: true })} />
-              <Input label={`Priming LF ($${getRate('int-priming-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingLF', { valueAsNumber: true })} />
-              <Input label={`Priming Sq Ft ($${getRate('int-priming-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingSqft', { valueAsNumber: true })} />
-              <Input label={`Drywall Replacement Sq Ft ($${getRate('int-drywall-replacement-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('drywallReplacementSqft', { valueAsNumber: true })} />
-              <Input label={`Popcorn Removal Sq Ft ($${getRate('int-popcorn-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('popcornRemovalSqft', { valueAsNumber: true })} />
-              <Input label={`Wall Texture Removal Sq Ft ($${getRate('int-wall-texture-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallTextureRemovalSqft', { valueAsNumber: true })} />
-              <Input label={`Trim Replacement LF ($${getRate('int-trim-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimReplacementLF', { valueAsNumber: true })} />
-              <Input label={`Drywall Repairs ($${getRate('int-drywall-repair').toFixed(0)}/repair)`} type="number" min="0" step="1" placeholder="0" {...register('drywallRepairs', { valueAsNumber: true })} />
+        if (section.id === 'int-doors-cabinets') return (
+          <Card key={section.id}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
+              <button onClick={() => toggleSection('int-doors-cabinets')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+                {collapsed['int-doors-cabinets'] ? '+ Show' : '− Hide'}
+              </button>
             </div>
-            <SectionSubtotal total={prepSubtotal} />
-          </div>
-        )}
-      </Card>
+            {!collapsed['int-doors-cabinets'] && (
+              <div className="mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input label={`Doors ($${getRate('int-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doors', { valueAsNumber: true })} />
+                  <Input label={`Cabinet Doors ($${getRate('int-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDoors', { valueAsNumber: true })} />
+                  <Input label={`Cabinet Drawers ($${getRate('int-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDrawers', { valueAsNumber: true })} />
+                  <Input label={`New Cabinet Doors ($${getRate('int-new-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDoors', { valueAsNumber: true })} />
+                  <Input label={`New Cabinet Drawers ($${getRate('int-new-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDrawers', { valueAsNumber: true })} />
+                </div>
+                <SectionSubtotal total={doorsSubtotal} />
+              </div>
+            )}
+          </Card>
+        );
 
-      {/* Additional Work */}
-      <Card>
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Additional Work</h3>
-          <button onClick={() => toggleSection('int-additional')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-            {collapsed['int-additional'] ? '+ Show' : '− Hide'}
-          </button>
-        </div>
-        {!collapsed['int-additional'] && (
-          <div className="mt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label={`Colors Above 3 ($${getRate('int-color-above-three').toFixed(0)}/color)`} type="number" min="0" step="1" placeholder="0" {...register('colorsAboveThree', { valueAsNumber: true })} />
-              <Input label={`Accent Walls ($${getRate('int-accent-wall').toFixed(0)}/wall)`} type="number" min="0" step="1" placeholder="0" {...register('accentWalls', { valueAsNumber: true })} />
-              <Input label={`Misc Work Hours ($${getRate('int-misc-work-hour').toFixed(0)}/hour)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscWorkHours', { valueAsNumber: true })} />
-              <Input label="Miscellaneous $ (custom)" type="number" min="0" step="0.01" placeholder="0" {...register('miscellaneousDollars', { valueAsNumber: true })} />
+        if (section.id === 'int-prep-work') return (
+          <Card key={section.id}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
+              <button onClick={() => toggleSection('int-prep-work')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+                {collapsed['int-prep-work'] ? '+ Show' : '− Hide'}
+              </button>
             </div>
-            <SectionSubtotal total={additionalSubtotal} />
-          </div>
-        )}
-      </Card>
+            {!collapsed['int-prep-work'] && (
+              <div className="mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input label={`Wallpaper Removal Sq Ft ($${getRate('int-wallpaper-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallpaperRemovalSqft', { valueAsNumber: true })} />
+                  <Input label={`Priming LF ($${getRate('int-priming-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingLF', { valueAsNumber: true })} />
+                  <Input label={`Priming Sq Ft ($${getRate('int-priming-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingSqft', { valueAsNumber: true })} />
+                  <Input label={`Drywall Replacement Sq Ft ($${getRate('int-drywall-replacement-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('drywallReplacementSqft', { valueAsNumber: true })} />
+                  <Input label={`Popcorn Removal Sq Ft ($${getRate('int-popcorn-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('popcornRemovalSqft', { valueAsNumber: true })} />
+                  <Input label={`Wall Texture Removal Sq Ft ($${getRate('int-wall-texture-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallTextureRemovalSqft', { valueAsNumber: true })} />
+                  <Input label={`Trim Replacement LF ($${getRate('int-trim-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimReplacementLF', { valueAsNumber: true })} />
+                  <Input label={`Drywall Repairs ($${getRate('int-drywall-repair').toFixed(0)}/repair)`} type="number" min="0" step="1" placeholder="0" {...register('drywallRepairs', { valueAsNumber: true })} />
+                </div>
+                <SectionSubtotal total={prepSubtotal} />
+              </div>
+            )}
+          </Card>
+        );
 
-      {/* Dynamic custom sections */}
-      {customSections.map((section) => {
+        if (section.id === 'int-additional') return (
+          <Card key={section.id}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
+              <button onClick={() => toggleSection('int-additional')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+                {collapsed['int-additional'] ? '+ Show' : '− Hide'}
+              </button>
+            </div>
+            {!collapsed['int-additional'] && (
+              <div className="mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input label={`Colors Above 3 ($${getRate('int-color-above-three').toFixed(0)}/color)`} type="number" min="0" step="1" placeholder="0" {...register('colorsAboveThree', { valueAsNumber: true })} />
+                  <Input label={`Accent Walls ($${getRate('int-accent-wall').toFixed(0)}/wall)`} type="number" min="0" step="1" placeholder="0" {...register('accentWalls', { valueAsNumber: true })} />
+                  <Input label={`Misc Work Hours ($${getRate('int-misc-work-hour').toFixed(0)}/hour)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscWorkHours', { valueAsNumber: true })} />
+                  <Input label="Miscellaneous $ (custom)" type="number" min="0" step="0.01" placeholder="0" {...register('miscellaneousDollars', { valueAsNumber: true })} />
+                </div>
+                <SectionSubtotal total={additionalSubtotal} />
+              </div>
+            )}
+          </Card>
+        );
+
+        // Custom section
         const sectionItems = pricing.lineItems
           .filter((item) => item.category === section.id)
           .sort((a, b) => a.order - b.order);
@@ -455,8 +450,6 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
         const sectionSubtotal = sectionItems.reduce(
           (sum, item) => sum + (customValues[item.id] || 0) * item.rate, 0
         );
-
-        const unitLabel: Record<string, string> = { sqft: '/sqft', lf: '/LF', each: '/each', hour: '/hour', dollars: '' };
 
         return (
           <Card key={section.id}>
@@ -473,8 +466,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
                     <Input
                       key={item.id}
                       label={`${item.name} ($${item.rate.toFixed(item.unit === 'sqft' || item.unit === 'lf' ? 2 : 0)}${unitLabel[item.unit] || ''})`}
-                      type="number"
-                      min="0"
+                      type="number" min="0"
                       step={item.unit === 'sqft' || item.unit === 'lf' ? '0.1' : '1'}
                       placeholder="0"
                       value={customValues[item.id] ?? 0}

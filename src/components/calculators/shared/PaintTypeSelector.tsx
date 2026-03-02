@@ -1,6 +1,6 @@
 import type { UseFormRegister } from 'react-hook-form';
 import { Card, CardHeader, CardTitle, CardContent } from '../../common/Card';
-import { PAINT_PRICES, EXTERIOR_PAINT_PRICES } from '../../../core/constants/pricing';
+import { useSettingsStore } from '../../../store/settingsStore';
 
 interface PaintTypeSelectorProps {
   register: UseFormRegister<any>;
@@ -13,15 +13,15 @@ export function PaintTypeSelector({
   isExterior = false,
   fieldName = 'paintType'
 }: PaintTypeSelectorProps) {
-  const paintOptions = isExterior
-    ? Object.entries(EXTERIOR_PAINT_PRICES).map(([type, price]) => ({
-        value: type,
-        label: `${type} ($${price}/gal)`,
-      }))
-    : Object.entries(PAINT_PRICES).map(([type, price]) => ({
-        value: type,
-        label: `${type} ($${price}/gal)`,
-      }));
+  const { settings } = useSettingsStore();
+  const paintPrices = isExterior
+    ? settings.pricing.exteriorPaint
+    : settings.pricing.interiorPaint;
+
+  const paintOptions = Object.entries(paintPrices).map(([type, price]) => ({
+    value: type,
+    label: `${type} ($${price}/gal)`,
+  }));
 
   return (
     <Card>
