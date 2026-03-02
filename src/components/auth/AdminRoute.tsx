@@ -1,12 +1,7 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import type { ReactNode } from 'react';
 
-interface AdminRouteProps {
-  children: ReactNode;
-}
-
-export function AdminRoute({ children }: AdminRouteProps) {
+export function AdminRoute() {
   const { user, loading } = useAuthStore();
 
   if (loading) {
@@ -21,5 +16,5 @@ export function AdminRoute({ children }: AdminRouteProps) {
     return <Navigate to="/" replace />;
   }
 
-  return <>{children}</>;
+  return <Outlet />;
 }
