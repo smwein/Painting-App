@@ -3,12 +3,12 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: 'AIzaSyAf0hMuMkbHgbp0-a50nmQPjy7AbPVi1Xk',
+  authDomain: 'texpainting-bid.firebaseapp.com',
+  projectId: 'texpainting-bid',
+  storageBucket: 'texpainting-bid.firebasestorage.app',
+  messagingSenderId: '980957288070',
+  appId: '1:980957288070:web:33e19e17d6e51e9b39e307',
 };
 
 // Guard against duplicate initialization (Vite HMR re-runs module code)
