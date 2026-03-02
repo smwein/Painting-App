@@ -4,6 +4,7 @@ import { InteriorSquareFootage } from '../components/calculators/InteriorSquareF
 import { InteriorDetailed } from '../components/calculators/InteriorDetailed';
 import { ExteriorSquareFootage } from '../components/calculators/ExteriorSquareFootage';
 import { ExteriorDetailed } from '../components/calculators/ExteriorDetailed';
+import { PerRoomDetailed } from '../components/calculators/PerRoomDetailed';
 import { ExportButtons } from '../components/results/ExportButtons';
 import { useBidStore } from '../store/bidStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -32,6 +33,8 @@ export function CalculatorPage() {
         return 'Exterior - Square Footage';
       case 'exterior-detailed':
         return 'Exterior - Detailed';
+      case 'per-room':
+        return 'Per Room - Detailed';
       default:
         return 'Calculator';
     }
@@ -121,6 +124,8 @@ export function CalculatorPage() {
         return <ExteriorSquareFootage onResultChange={handleResultChange} loadedBid={loadedBid} />;
       case 'exterior-detailed':
         return <ExteriorDetailed onResultChange={handleResultChange} loadedBid={loadedBid} />;
+      case 'per-room':
+        return <PerRoomDetailed onResultChange={handleResultChange} />;
       default:
         return (
           <div className="text-center py-8">

@@ -47,10 +47,10 @@ export function SimplePricingSettings() {
 
   return (
     <div className="space-y-6">
-      {/* Interior Square Footage Rates */}
+      {/* Furnished Interior Square Footage Rates */}
       <Card>
         <CardHeader>
-          <CardTitle>Interior Square Footage Pricing (per sq ft)</CardTitle>
+          <CardTitle>Furnished Interior Square Footage Pricing (per sq ft)</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
@@ -84,6 +84,47 @@ export function SimplePricingSettings() {
             step="0.01"
             value={formData.interiorSqft.complete}
             onChange={(e) => handleNumberChange('interiorSqft.complete', parseFloat(e.target.value))}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Empty Interior Square Footage Rates */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Empty Interior Square Footage Pricing (per sq ft)</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Input
+            label="Walls Only"
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.interiorSqftEmpty?.wallsOnly ?? 1.25}
+            onChange={(e) => handleNumberChange('interiorSqftEmpty.wallsOnly', parseFloat(e.target.value))}
+          />
+          <Input
+            label="Trim Only"
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.interiorSqftEmpty?.trimOnly ?? 1.00}
+            onChange={(e) => handleNumberChange('interiorSqftEmpty.trimOnly', parseFloat(e.target.value))}
+          />
+          <Input
+            label="Ceilings Only"
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.interiorSqftEmpty?.ceilingsOnly ?? 0.75}
+            onChange={(e) => handleNumberChange('interiorSqftEmpty.ceilingsOnly', parseFloat(e.target.value))}
+          />
+          <Input
+            label="Complete Interior"
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.interiorSqftEmpty?.complete ?? 2.00}
+            onChange={(e) => handleNumberChange('interiorSqftEmpty.complete', parseFloat(e.target.value))}
           />
         </CardContent>
       </Card>

@@ -22,27 +22,32 @@ export function calculateInteriorSqftAutoMeasurements(
 
 /**
  * Calculate interior square footage bid
- * Simple calculator with house SF, pricing option, and markup
+ * Simple calculator with house SF, pricing option, house condition, and markup
  */
 export function calculateInteriorSquareFootage(
   inputs: InteriorSqftInputs,
   pricing: PricingSettings
 ): BidResult {
+  // Use empty or furnished rates based on houseCondition
+  const rates = inputs.houseCondition === 'empty'
+    ? (pricing.interiorSqftEmpty ?? pricing.interiorSqft)
+    : pricing.interiorSqft;
+
   // Calculate labor COST based on pricing option
   let laborCost = 0;
 
   switch (inputs.pricingOption) {
     case 'walls-only':
-      laborCost = inputs.houseSquareFootage * pricing.interiorSqft.wallsOnly;
+      laborCost = inputs.houseSquareFootage * rates.wallsOnly;
       break;
     case 'trim-only':
-      laborCost = inputs.houseSquareFootage * pricing.interiorSqft.trimOnly;
+      laborCost = inputs.houseSquareFootage * rates.trimOnly;
       break;
     case 'ceilings-only':
-      laborCost = inputs.houseSquareFootage * pricing.interiorSqft.ceilingsOnly;
+      laborCost = inputs.houseSquareFootage * rates.ceilingsOnly;
       break;
     case 'complete':
-      laborCost = inputs.houseSquareFootage * pricing.interiorSqft.complete;
+      laborCost = inputs.houseSquareFootage * rates.complete;
       break;
   }
 
@@ -68,6 +73,7 @@ export function calculateInteriorSquareFootage(
     breakdown: {
       houseSquareFootage: inputs.houseSquareFootage,
       pricingOption: inputs.pricingOption,
+      houseCondition: inputs.houseCondition,
       autoCalculations: autoCalcs,
       markup: inputs.markup,
     },

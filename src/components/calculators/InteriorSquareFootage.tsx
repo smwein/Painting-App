@@ -1,11 +1,12 @@
 import { useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Input } from '../common/Input';
+import { Select } from '../common/Select';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
 import { CustomerInfoSection } from './shared/CustomerInfoSection';
 import { MarkupSelector } from './shared/MarkupSelector';
 import { useSettingsStore } from '../../store/settingsStore';
-import type { InteriorSqftInputs, InteriorSqftOption, MarkupPercentage } from '../../types/calculator.types';
+import type { InteriorSqftInputs, InteriorSqftOption, MarkupPercentage, HouseCondition } from '../../types/calculator.types';
 import type { CustomerInfo, Bid } from '../../types/bid.types';
 import { JobDurationEstimate } from '../results/JobDurationEstimate';
 import {
@@ -18,6 +19,7 @@ interface InteriorSqftFormData {
   houseSquareFootage: number;
   pricingOption: InteriorSqftOption;
   markup: number;
+  houseCondition: HouseCondition;
 }
 
 interface InteriorSquareFootageProps {
@@ -34,6 +36,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
       houseSquareFootage: 0,
       pricingOption: 'complete',
       markup: 40,
+      houseCondition: 'furnished',
     },
   });
 
@@ -46,6 +49,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
         houseSquareFootage: inputs.houseSquareFootage,
         pricingOption: inputs.pricingOption,
         markup: inputs.markup,
+        houseCondition: inputs.houseCondition ?? 'furnished',
       });
     }
   }, [loadedBid, reset]);
@@ -55,6 +59,12 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
   const pricingOption = watch('pricingOption');
   const markup = watch('markup');
   const customer = watch('customer');
+  const houseCondition = watch('houseCondition');
+
+  // Get the rates based on current condition
+  const rates = houseCondition === 'empty'
+    ? (pricing.interiorSqftEmpty ?? pricing.interiorSqft)
+    : pricing.interiorSqft;
 
   // Real-time calculation
   const result = useMemo(() => {
@@ -66,6 +76,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
       houseSquareFootage,
       pricingOption,
       markup: markup as MarkupPercentage,
+      houseCondition,
     };
 
     const calculatedResult = calculateInteriorSquareFootage(inputs, pricing);
@@ -79,7 +90,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
     }
 
     return calculatedResult;
-  }, [houseSquareFootage, pricingOption, markup, customer, onResultChange, pricing]);
+  }, [houseSquareFootage, pricingOption, markup, houseCondition, customer, onResultChange, pricing]);
 
   const autoCalcs = useMemo(() => {
     if (!houseSquareFootage || houseSquareFootage <= 0) {
@@ -88,9 +99,33 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
     return calculateInteriorSqftAutoMeasurements(houseSquareFootage, pricing);
   }, [houseSquareFootage, pricing]);
 
+  // Estimate gallons from auto-calculations
+  const gallonEstimate = useMemo(() => {
+    if (!autoCalcs) return null;
+    const wallGallons = autoCalcs.wallSqft / pricing.interiorCoverage.wallSqftPerGallon;
+    const ceilingGallons = autoCalcs.ceilingSqft / pricing.interiorCoverage.ceilingSqftPerGallon;
+    const trimGallons = autoCalcs.trimLF / pricing.interiorCoverage.trimLfPerGallon;
+    return { wallGallons, ceilingGallons, trimGallons, total: wallGallons + ceilingGallons + trimGallons };
+  }, [autoCalcs, pricing]);
+
   return (
     <div className="space-y-6">
       <CustomerInfoSection register={register} />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>House Condition</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Select
+            label="Is the house empty or furnished?"
+            {...register('houseCondition')}
+          >
+            <option value="furnished">Furnished</option>
+            <option value="empty">Empty</option>
+          </Select>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -125,7 +160,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
               {...register('pricingOption', { required: true })}
             />
             <span className="text-sm font-medium text-gray-700">
-              Walls Only ($1.75/sqft)
+              Walls Only (${rates.wallsOnly.toFixed(2)}/sqft)
             </span>
           </label>
 
@@ -137,7 +172,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
               {...register('pricingOption', { required: true })}
             />
             <span className="text-sm font-medium text-gray-700">
-              Trim Only ($1.25/sqft)
+              Trim Only (${rates.trimOnly.toFixed(2)}/sqft)
             </span>
           </label>
 
@@ -149,7 +184,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
               {...register('pricingOption', { required: true })}
             />
             <span className="text-sm font-medium text-gray-700">
-              Ceilings Only ($1.00/sqft)
+              Ceilings Only (${rates.ceilingsOnly.toFixed(2)}/sqft)
             </span>
           </label>
 
@@ -161,7 +196,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
               {...register('pricingOption', { required: true })}
             />
             <span className="text-sm font-medium text-gray-700">
-              Complete ($2.50/sqft)
+              Complete (${rates.complete.toFixed(2)}/sqft)
             </span>
           </label>
         </CardContent>
@@ -179,12 +214,15 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
             <CardContent className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Labor Cost</span>
-                <span className="text-lg font-semibold text-gray-800">
-                  ${result.labor.toFixed(2)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">({result.total > 0 ? ((result.labor / result.total) * 100).toFixed(0) : 0}%)</span>
+                  <span className="text-lg font-semibold text-gray-800">
+                    ${result.labor.toFixed(2)}
+                  </span>
+                </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Profit</span>
+                <span className="text-sm text-gray-600">Gross Profit</span>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-green-600 font-medium">({markup}%)</span>
                   <span className="text-lg font-semibold text-green-700">
@@ -201,6 +239,32 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
             </CardContent>
           </Card>
         </>
+      )}
+
+      {gallonEstimate && gallonEstimate.total > 0 && (
+        <Card className="bg-yellow-50 border-yellow-200">
+          <CardHeader>
+            <CardTitle>Estimated Paint</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-xs text-gray-600 mb-1">Wall Paint</div>
+              <div className="text-xl font-bold text-yellow-700">{gallonEstimate.wallGallons.toFixed(1)} gal</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-gray-600 mb-1">Ceiling Paint</div>
+              <div className="text-xl font-bold text-yellow-700">{gallonEstimate.ceilingGallons.toFixed(1)} gal</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-gray-600 mb-1">Trim Paint</div>
+              <div className="text-xl font-bold text-yellow-700">{gallonEstimate.trimGallons.toFixed(1)} gal</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-gray-600 mb-1">Total</div>
+              <div className="text-xl font-bold text-yellow-800">{gallonEstimate.total.toFixed(1)} gal</div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {autoCalcs && (

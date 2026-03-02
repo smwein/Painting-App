@@ -11,7 +11,8 @@ export type CalculatorType =
   | 'interior-sqft'
   | 'interior-detailed'
   | 'exterior-sqft'
-  | 'exterior-detailed';
+  | 'exterior-detailed'
+  | 'per-room';
 
 // Interior Square Footage pricing options
 export type InteriorSqftOption = 'walls-only' | 'trim-only' | 'ceilings-only' | 'complete';
@@ -43,11 +44,15 @@ export interface BidResult {
   timestamp: Date;
 }
 
+// House condition for interior pricing
+export type HouseCondition = 'furnished' | 'empty';
+
 // Interior Square Footage Calculator Inputs
 export interface InteriorSqftInputs {
   houseSquareFootage: number;
   pricingOption: InteriorSqftOption;
   markup: MarkupPercentage;
+  houseCondition: HouseCondition;
 }
 
 // Interior Square Footage Auto-calculations

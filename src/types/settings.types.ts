@@ -28,10 +28,35 @@ export interface CrewRateConfig {
   description?: string; // Editable helper text
 }
 
+// Interior labor modifier values (configurable)
+export interface InteriorModifierValues {
+  heavilyFurnished: number;
+  emptyHouse: number;
+  extensivePrep: number;
+  additionalCoat: number;
+  oneCoat: number;
+}
+
+// Exterior labor modifier values (configurable)
+export interface ExteriorModifierValues {
+  threeStory: number;
+  extensivePrep: number;
+  hardTerrain: number;
+  additionalCoat: number;
+  oneCoat: number;
+}
+
 // All pricing configuration (formerly hardcoded)
 export interface PricingSettings {
   // Simple calculator rates
   interiorSqft: {
+    wallsOnly: number;
+    trimOnly: number;
+    ceilingsOnly: number;
+    complete: number;
+  };
+  // Empty house interior rates
+  interiorSqftEmpty: {
     wallsOnly: number;
     trimOnly: number;
     ceilingsOnly: number;
@@ -79,6 +104,10 @@ export interface PricingSettings {
   // Editable job duration description text
   jobDurationFormulaText?: string;
   jobDurationExampleText?: string;
+
+  // Editable labor modifier values
+  interiorModifierValues?: InteriorModifierValues;
+  exteriorModifierValues?: ExteriorModifierValues;
 
   // Dynamic configuration
   lineItems: LineItemConfig[];

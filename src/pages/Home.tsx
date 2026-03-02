@@ -33,6 +33,12 @@ const calculatorOptions: CalculatorOption[] = [
     description: 'Detailed exterior bid with measurements, modifiers, and materials',
     icon: '📏',
   },
+  {
+    type: 'per-room',
+    title: 'Per Room - Detailed',
+    description: 'Room-by-room interior bid with individual breakdowns and a grand total',
+    icon: '🛋️',
+  },
 ];
 
 export function Home() {

@@ -65,7 +65,7 @@ export function calculateExteriorDetailed(
   baseLabor += Object.values(additionalLabor).reduce((sum, val) => sum + val, 0);
 
   // 2. Apply modifiers (multiplicative)
-  const { modifiedLabor, appliedModifiers } = applyExteriorModifiers(baseLabor, inputs.modifiers);
+  const { modifiedLabor, appliedModifiers } = applyExteriorModifiers(baseLabor, inputs.modifiers, pricing);
 
   // 3. Calculate materials
   const materials = calculateExteriorMaterials({

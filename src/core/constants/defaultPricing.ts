@@ -13,6 +13,13 @@ export function createDefaultPricingSettings(): PricingSettings {
       ceilingsOnly: 1.00,
       complete: 2.50,
     },
+    // Empty house interior rates (discounted)
+    interiorSqftEmpty: {
+      wallsOnly: 1.25,
+      trimOnly: 1.00,
+      ceilingsOnly: 0.75,
+      complete: 2.00,
+    },
     exteriorSqft: {
       fullExterior: 2.00,
       trimOnly: 1.35,
@@ -67,6 +74,24 @@ export function createDefaultPricingSettings(): PricingSettings {
 
     jobDurationFormulaText: 'Estimated Days = Labor Cost ÷ Daily Rate',
     jobDurationExampleText: 'For example, if labor cost is $3,000 and you select a 2-person crew ($1,000/day), the estimated duration is 3 days.',
+
+    // Interior labor modifier values (multipliers)
+    interiorModifierValues: {
+      heavilyFurnished: 1.25,
+      emptyHouse: 0.85,
+      extensivePrep: 1.15,
+      additionalCoat: 1.25,
+      oneCoat: 0.85,
+    },
+
+    // Exterior labor modifier values (multipliers)
+    exteriorModifierValues: {
+      threeStory: 1.15,
+      extensivePrep: 1.20,
+      hardTerrain: 1.15,
+      additionalCoat: 1.25,
+      oneCoat: 0.85,
+    },
 
     // Dynamic line items - Interior Detailed
     lineItems: [

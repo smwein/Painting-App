@@ -88,6 +88,14 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
     return calculateExteriorSqftAutoMeasurements(houseSquareFootage, pricing);
   }, [houseSquareFootage, pricing]);
 
+  // Estimate gallons from auto-calculations
+  const gallonEstimate = useMemo(() => {
+    if (!autoCalcs) return null;
+    const wallGallons = autoCalcs.sidingSqft / pricing.exteriorCoverage.wallSqftPerGallon;
+    const trimGallons = autoCalcs.trimLF / pricing.exteriorCoverage.trimLfPerGallon;
+    return { wallGallons, trimGallons, total: wallGallons + trimGallons };
+  }, [autoCalcs, pricing]);
+
   return (
     <div className="space-y-6">
       <CustomerInfoSection register={register} />
@@ -125,7 +133,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
               {...register('pricingOption', { required: true })}
             />
             <span className="text-sm font-medium text-gray-700">
-              Full Exterior ($2.00/sqft)
+              Full Exterior (${pricing.exteriorSqft.fullExterior.toFixed(2)}/sqft)
             </span>
           </label>
 
@@ -137,7 +145,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
               {...register('pricingOption', { required: true })}
             />
             <span className="text-sm font-medium text-gray-700">
-              Trim Only ($1.35/sqft)
+              Trim Only (${pricing.exteriorSqft.trimOnly.toFixed(2)}/sqft)
             </span>
           </label>
         </CardContent>
@@ -155,12 +163,15 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
             <CardContent className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Labor Cost</span>
-                <span className="text-lg font-semibold text-gray-800">
-                  ${result.labor.toFixed(2)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">({result.total > 0 ? ((result.labor / result.total) * 100).toFixed(0) : 0}%)</span>
+                  <span className="text-lg font-semibold text-gray-800">
+                    ${result.labor.toFixed(2)}
+                  </span>
+                </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Profit</span>
+                <span className="text-sm text-gray-600">Gross Profit</span>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-green-600 font-medium">({markup}%)</span>
                   <span className="text-lg font-semibold text-green-700">
@@ -177,6 +188,28 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
             </CardContent>
           </Card>
         </>
+      )}
+
+      {gallonEstimate && gallonEstimate.total > 0 && (
+        <Card className="bg-yellow-50 border-yellow-200">
+          <CardHeader>
+            <CardTitle>Estimated Paint</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-xs text-gray-600 mb-1">Siding Paint</div>
+              <div className="text-xl font-bold text-yellow-700">{gallonEstimate.wallGallons.toFixed(1)} gal</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-gray-600 mb-1">Trim Paint</div>
+              <div className="text-xl font-bold text-yellow-700">{gallonEstimate.trimGallons.toFixed(1)} gal</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-gray-600 mb-1">Total</div>
+              <div className="text-xl font-bold text-yellow-800">{gallonEstimate.total.toFixed(1)} gal</div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {autoCalcs && (
