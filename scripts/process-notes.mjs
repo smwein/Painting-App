@@ -15,8 +15,8 @@
 import { google } from 'googleapis';
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
-import readline from 'readline';
+import http from 'http';
+import { execSync, exec } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -50,40 +50,53 @@ function saveProcessed(data) {
   fs.writeFileSync(PROCESSED_FILE, JSON.stringify(data, null, 2));
 }
 
-function prompt(question) {
-  return new Promise((resolve) => {
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    rl.question(question, (ans) => { rl.close(); resolve(ans); });
+const REDIRECT_PORT = 3000;
+const REDIRECT_URI = `http://localhost:${REDIRECT_PORT}`;
+
+function openBrowser(url) {
+  exec(`open "${url}"`); // macOS
+}
+
+function waitForAuthCode() {
+  return new Promise((resolve, reject) => {
+    const server = http.createServer((req, res) => {
+      const code = new URL(req.url, REDIRECT_URI).searchParams.get('code');
+      if (code) {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end('<h2 style="font-family:sans-serif;text-align:center;margin-top:80px">✅ Authorized! You can close this tab.</h2>');
+        server.close();
+        resolve(code);
+      } else {
+        res.writeHead(400);
+        res.end('No code received');
+        server.close();
+        reject(new Error('No auth code in callback'));
+      }
+    });
+    server.listen(REDIRECT_PORT, () => {
+      console.log(`  Listening for OAuth callback on port ${REDIRECT_PORT}...`);
+    });
+    server.on('error', reject);
+    // Timeout after 2 minutes
+    setTimeout(() => { server.close(); reject(new Error('Auth timed out')); }, 120000);
   });
 }
 
 async function getAuthClient() {
   if (!fs.existsSync(CREDENTIALS_FILE)) {
-    console.error(`
-❌  Missing credentials file: scripts/google-credentials.json
-
-To set up:
-  1. Go to https://console.cloud.google.com/apis/credentials?project=texpainting-bid
-  2. Click "Create Credentials" → "OAuth client ID"
-  3. Application type: "Desktop app" → name it "Notes Script" → Create
-  4. Click the download icon (⬇) next to the new credential
-  5. Save the downloaded JSON as:  scripts/google-credentials.json
-  6. Also enable the Drive API at:
-     https://console.cloud.google.com/apis/library/drive.googleapis.com?project=texpainting-bid
-`);
+    console.error(`\n❌  Missing credentials file: scripts/google-credentials.json\n`);
     process.exit(1);
   }
 
   const creds = JSON.parse(fs.readFileSync(CREDENTIALS_FILE, 'utf8'));
-  const { client_id, client_secret, redirect_uris } = creds.installed || creds.web;
+  const { client_id, client_secret } = creds.installed || creds.web;
 
-  const oauth2 = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+  const oauth2 = new google.auth.OAuth2(client_id, client_secret, REDIRECT_URI);
 
   // Use stored token if available
   if (fs.existsSync(TOKEN_FILE)) {
     const token = JSON.parse(fs.readFileSync(TOKEN_FILE, 'utf8'));
     oauth2.setCredentials(token);
-    // Refresh if expired
     oauth2.on('tokens', (newTokens) => {
       const existing = JSON.parse(fs.readFileSync(TOKEN_FILE, 'utf8'));
       fs.writeFileSync(TOKEN_FILE, JSON.stringify({ ...existing, ...newTokens }, null, 2));
@@ -91,16 +104,16 @@ To set up:
     return oauth2;
   }
 
-  // First run: open browser for consent
+  // First run: open browser, local server catches the redirect
   const authUrl = oauth2.generateAuthUrl({ access_type: 'offline', scope: SCOPES });
-  console.log('\n🔐  First-time setup: open this URL in your browser to authorize:\n');
-  console.log('  ', authUrl, '\n');
+  console.log('\n🔐  Opening browser for Google authorization (sign in as steven@simpleav.co)...\n');
+  openBrowser(authUrl);
 
-  const code = await prompt('Paste the authorization code here: ');
-  const { tokens } = await oauth2.getToken(code.trim());
+  const code = await waitForAuthCode();
+  const { tokens } = await oauth2.getToken(code);
   oauth2.setCredentials(tokens);
   fs.writeFileSync(TOKEN_FILE, JSON.stringify(tokens, null, 2));
-  console.log('✅  Token saved. You won\'t need to do this again.\n');
+  console.log('\n✅  Authorized and token saved. Future runs will be automatic.\n');
 
   return oauth2;
 }
