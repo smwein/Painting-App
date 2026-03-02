@@ -64,6 +64,13 @@ export function calculateInteriorDetailed(
   };
   baseLabor += Object.values(additionalLabor).reduce((sum, val) => sum + val, 0);
 
+  // Custom line item labor (from user-added sections)
+  if (inputs.customItemValues) {
+    for (const [itemId, quantity] of Object.entries(inputs.customItemValues)) {
+      baseLabor += quantity * getRate(itemId);
+    }
+  }
+
   // 2. Apply modifiers (multiplicative)
   const { modifiedLabor, appliedModifiers } = applyInteriorModifiers(baseLabor, inputs.modifiers, pricing);
 

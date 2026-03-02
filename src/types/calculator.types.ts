@@ -109,6 +109,9 @@ export interface InteriorDetailedInputs {
 
   // Modifiers
   modifiers: InteriorModifiers;
+
+  // Custom section line item quantities (itemId → quantity)
+  customItemValues?: Record<string, number>;
 }
 
 // Exterior Detailed Calculator Modifiers
@@ -166,6 +169,9 @@ export interface ExteriorDetailedInputs {
 
   // Modifiers
   modifiers: ExteriorModifiers;
+
+  // Custom section line item quantities (itemId → quantity)
+  customItemValues?: Record<string, number>;
 }
 
 // Interior Detailed breakdown for display

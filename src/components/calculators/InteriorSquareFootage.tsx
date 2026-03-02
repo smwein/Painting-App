@@ -35,7 +35,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
     defaultValues: {
       houseSquareFootage: 0,
       pricingOption: 'complete',
-      markup: 40,
+      markup: 50,
       houseCondition: 'furnished',
     },
   });

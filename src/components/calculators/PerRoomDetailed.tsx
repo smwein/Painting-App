@@ -50,7 +50,7 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
   const pricing = settings.pricing;
 
   const { register, watch } = useForm<PerRoomFormData>({
-    defaultValues: { markup: 40 },
+    defaultValues: { markup: 50 },
   });
 
   const markup = watch('markup');

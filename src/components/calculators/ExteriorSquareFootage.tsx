@@ -33,7 +33,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
     defaultValues: {
       houseSquareFootage: 0,
       pricingOption: 'full-exterior',
-      markup: 40,
+      markup: 50,
     },
   });
 

@@ -461,6 +461,22 @@ export function createDefaultPricingSettings(): PricingSettings {
         order: 4,
       },
 
+      // Simple Pricing Sections
+      {
+        id: 'simple-interior-sqft',
+        name: 'Interior Square Footage',
+        calculatorType: 'simple-pricing',
+        isDefault: true,
+        order: 1,
+      },
+      {
+        id: 'simple-exterior-sqft',
+        name: 'Exterior Square Footage',
+        calculatorType: 'simple-pricing',
+        isDefault: true,
+        order: 2,
+      },
+
       // Exterior Detailed Sections
       {
         id: 'ext-measurements',
