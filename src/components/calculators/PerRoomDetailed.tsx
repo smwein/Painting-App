@@ -12,6 +12,7 @@ import {
   calculatePerRoom,
   ROOM_TYPE_LABELS,
   ROOM_DEFAULT_SF,
+  getAllRoomTypes,
 } from '../../core/calculators/perRoomDetailed';
 import type { RoomEntry, RoomType } from '../../core/calculators/perRoomDetailed';
 
@@ -26,28 +27,27 @@ interface PerRoomDetailedProps {
 
 const PAINT_TYPES: PaintType[] = ['ProMar', 'SuperPaint', 'Duration', 'Emerald'];
 
-const ROOM_TYPES: RoomType[] = [
-  'bedroom', 'living-room', 'kitchen', 'bathroom', 'closet',
-  'dining-room', 'basement', 'hallway', 'office',
-];
-
-function createRoom(type: RoomType = 'bedroom'): RoomEntry {
-  const sf = ROOM_DEFAULT_SF[type];
-  return {
-    id: crypto.randomUUID(),
-    roomType: type,
-    roomLabel: ROOM_TYPE_LABELS[type],
-    wallSqft: sf,
-    ceilingSqft: Math.round(sf * 0.31),
-    trimLF: Math.round(sf * 0.11),
-    doors: type === 'bathroom' || type === 'closet' ? 1 : 2,
-    paintType: 'SuperPaint',
-  };
-}
-
 export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
   const { settings } = useSettingsStore();
   const pricing = settings.pricing;
+
+  const allRoomTypes = getAllRoomTypes(pricing);
+
+  const createRoom = (type: RoomType = 'bedroom'): RoomEntry => {
+    const roomDef = allRoomTypes.find((r) => r.id === type);
+    const sf = roomDef?.defaultSqft ?? ROOM_DEFAULT_SF[type] ?? 150;
+    const label = roomDef?.name ?? ROOM_TYPE_LABELS[type] ?? type;
+    return {
+      id: crypto.randomUUID(),
+      roomType: type,
+      roomLabel: label,
+      wallSqft: sf,
+      ceilingSqft: Math.round(sf * 0.31),
+      trimLF: Math.round(sf * 0.11),
+      doors: type === 'bathroom' || type === 'closet' ? 1 : 2,
+      paintType: 'SuperPaint',
+    };
+  };
 
   const { register, watch } = useForm<PerRoomFormData>({
     defaultValues: { markup: 50 },
@@ -56,7 +56,7 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
   const markup = watch('markup');
   const customer = watch('customer');
 
-  const [rooms, setRooms] = useState<RoomEntry[]>([createRoom('bedroom')]);
+  const [rooms, setRooms] = useState<RoomEntry[]>(() => [createRoom('bedroom')]);
   const [collapsedRooms, setCollapsedRooms] = useState<Record<string, boolean>>({});
 
   const toggleRoom = (id: string) =>
@@ -77,12 +77,15 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
       const updated = { ...r, ...updates };
       // Auto-fill measurements if room type changed
       if (updates.roomType && updates.roomType !== r.roomType) {
-        const sf = ROOM_DEFAULT_SF[updates.roomType];
+        const roomDef = allRoomTypes.find((rt) => rt.id === updates.roomType);
+        const sf = roomDef?.defaultSqft ?? ROOM_DEFAULT_SF[updates.roomType!] ?? 150;
         updated.wallSqft = sf;
         updated.ceilingSqft = Math.round(sf * 0.31);
         updated.trimLF = Math.round(sf * 0.11);
         updated.doors = updates.roomType === 'bathroom' || updates.roomType === 'closet' ? 1 : 2;
-        if (!updates.roomLabel) updated.roomLabel = ROOM_TYPE_LABELS[updates.roomType];
+        if (!updates.roomLabel) {
+          updated.roomLabel = roomDef?.name ?? ROOM_TYPE_LABELS[updates.roomType!] ?? updates.roomType!;
+        }
       }
       return updated;
     }));
@@ -163,8 +166,8 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
                         value={room.roomType}
                         onChange={(e) => updateRoom(room.id, { roomType: e.target.value as RoomType })}
                       >
-                        {ROOM_TYPES.map((type) => (
-                          <option key={type} value={type}>{ROOM_TYPE_LABELS[type]}</option>
+                        {allRoomTypes.map((rt) => (
+                          <option key={rt.id} value={rt.id}>{rt.name}</option>
                         ))}
                       </select>
                     </div>

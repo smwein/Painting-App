@@ -74,7 +74,7 @@ function SectionSubtotal({ total }: { total: number }) {
 }
 
 export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailedProps) {
-  const { settings } = useSettingsStore();
+  const { settings, updateSection, deleteSection } = useSettingsStore();
   const pricing = settings.pricing;
 
   const [houseCondition, setHouseCondition] = useState<HouseCondition>('furnished');
@@ -97,6 +97,29 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
   });
   const toggleSection = (id: string) =>
     setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const moveSection = (sectionId: string, direction: 'up' | 'down') => {
+    const sorted = [...pricing.sections]
+      .filter((s) => s.calculatorType === 'interior-detailed')
+      .sort((a, b) => a.order - b.order);
+    const idx = sorted.findIndex((s) => s.id === sectionId);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+    const currentOrder = sorted[idx].order;
+    const swapOrder = sorted[swapIdx].order;
+    updateSection(sorted[idx].id, { order: swapOrder });
+    updateSection(sorted[swapIdx].id, { order: currentOrder });
+  };
+
+  const handleDeleteSection = (sectionId: string) => {
+    const section = pricing.sections.find((s) => s.id === sectionId);
+    if (!section) return;
+    const itemCount = pricing.lineItems.filter((i) => i.category === sectionId).length;
+    const msg = itemCount > 0
+      ? `Delete "${section.name}"? This section has ${itemCount} line item(s) that will also be removed.`
+      : `Delete "${section.name}"?`;
+    if (confirm(msg)) deleteSection(sectionId);
+  };
 
   // State for custom section line item quantities
   const [customValues, setCustomValues] = useState<Record<string, number>>({});
@@ -338,24 +361,59 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
 
   return (
     <div className="space-y-6">
-      {/* House Condition */}
-      <Card className="bg-green-50 border-green-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">House Condition</h3>
-        <CardContent>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Is the house furnished?</label>
-          <select
-            value={houseCondition}
-            onChange={(e) => setHouseCondition(e.target.value as HouseCondition)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
-          >
-            <option value="furnished">Furnished</option>
-            <option value="empty">Empty</option>
-          </select>
-          <p className="text-xs text-gray-500 mt-2">
-            Affects wall, ceiling, and trim labor rates.
-          </p>
-        </CardContent>
-      </Card>
+      {/* House Condition Rate Cards */}
+      <div className="grid grid-cols-2 gap-4">
+        <button
+          type="button"
+          onClick={() => setHouseCondition('furnished')}
+          className={`text-left rounded-lg border-2 p-4 transition-colors ${
+            houseCondition === 'furnished'
+              ? 'border-green-500 bg-green-50'
+              : 'border-gray-200 bg-white opacity-60'
+          }`}
+        >
+          <h4 className="text-sm font-semibold text-gray-900 mb-2">Interior Furnished Rates</h4>
+          <div className="space-y-1 text-xs text-gray-600">
+            <div className="flex justify-between">
+              <span>Wall Sqft</span>
+              <span className="font-medium">${(pricing.interiorDetailedFurnishedRates?.wallSqft ?? 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Ceiling Sqft</span>
+              <span className="font-medium">${(pricing.interiorDetailedFurnishedRates?.ceilingSqft ?? 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Trim LF</span>
+              <span className="font-medium">${(pricing.interiorDetailedFurnishedRates?.trimLF ?? 0).toFixed(2)}</span>
+            </div>
+          </div>
+        </button>
+        <button
+          type="button"
+          onClick={() => setHouseCondition('empty')}
+          className={`text-left rounded-lg border-2 p-4 transition-colors ${
+            houseCondition === 'empty'
+              ? 'border-green-500 bg-green-50'
+              : 'border-gray-200 bg-white opacity-60'
+          }`}
+        >
+          <h4 className="text-sm font-semibold text-gray-900 mb-2">Interior Empty Rates</h4>
+          <div className="space-y-1 text-xs text-gray-600">
+            <div className="flex justify-between">
+              <span>Wall Sqft</span>
+              <span className="font-medium">${(pricing.interiorDetailedEmptyRates?.wallSqft ?? 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Ceiling Sqft</span>
+              <span className="font-medium">${(pricing.interiorDetailedEmptyRates?.ceilingSqft ?? 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Trim LF</span>
+              <span className="font-medium">${(pricing.interiorDetailedEmptyRates?.trimLF ?? 0).toFixed(2)}</span>
+            </div>
+          </div>
+        </button>
+      </div>
 
       {/* House SF Auto-Calculate */}
       <Card className="bg-blue-50 border-blue-200">
@@ -377,17 +435,45 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
       </Card>
 
       {/* All sections rendered in dynamic sorted order */}
-      {allIntSections.map((section) => {
+      {allIntSections.map((section, sectionIdx) => {
         const unitLabel: Record<string, string> = { sqft: '/sqft', lf: '/LF', each: '/each', hour: '/hour', dollars: '' };
+        const isFirst = sectionIdx === 0;
+        const isLast = sectionIdx === allIntSections.length - 1;
+
+        const sectionHeader = (sectionId: string) => (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex flex-col -my-1">
+                <button
+                  onClick={() => moveSection(sectionId, 'up')}
+                  disabled={isFirst}
+                  className="text-xs text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed px-1 leading-none"
+                >&#9650;</button>
+                <button
+                  onClick={() => moveSection(sectionId, 'down')}
+                  disabled={isLast}
+                  className="text-xs text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed px-1 leading-none"
+                >&#9660;</button>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => toggleSection(sectionId)} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+                {collapsed[sectionId] ? '+ Show' : '− Hide'}
+              </button>
+              {!section.isDefault && (
+                <button
+                  onClick={() => handleDeleteSection(sectionId)}
+                  className="text-sm text-red-400 hover:text-red-600 font-bold px-1"
+                >&#10005;</button>
+              )}
+            </div>
+          </div>
+        );
 
         if (section.id === 'int-measurements') return (
           <Card key={section.id}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
-              <button onClick={() => toggleSection('int-measurements')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-                {collapsed['int-measurements'] ? '+ Show' : '− Hide'}
-              </button>
-            </div>
+            {sectionHeader('int-measurements')}
             {!collapsed['int-measurements'] && (
               <div className="mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -403,12 +489,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
 
         if (section.id === 'int-doors-cabinets') return (
           <Card key={section.id}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
-              <button onClick={() => toggleSection('int-doors-cabinets')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-                {collapsed['int-doors-cabinets'] ? '+ Show' : '− Hide'}
-              </button>
-            </div>
+            {sectionHeader('int-doors-cabinets')}
             {!collapsed['int-doors-cabinets'] && (
               <div className="mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -426,12 +507,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
 
         if (section.id === 'int-prep-work') return (
           <Card key={section.id}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
-              <button onClick={() => toggleSection('int-prep-work')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-                {collapsed['int-prep-work'] ? '+ Show' : '− Hide'}
-              </button>
-            </div>
+            {sectionHeader('int-prep-work')}
             {!collapsed['int-prep-work'] && (
               <div className="mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -452,12 +528,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
 
         if (section.id === 'int-additional') return (
           <Card key={section.id}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
-              <button onClick={() => toggleSection('int-additional')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-                {collapsed['int-additional'] ? '+ Show' : '− Hide'}
-              </button>
-            </div>
+            {sectionHeader('int-additional')}
             {!collapsed['int-additional'] && (
               <div className="mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -484,12 +555,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
 
         return (
           <Card key={section.id}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
-              <button onClick={() => toggleSection(section.id)} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-                {collapsed[section.id] ? '+ Show' : '− Hide'}
-              </button>
-            </div>
+            {sectionHeader(section.id)}
             {!collapsed[section.id] && (
               <div className="mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -6,6 +6,7 @@ import { ExteriorDetailedPricing } from '../components/settings/ExteriorDetailed
 import { CustomLineItemsManager } from '../components/settings/CustomLineItemsManager';
 import { CustomSectionsManager } from '../components/settings/CustomSectionsManager';
 import { JobEstimationSettings } from '../components/settings/JobEstimationSettings';
+import { PerRoomSettings } from '../components/settings/PerRoomSettings';
 import { UsersSettings } from '../components/settings/UsersSettings';
 
 type SettingsTab =
@@ -15,6 +16,7 @@ type SettingsTab =
   | 'exterior-detailed-pricing'
   | 'line-items'
   | 'sections'
+  | 'per-room'
   | 'crew-rates'
   | 'users';
 
@@ -65,6 +67,12 @@ export function Settings() {
             Add New Section
           </TabButton>
           <TabButton
+            active={activeTab === 'per-room'}
+            onClick={() => setActiveTab('per-room')}
+          >
+            Per Room
+          </TabButton>
+          <TabButton
             active={activeTab === 'crew-rates'}
             onClick={() => setActiveTab('crew-rates')}
           >
@@ -87,6 +95,7 @@ export function Settings() {
         {activeTab === 'exterior-detailed-pricing' && <ExteriorDetailedPricing />}
         {activeTab === 'line-items' && <CustomLineItemsManager />}
         {activeTab === 'sections' && <CustomSectionsManager />}
+        {activeTab === 'per-room' && <PerRoomSettings />}
         {activeTab === 'crew-rates' && <JobEstimationSettings />}
         {activeTab === 'users' && <UsersSettings />}
       </div>

@@ -2,18 +2,9 @@ import type { BidResult, MaterialBreakdown, PaintType } from '../../types/calcul
 import type { PricingSettings } from '../../types/settings.types';
 import { calculateInteriorMaterials } from './utils/materialCalculations';
 
-export type RoomType =
-  | 'bedroom'
-  | 'living-room'
-  | 'kitchen'
-  | 'bathroom'
-  | 'closet'
-  | 'dining-room'
-  | 'basement'
-  | 'hallway'
-  | 'office';
+export type RoomType = string;
 
-export const ROOM_TYPE_LABELS: Record<RoomType, string> = {
+export const ROOM_TYPE_LABELS: Record<string, string> = {
   'bedroom': 'Bedroom',
   'living-room': 'Living Room',
   'kitchen': 'Kitchen',
@@ -26,7 +17,7 @@ export const ROOM_TYPE_LABELS: Record<RoomType, string> = {
 };
 
 // Default SF estimates per room type (for auto-fill)
-export const ROOM_DEFAULT_SF: Record<RoomType, number> = {
+export const ROOM_DEFAULT_SF: Record<string, number> = {
   'bedroom': 180,
   'living-room': 300,
   'kitchen': 200,
@@ -37,6 +28,23 @@ export const ROOM_DEFAULT_SF: Record<RoomType, number> = {
   'hallway': 100,
   'office': 150,
 };
+
+// Built-in room type IDs
+export const BUILT_IN_ROOM_TYPES: string[] = [
+  'bedroom', 'living-room', 'kitchen', 'bathroom', 'closet',
+  'dining-room', 'basement', 'hallway', 'office',
+];
+
+// Merge built-in room types with custom room types from settings
+export function getAllRoomTypes(pricing: PricingSettings): Array<{ id: string; name: string; defaultSqft: number }> {
+  const builtIn = BUILT_IN_ROOM_TYPES.map((id) => ({
+    id,
+    name: ROOM_TYPE_LABELS[id],
+    defaultSqft: ROOM_DEFAULT_SF[id],
+  }));
+  const custom = pricing.customRoomTypes ?? [];
+  return [...builtIn, ...custom];
+}
 
 export interface RoomEntry {
   id: string;

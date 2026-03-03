@@ -137,6 +137,9 @@ export interface PricingSettings {
   interiorModifierValues?: InteriorModifierValues;
   exteriorModifierValues?: ExteriorModifierValues;
 
+  // Custom room types for Per Room calculator
+  customRoomTypes?: Array<{ id: string; name: string; defaultSqft: number }>;
+
   // Dynamic configuration
   lineItems: LineItemConfig[];
   sections: SectionConfig[];

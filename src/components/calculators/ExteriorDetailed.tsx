@@ -69,7 +69,7 @@ function SectionSubtotal({ total }: { total: number }) {
 }
 
 export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailedProps) {
-  const { settings } = useSettingsStore();
+  const { settings, updateSection, deleteSection } = useSettingsStore();
   const pricing = settings.pricing;
 
   const getRate = (lineItemId: string): number => {
@@ -84,6 +84,29 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
   });
   const toggleSection = (id: string) =>
     setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const moveSection = (sectionId: string, direction: 'up' | 'down') => {
+    const sorted = [...pricing.sections]
+      .filter((s) => s.calculatorType === 'exterior-detailed')
+      .sort((a, b) => a.order - b.order);
+    const idx = sorted.findIndex((s) => s.id === sectionId);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+    const currentOrder = sorted[idx].order;
+    const swapOrder = sorted[swapIdx].order;
+    updateSection(sorted[idx].id, { order: swapOrder });
+    updateSection(sorted[swapIdx].id, { order: currentOrder });
+  };
+
+  const handleDeleteSection = (sectionId: string) => {
+    const section = pricing.sections.find((s) => s.id === sectionId);
+    if (!section) return;
+    const itemCount = pricing.lineItems.filter((i) => i.category === sectionId).length;
+    const msg = itemCount > 0
+      ? `Delete "${section.name}"? This section has ${itemCount} line item(s) that will also be removed.`
+      : `Delete "${section.name}"?`;
+    if (confirm(msg)) deleteSection(sectionId);
+  };
 
   // State for custom section line item quantities
   const [customValues, setCustomValues] = useState<Record<string, number>>({});
@@ -303,17 +326,45 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
       </Card>
 
       {/* All sections rendered in dynamic sorted order */}
-      {allExtSections.map((section) => {
+      {allExtSections.map((section, sectionIdx) => {
         const unitLabel: Record<string, string> = { sqft: '/sqft', lf: '/LF', each: '/each', hour: '/hour', dollars: '' };
+        const isFirst = sectionIdx === 0;
+        const isLast = sectionIdx === allExtSections.length - 1;
+
+        const sectionHeader = (sectionId: string) => (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex flex-col -my-1">
+                <button
+                  onClick={() => moveSection(sectionId, 'up')}
+                  disabled={isFirst}
+                  className="text-xs text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed px-1 leading-none"
+                >&#9650;</button>
+                <button
+                  onClick={() => moveSection(sectionId, 'down')}
+                  disabled={isLast}
+                  className="text-xs text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed px-1 leading-none"
+                >&#9660;</button>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => toggleSection(sectionId)} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+                {collapsed[sectionId] ? '+ Show' : '− Hide'}
+              </button>
+              {!section.isDefault && (
+                <button
+                  onClick={() => handleDeleteSection(sectionId)}
+                  className="text-sm text-red-400 hover:text-red-600 font-bold px-1"
+                >&#10005;</button>
+              )}
+            </div>
+          </div>
+        );
 
         if (section.id === 'ext-measurements') return (
           <Card key={section.id}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
-              <button onClick={() => toggleSection('ext-measurements')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-                {collapsed['ext-measurements'] ? '+ Show' : '− Hide'}
-              </button>
-            </div>
+            {sectionHeader('ext-measurements')}
             {!collapsed['ext-measurements'] && (
               <div className="mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -328,12 +379,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
 
         if (section.id === 'ext-doors-shutters') return (
           <Card key={section.id}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
-              <button onClick={() => toggleSection('ext-doors-shutters')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-                {collapsed['ext-doors-shutters'] ? '+ Show' : '− Hide'}
-              </button>
-            </div>
+            {sectionHeader('ext-doors-shutters')}
             {!collapsed['ext-doors-shutters'] && (
               <div className="mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -349,12 +395,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
 
         if (section.id === 'ext-prep-work') return (
           <Card key={section.id}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
-              <button onClick={() => toggleSection('ext-prep-work')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-                {collapsed['ext-prep-work'] ? '+ Show' : '− Hide'}
-              </button>
-            </div>
+            {sectionHeader('ext-prep-work')}
             {!collapsed['ext-prep-work'] && (
               <div className="mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -369,12 +410,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
 
         if (section.id === 'ext-replacements-repairs') return (
           <Card key={section.id}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
-              <button onClick={() => toggleSection('ext-replacements-repairs')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-                {collapsed['ext-replacements-repairs'] ? '+ Show' : '− Hide'}
-              </button>
-            </div>
+            {sectionHeader('ext-replacements-repairs')}
             {!collapsed['ext-replacements-repairs'] && (
               <div className="mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -391,12 +427,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
 
         if (section.id === 'ext-additional') return (
           <Card key={section.id}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
-              <button onClick={() => toggleSection('ext-additional')} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-                {collapsed['ext-additional'] ? '+ Show' : '− Hide'}
-              </button>
-            </div>
+            {sectionHeader('ext-additional')}
             {!collapsed['ext-additional'] && (
               <div className="mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -423,12 +454,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
 
         return (
           <Card key={section.id}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
-              <button onClick={() => toggleSection(section.id)} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-                {collapsed[section.id] ? '+ Show' : '− Hide'}
-              </button>
-            </div>
+            {sectionHeader(section.id)}
             {!collapsed[section.id] && (
               <div className="mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
