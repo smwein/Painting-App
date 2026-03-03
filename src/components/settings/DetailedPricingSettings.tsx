@@ -143,6 +143,15 @@ export function DetailedPricingSettings() {
       .filter((item) => item.category === sectionId)
       .sort((a, b) => a.order - b.order);
 
+  const moveLineItem = (items: ReturnType<typeof getItemsForSection>, idx: number, direction: 'up' | 'down') => {
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= items.length) return;
+    const a = items[idx];
+    const b = items[swapIdx];
+    updateLineItem(a.id, { order: b.order });
+    updateLineItem(b.id, { order: a.order });
+  };
+
   const renderSections = (sections: typeof interiorSections) =>
     sections.map((section, idx) => {
       const items = getItemsForSection(section.id);
@@ -206,8 +215,22 @@ export function DetailedPricingSettings() {
             </div>
           </CardHeader>
           <CardContent className="space-y-2">
-            {items.map((item) => (
+            {items.map((item, itemIdx) => (
               <div key={item.id} className="flex items-end gap-2">
+                <div className="flex flex-col gap-0.5 flex-shrink-0 mb-0.5">
+                  <button
+                    onClick={() => moveLineItem(items, itemIdx, 'up')}
+                    disabled={itemIdx === 0}
+                    className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs px-1 leading-none"
+                    title="Move up"
+                  >▲</button>
+                  <button
+                    onClick={() => moveLineItem(items, itemIdx, 'down')}
+                    disabled={itemIdx === items.length - 1}
+                    className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs px-1 leading-none"
+                    title="Move down"
+                  >▼</button>
+                </div>
                 <div className="flex-1">
                   <label className="block text-xs font-medium text-gray-700 mb-1">Name</label>
                   <input
