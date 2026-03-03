@@ -304,6 +304,41 @@ export function InteriorDetailedPricing() {
         Edit section names (click to edit), adjust rates and names for each line item, reorder sections, and configure modifier scopes. Line item name/rate changes save on blur; use Save button for modifiers, multipliers, and paint prices.
       </p>
 
+      {/* Auto-Calculate Multipliers */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Auto-Calculate Multipliers</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-gray-500">
+            When a user enters House Square Footage, these multipliers determine how wall sqft, ceiling sqft, and trim LF are auto-populated.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Input
+              label="Wall Multiplier"
+              type="number" min="0" step="0.1"
+              value={intMultipliers.wall}
+              onChange={(e) => setIntMultipliers((p) => ({ ...p, wall: parseFloat(e.target.value) || 0 }))}
+              helperText={`Wall Sqft = House SF × ${intMultipliers.wall}`}
+            />
+            <Input
+              label="Ceiling Multiplier"
+              type="number" min="0" step="0.1"
+              value={intMultipliers.ceiling}
+              onChange={(e) => setIntMultipliers((p) => ({ ...p, ceiling: parseFloat(e.target.value) || 0 }))}
+              helperText={`Ceiling Sqft = House SF × ${intMultipliers.ceiling}`}
+            />
+            <Input
+              label="Trim Multiplier"
+              type="number" min="0" step="0.01"
+              value={intMultipliers.trim}
+              onChange={(e) => setIntMultipliers((p) => ({ ...p, trim: parseFloat(e.target.value) || 0 }))}
+              helperText={`Trim LF = House SF × ${intMultipliers.trim}`}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="space-y-4">
         {renderSections(interiorSections)}
       </div>
@@ -364,41 +399,6 @@ export function InteriorDetailedPricing() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Auto-Calculate Multipliers */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Auto-Calculate Multipliers</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-xs text-gray-500">
-            When a user enters House Square Footage, these multipliers determine how wall sqft, ceiling sqft, and trim LF are auto-populated.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Input
-              label="Wall Multiplier"
-              type="number" min="0" step="0.1"
-              value={intMultipliers.wall}
-              onChange={(e) => setIntMultipliers((p) => ({ ...p, wall: parseFloat(e.target.value) || 0 }))}
-              helperText={`Wall Sqft = House SF × ${intMultipliers.wall}`}
-            />
-            <Input
-              label="Ceiling Multiplier"
-              type="number" min="0" step="0.1"
-              value={intMultipliers.ceiling}
-              onChange={(e) => setIntMultipliers((p) => ({ ...p, ceiling: parseFloat(e.target.value) || 0 }))}
-              helperText={`Ceiling Sqft = House SF × ${intMultipliers.ceiling}`}
-            />
-            <Input
-              label="Trim Multiplier"
-              type="number" min="0" step="0.01"
-              value={intMultipliers.trim}
-              onChange={(e) => setIntMultipliers((p) => ({ ...p, trim: parseFloat(e.target.value) || 0 }))}
-              helperText={`Trim LF = House SF × ${intMultipliers.trim}`}
-            />
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Interior Modifiers */}
       <Card>

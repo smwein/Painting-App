@@ -26,15 +26,15 @@ export function CalculatorPage() {
   const getCalculatorTitle = () => {
     switch (type) {
       case 'interior-sqft':
-        return 'Interior - Square Footage';
+        return 'Interior Quick Measure';
       case 'interior-detailed':
-        return 'Interior - Detailed';
+        return 'Interior Exact Measure';
       case 'exterior-sqft':
-        return 'Exterior - Square Footage';
+        return 'Exterior Quick Measure';
       case 'exterior-detailed':
-        return 'Exterior - Detailed';
+        return 'Exterior Exact Measure';
       case 'per-room':
-        return 'Per Room - Detailed';
+        return 'Per Room - Exact Measure';
       default:
         return 'Calculator';
     }

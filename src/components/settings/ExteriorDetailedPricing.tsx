@@ -294,10 +294,6 @@ export function ExteriorDetailedPricing() {
         Edit section names (click to edit), adjust rates and names for each line item, reorder sections, and configure modifier scopes. Line item name/rate changes save on blur; use Save button for modifiers, multipliers, and paint prices.
       </p>
 
-      <div className="space-y-4">
-        {renderSections(exteriorSections)}
-      </div>
-
       {/* Auto-Calculate Multipliers */}
       <Card>
         <CardHeader>
@@ -325,6 +321,10 @@ export function ExteriorDetailedPricing() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="space-y-4">
+        {renderSections(exteriorSections)}
+      </div>
 
       {/* Exterior Modifiers */}
       <Card>

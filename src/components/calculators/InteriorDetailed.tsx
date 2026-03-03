@@ -361,59 +361,21 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
 
   return (
     <div className="space-y-6">
-      {/* House Condition Rate Cards */}
-      <div className="grid grid-cols-2 gap-4">
-        <button
-          type="button"
-          onClick={() => setHouseCondition('furnished')}
-          className={`text-left rounded-lg border-2 p-4 transition-colors ${
-            houseCondition === 'furnished'
-              ? 'border-green-500 bg-green-50'
-              : 'border-gray-200 bg-white opacity-60'
-          }`}
-        >
-          <h4 className="text-sm font-semibold text-gray-900 mb-2">Interior Furnished Rates</h4>
-          <div className="space-y-1 text-xs text-gray-600">
-            <div className="flex justify-between">
-              <span>Wall Sqft</span>
-              <span className="font-medium">${(pricing.interiorDetailedFurnishedRates?.wallSqft ?? 0).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Ceiling Sqft</span>
-              <span className="font-medium">${(pricing.interiorDetailedFurnishedRates?.ceilingSqft ?? 0).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Trim LF</span>
-              <span className="font-medium">${(pricing.interiorDetailedFurnishedRates?.trimLF ?? 0).toFixed(2)}</span>
-            </div>
-          </div>
-        </button>
-        <button
-          type="button"
-          onClick={() => setHouseCondition('empty')}
-          className={`text-left rounded-lg border-2 p-4 transition-colors ${
-            houseCondition === 'empty'
-              ? 'border-green-500 bg-green-50'
-              : 'border-gray-200 bg-white opacity-60'
-          }`}
-        >
-          <h4 className="text-sm font-semibold text-gray-900 mb-2">Interior Empty Rates</h4>
-          <div className="space-y-1 text-xs text-gray-600">
-            <div className="flex justify-between">
-              <span>Wall Sqft</span>
-              <span className="font-medium">${(pricing.interiorDetailedEmptyRates?.wallSqft ?? 0).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Ceiling Sqft</span>
-              <span className="font-medium">${(pricing.interiorDetailedEmptyRates?.ceilingSqft ?? 0).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Trim LF</span>
-              <span className="font-medium">${(pricing.interiorDetailedEmptyRates?.trimLF ?? 0).toFixed(2)}</span>
-            </div>
-          </div>
-        </button>
-      </div>
+      {/* House Condition */}
+      <Card>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">House Condition</h3>
+        <CardContent>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Is the house furnished or empty?</label>
+          <select
+            value={houseCondition}
+            onChange={(e) => setHouseCondition(e.target.value as HouseCondition)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+          >
+            <option value="furnished">Furnished</option>
+            <option value="empty">Empty</option>
+          </select>
+        </CardContent>
+      </Card>
 
       {/* House SF Auto-Calculate */}
       <Card className="bg-blue-50 border-blue-200">

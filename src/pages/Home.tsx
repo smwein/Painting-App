@@ -11,31 +11,31 @@ interface CalculatorOption {
 const calculatorOptions: CalculatorOption[] = [
   {
     type: 'interior-sqft',
-    title: 'Interior - Square Footage',
+    title: 'Interior Quick Measure',
     description: 'Quick estimate based on house square footage and pricing option',
     icon: '🏠',
   },
   {
     type: 'interior-detailed',
-    title: 'Interior - Detailed',
+    title: 'Interior Exact Measure',
     description: 'Comprehensive bid with 22 measurements, modifiers, and material costs',
     icon: '📐',
   },
   {
     type: 'exterior-sqft',
-    title: 'Exterior - Square Footage',
+    title: 'Exterior Quick Measure',
     description: 'Quick exterior estimate based on house square footage',
     icon: '🏡',
   },
   {
     type: 'exterior-detailed',
-    title: 'Exterior - Detailed',
+    title: 'Exterior Exact Measure',
     description: 'Detailed exterior bid with measurements, modifiers, and materials',
     icon: '📏',
   },
   {
     type: 'per-room',
-    title: 'Per Room - Detailed',
+    title: 'Per Room - Exact Measure',
     description: 'Room-by-room interior bid with individual breakdowns and a grand total',
     icon: '🛋️',
   },
