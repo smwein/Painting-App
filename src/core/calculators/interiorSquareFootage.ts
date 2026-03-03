@@ -51,12 +51,13 @@ export function calculateInteriorSquareFootage(
   let laborCost = baseCost * (laborPct / 100);
   let baseMatCost = baseCost * (matPct / 100);
 
-  // Apply simple modifiers (multiply both labor and materials)
+  // Apply simple modifiers (respecting scope: labor, materials, or both)
   if (inputs.simpleModifiers && pricing.simpleInteriorModifiers) {
     for (const mod of pricing.simpleInteriorModifiers) {
       if (inputs.simpleModifiers[mod.id]) {
-        laborCost *= mod.multiplier;
-        baseMatCost *= mod.multiplier;
+        const scope = mod.scope ?? 'both';
+        if (scope === 'labor' || scope === 'both') laborCost *= mod.multiplier;
+        if (scope === 'materials' || scope === 'both') baseMatCost *= mod.multiplier;
       }
     }
   }

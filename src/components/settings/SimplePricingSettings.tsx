@@ -20,7 +20,7 @@ import { useSettingsStore } from '../../store/settingsStore';
 import { Input } from '../common/Input';
 import { Button } from '../common/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
-import type { SectionConfig, LineItemConfig } from '../../types/settings.types';
+import type { SectionConfig, LineItemConfig, ModifierScope } from '../../types/settings.types';
 
 const UNIT_OPTIONS = ['sqft', 'lf', 'each', 'hour', 'dollars'] as const;
 
@@ -83,11 +83,12 @@ export function SimplePricingSettings() {
   // Simple interior modifiers state
   const [simpleModifiers, setSimpleModifiers] = useState(
     settings.pricing.simpleInteriorModifiers ?? [
-      { id: 'simple-mod-second-dry-coat', name: 'Second Dry Coat', multiplier: 1.20, order: 1 },
+      { id: 'simple-mod-second-dry-coat', name: 'Second Dry Coat', multiplier: 1.20, scope: 'both' as ModifierScope, order: 1 },
     ]
   );
   const [newModName, setNewModName] = useState('');
   const [newModMultiplier, setNewModMultiplier] = useState('1.20');
+  const [newModScope, setNewModScope] = useState<ModifierScope>('both');
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -197,10 +198,11 @@ export function SimplePricingSettings() {
     const maxOrder = Math.max(...simpleModifiers.map((m) => m.order), 0);
     setSimpleModifiers((prev) => [
       ...prev,
-      { id: `simple-mod-${Date.now()}`, name, multiplier, order: maxOrder + 1 },
+      { id: `simple-mod-${Date.now()}`, name, multiplier, scope: newModScope, order: maxOrder + 1 },
     ]);
     setNewModName('');
     setNewModMultiplier('1.20');
+    setNewModScope('both');
   };
 
   const handleDeleteSimpleModifier = (id: string) => {
@@ -423,7 +425,7 @@ export function SimplePricingSettings() {
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-xs text-gray-500">
-            Modifiers appear as checkboxes on the Interior Quick Measure calculator. When enabled, they multiply both labor and materials.
+            Modifiers appear as checkboxes on the Interior Quick Measure calculator. Choose whether each modifier applies to Labor, Materials, or Both.
           </p>
           {simpleModifiers.sort((a, b) => a.order - b.order).map((mod) => (
             <div key={mod.id} className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg bg-gray-50">
@@ -450,6 +452,17 @@ export function SimplePricingSettings() {
                 />
               </div>
               <span className="text-xs text-gray-500 w-6">×</span>
+              <select
+                value={mod.scope ?? 'both'}
+                onChange={(e) => setSimpleModifiers((prev) =>
+                  prev.map((m) => m.id === mod.id ? { ...m, scope: e.target.value as ModifierScope } : m)
+                )}
+                className="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="labor">Labor</option>
+                <option value="materials">Materials</option>
+                <option value="both">Both</option>
+              </select>
               <button
                 onClick={() => handleDeleteSimpleModifier(mod.id)}
                 className="text-red-400 hover:text-red-600 text-sm font-bold px-1"
@@ -462,9 +475,21 @@ export function SimplePricingSettings() {
               <Input label="New Modifier Name" type="text" value={newModName}
                 onChange={(e) => setNewModName(e.target.value)} placeholder="e.g., Extra Coat" />
             </div>
-            <div className="w-28">
+            <div className="w-24">
               <Input label="Multiplier" type="number" min="0" step="0.01" value={newModMultiplier}
                 onChange={(e) => setNewModMultiplier(e.target.value)} placeholder="1.20" />
+            </div>
+            <div className="w-28">
+              <label className="block text-xs font-medium text-gray-500 mb-1">Scope</label>
+              <select
+                value={newModScope}
+                onChange={(e) => setNewModScope(e.target.value as ModifierScope)}
+                className="w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="labor">Labor</option>
+                <option value="materials">Materials</option>
+                <option value="both">Both</option>
+              </select>
             </div>
             <Button onClick={handleAddSimpleModifier} variant="outline" size="sm" className="mb-0.5">+ Add</Button>
           </div>

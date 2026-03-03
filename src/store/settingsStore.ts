@@ -42,8 +42,11 @@ function ensureNewPricingFields(settings: CompanySettings): CompanySettings {
 
   if (p.simpleInteriorModifiers === undefined) {
     updates.simpleInteriorModifiers = [
-      { id: 'simple-mod-second-dry-coat', name: 'Second Dry Coat', multiplier: 1.20, order: 1 },
+      { id: 'simple-mod-second-dry-coat', name: 'Second Dry Coat', multiplier: 1.20, scope: 'both', order: 1 },
     ];
+    changed = true;
+  } else if (p.simpleInteriorModifiers.length > 0 && !('scope' in p.simpleInteriorModifiers[0])) {
+    updates.simpleInteriorModifiers = p.simpleInteriorModifiers.map((m) => ({ ...m, scope: 'both' as const }));
     changed = true;
   }
 

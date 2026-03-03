@@ -138,7 +138,7 @@ export interface PricingSettings {
   exteriorModifierValues?: ExteriorModifierValues;
 
   // Configurable modifiers for Simple Interior calculator
-  simpleInteriorModifiers?: Array<{ id: string; name: string; multiplier: number; order: number }>;
+  simpleInteriorModifiers?: Array<{ id: string; name: string; multiplier: number; scope: ModifierScope; order: number }>;
 
   // Dynamic modifier arrays for detailed calculators (replaces interiorModifierValues/exteriorModifierValues)
   interiorModifiers?: Array<{ id: string; name: string; multiplier: number; scope: ModifierScope; order: number }>;
