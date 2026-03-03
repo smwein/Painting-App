@@ -356,6 +356,37 @@ export function SimplePricingSettings() {
         </CardContent>
       </Card>
 
+      {/* Sqft Labor vs Materials Split */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Sqft Calculator — Labor / Materials Split</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-gray-500">
+            The sqft rate is split into labor and materials using this percentage. Materials = 100% minus the labor %.
+          </p>
+          <div className="flex items-end gap-4">
+            <div className="w-40">
+              <Input
+                label="Labor %"
+                type="number"
+                min="1"
+                max="99"
+                step="1"
+                value={formData.sqftLaborPct ?? 85}
+                onChange={(e) => {
+                  const val = Math.min(99, Math.max(1, parseInt(e.target.value) || 85));
+                  setFormData((prev) => ({ ...prev, sqftLaborPct: val }));
+                }}
+              />
+            </div>
+            <div className="pb-1 text-sm text-gray-600">
+              Materials: <span className="font-semibold">{100 - (formData.sqftLaborPct ?? 85)}%</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Simple Pricing Sections — drag-and-drop, show line items, add section */}
       <Card>
         <CardHeader>

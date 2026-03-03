@@ -109,6 +109,9 @@ export interface PricingSettings {
   // Markup options
   markupOptions: number[];
 
+  // Labor vs materials split for sqft calculators (default 85% labor, 15% materials)
+  sqftLaborPct: number;
+
   // Crew rates for job duration estimates
   crewRates: CrewRateConfig[];
 

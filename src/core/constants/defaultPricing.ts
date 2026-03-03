@@ -65,6 +65,9 @@ export function createDefaultPricingSettings(): PricingSettings {
     // Margin options (from pricing.ts)
     markupOptions: [30, 35, 40, 45, 50],
 
+    // Sqft calculator labor vs materials split
+    sqftLaborPct: 85,
+
     // Crew rates for job duration estimates
     crewRates: [
       { crewSize: 2, dailyRate: 1000, description: 'Default: $1,000/day' },

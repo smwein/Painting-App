@@ -33,23 +33,23 @@ export function calculateInteriorSquareFootage(
     ? (pricing.interiorSqftEmpty ?? pricing.interiorSqft)
     : pricing.interiorSqft;
 
-  // Calculate labor COST based on pricing option
-  let laborCost = 0;
-
-  switch (inputs.pricingOption) {
-    case 'walls-only':
-      laborCost = inputs.houseSquareFootage * rates.wallsOnly;
-      break;
-    case 'trim-only':
-      laborCost = inputs.houseSquareFootage * rates.trimOnly;
-      break;
-    case 'ceilings-only':
-      laborCost = inputs.houseSquareFootage * rates.ceilingsOnly;
-      break;
-    case 'complete':
-      laborCost = inputs.houseSquareFootage * rates.complete;
-      break;
+  // Sum rates for all selected pricing options
+  let totalRate = 0;
+  for (const option of inputs.pricingOptions) {
+    switch (option) {
+      case 'walls-only': totalRate += rates.wallsOnly; break;
+      case 'trim-only': totalRate += rates.trimOnly; break;
+      case 'ceilings-only': totalRate += rates.ceilingsOnly; break;
+      case 'complete': totalRate += rates.complete; break;
+    }
   }
+  const baseCost = inputs.houseSquareFootage * totalRate;
+
+  // Split base cost into labor and materials using configured ratio
+  const laborPct = pricing.sqftLaborPct ?? 85;
+  const matPct = 100 - laborPct;
+  const laborCost = baseCost * (laborPct / 100);
+  const baseMatCost = baseCost * (matPct / 100);
 
   // Calculate auto-measurements
   const autoCalcs = calculateInteriorSqftAutoMeasurements(inputs.houseSquareFootage, pricing);
@@ -69,7 +69,7 @@ export function calculateInteriorSquareFootage(
   }
   const materials: MaterialBreakdown = {
     items: customItems,
-    totalCost: customTotal,
+    totalCost: baseMatCost + customTotal,
   };
 
   // Calculate total using margin formula: total = cost / (1 - margin%)
@@ -85,7 +85,7 @@ export function calculateInteriorSquareFootage(
     total,
     breakdown: {
       houseSquareFootage: inputs.houseSquareFootage,
-      pricingOption: inputs.pricingOption,
+      pricingOptions: inputs.pricingOptions,
       houseCondition: inputs.houseCondition,
       autoCalculations: autoCalcs,
       markup: inputs.markup,

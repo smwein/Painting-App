@@ -50,7 +50,7 @@ export type HouseCondition = 'furnished' | 'empty';
 // Interior Square Footage Calculator Inputs
 export interface InteriorSqftInputs {
   houseSquareFootage: number;
-  pricingOption: InteriorSqftOption;
+  pricingOptions: InteriorSqftOption[];
   markup: MarkupPercentage;
   houseCondition: HouseCondition;
   customItemValues?: Record<string, number>;
@@ -127,7 +127,7 @@ export interface ExteriorModifiers {
 // Exterior Square Footage Calculator Inputs
 export interface ExteriorSqftInputs {
   houseSquareFootage: number;
-  pricingOption: ExteriorSqftOption;
+  pricingOptions: ExteriorSqftOption[];
   markup: MarkupPercentage;
   customItemValues?: Record<string, number>;
 }

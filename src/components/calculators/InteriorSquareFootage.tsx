@@ -17,7 +17,6 @@ import {
 interface InteriorSqftFormData {
   customer: CustomerInfo;
   houseSquareFootage: number;
-  pricingOption: InteriorSqftOption;
   markup: number;
   houseCondition: HouseCondition;
 }
@@ -27,9 +26,19 @@ interface InteriorSquareFootageProps {
   loadedBid?: Bid;
 }
 
+const ALL_OPTIONS: { value: InteriorSqftOption; label: string }[] = [
+  { value: 'walls-only', label: 'Walls Only' },
+  { value: 'trim-only', label: 'Trim Only' },
+  { value: 'ceilings-only', label: 'Ceilings Only' },
+  { value: 'complete', label: 'Complete' },
+];
+
 export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSquareFootageProps) {
   const { settings } = useSettingsStore();
   const pricing = settings.pricing;
+
+  const [selectedOptions, setSelectedOptions] = useState<InteriorSqftOption[]>(['complete']);
+  const [customItemValues, setCustomItemValues] = useState<Record<string, number>>({});
 
   // Custom simple-pricing sections with their line items
   const customSections = useMemo(() => {
@@ -43,12 +52,9 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
       .sort((a, b) => a.section.order - b.section.order);
   }, [pricing.sections, pricing.lineItems]);
 
-  const [customItemValues, setCustomItemValues] = useState<Record<string, number>>({});
-
   const { register, watch, reset } = useForm<InteriorSqftFormData>({
     defaultValues: {
       houseSquareFootage: 0,
-      pricingOption: 'complete',
       markup: 50,
       houseCondition: 'furnished',
     },
@@ -57,39 +63,52 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
   // Pre-fill form when loading a saved bid
   useEffect(() => {
     if (loadedBid && loadedBid.calculatorType === 'interior-sqft') {
-      const inputs = loadedBid.inputs as InteriorSqftInputs;
+      const inputs = loadedBid.inputs as InteriorSqftInputs & { pricingOption?: InteriorSqftOption };
       reset({
         customer: loadedBid.customer,
         houseSquareFootage: inputs.houseSquareFootage,
-        pricingOption: inputs.pricingOption,
         markup: inputs.markup,
         houseCondition: inputs.houseCondition ?? 'furnished',
       });
+      // Handle both old single-option and new multi-option format
+      const opts = inputs.pricingOptions ?? (inputs.pricingOption ? [inputs.pricingOption] : ['complete']);
+      setSelectedOptions(opts);
       setCustomItemValues(inputs.customItemValues ?? {});
     }
   }, [loadedBid, reset]);
 
-  // Watch only the specific fields needed for calculation
+  const handleOptionToggle = (option: InteriorSqftOption, checked: boolean) => {
+    if (option === 'complete' && checked) {
+      setSelectedOptions(['complete']);
+    } else if (checked) {
+      setSelectedOptions((prev) => [...prev.filter((o) => o !== 'complete'), option]);
+    } else {
+      setSelectedOptions((prev) => prev.filter((o) => o !== option));
+    }
+  };
+
   const houseSquareFootage = watch('houseSquareFootage');
-  const pricingOption = watch('pricingOption');
   const markup = watch('markup');
   const customer = watch('customer');
   const houseCondition = watch('houseCondition');
 
-  // Get the rates based on current condition
   const rates = houseCondition === 'empty'
     ? (pricing.interiorSqftEmpty ?? pricing.interiorSqft)
     : pricing.interiorSqft;
 
-  // Real-time calculation
+  const rateMap: Record<InteriorSqftOption, number> = {
+    'walls-only': rates.wallsOnly,
+    'trim-only': rates.trimOnly,
+    'ceilings-only': rates.ceilingsOnly,
+    'complete': rates.complete,
+  };
+
   const result = useMemo(() => {
-    if (!houseSquareFootage || houseSquareFootage <= 0) {
-      return null;
-    }
+    if (!houseSquareFootage || houseSquareFootage <= 0 || selectedOptions.length === 0) return null;
 
     const inputs: InteriorSqftInputs = {
       houseSquareFootage,
-      pricingOption,
+      pricingOptions: selectedOptions,
       markup: markup as MarkupPercentage,
       houseCondition,
       customItemValues,
@@ -98,24 +117,17 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
     const calculatedResult = calculateInteriorSquareFootage(inputs, pricing);
 
     if (onResultChange) {
-      onResultChange({
-        customer,
-        inputs,
-        result: calculatedResult,
-      });
+      onResultChange({ customer, inputs, result: calculatedResult });
     }
 
     return calculatedResult;
-  }, [houseSquareFootage, pricingOption, markup, houseCondition, customItemValues, customer, onResultChange, pricing]);
+  }, [houseSquareFootage, selectedOptions, markup, houseCondition, customItemValues, customer, onResultChange, pricing]);
 
   const autoCalcs = useMemo(() => {
-    if (!houseSquareFootage || houseSquareFootage <= 0) {
-      return null;
-    }
+    if (!houseSquareFootage || houseSquareFootage <= 0) return null;
     return calculateInteriorSqftAutoMeasurements(houseSquareFootage, pricing);
   }, [houseSquareFootage, pricing]);
 
-  // Estimate gallons from auto-calculations
   const gallonEstimate = useMemo(() => {
     if (!autoCalcs) return null;
     const wallGallons = autoCalcs.wallSqft / pricing.interiorCoverage.wallSqftPerGallon;
@@ -124,19 +136,16 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
     return { wallGallons, ceilingGallons, trimGallons, total: wallGallons + ceilingGallons + trimGallons };
   }, [autoCalcs, pricing]);
 
+  const laborPct = pricing.sqftLaborPct ?? 85;
+
   return (
     <div className="space-y-6">
-      <CustomerInfoSection register={register} />
-
       <Card>
         <CardHeader>
           <CardTitle>House Condition</CardTitle>
         </CardHeader>
         <CardContent>
-          <Select
-            label="Is the house empty or furnished?"
-            {...register('houseCondition')}
-          >
+          <Select label="Is the house empty or furnished?" {...register('houseCondition')}>
             <option value="furnished">Furnished</option>
             <option value="empty">Empty</option>
           </Select>
@@ -150,71 +159,42 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
         <CardContent>
           <Input
             label="Square Footage"
-            type="number"
-            min="0"
-            step="1"
-            placeholder="2000"
-            {...register('houseSquareFootage', {
-              required: true,
-              valueAsNumber: true,
-              min: 0,
-            })}
+            type="number" min="0" step="1" placeholder="2000"
+            {...register('houseSquareFootage', { required: true, valueAsNumber: true, min: 0 })}
           />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Pricing Option</CardTitle>
+          <CardTitle>Pricing Options</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-            <input
-              type="radio"
-              value="walls-only"
-              className="w-5 h-5 text-primary-600 border-gray-300 focus:ring-2 focus:ring-primary-500"
-              {...register('pricingOption', { required: true })}
-            />
-            <span className="text-sm font-medium text-gray-700">
-              Walls Only (${rates.wallsOnly.toFixed(2)}/sqft)
-            </span>
-          </label>
-
-          <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-            <input
-              type="radio"
-              value="trim-only"
-              className="w-5 h-5 text-primary-600 border-gray-300 focus:ring-2 focus:ring-primary-500"
-              {...register('pricingOption', { required: true })}
-            />
-            <span className="text-sm font-medium text-gray-700">
-              Trim Only (${rates.trimOnly.toFixed(2)}/sqft)
-            </span>
-          </label>
-
-          <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-            <input
-              type="radio"
-              value="ceilings-only"
-              className="w-5 h-5 text-primary-600 border-gray-300 focus:ring-2 focus:ring-primary-500"
-              {...register('pricingOption', { required: true })}
-            />
-            <span className="text-sm font-medium text-gray-700">
-              Ceilings Only (${rates.ceilingsOnly.toFixed(2)}/sqft)
-            </span>
-          </label>
-
-          <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-            <input
-              type="radio"
-              value="complete"
-              className="w-5 h-5 text-primary-600 border-gray-300 focus:ring-2 focus:ring-primary-500"
-              {...register('pricingOption', { required: true })}
-            />
-            <span className="text-sm font-medium text-gray-700">
-              Complete (${rates.complete.toFixed(2)}/sqft)
-            </span>
-          </label>
+          <p className="text-xs text-gray-500 mb-2">Select one or more options. "Complete" is exclusive.</p>
+          {ALL_OPTIONS.map(({ value, label }) => {
+            const checked = selectedOptions.includes(value);
+            const disabled = value !== 'complete' && selectedOptions.includes('complete');
+            return (
+              <label
+                key={value}
+                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                  checked ? 'bg-primary-50 border border-primary-200' : 'hover:bg-gray-50 border border-transparent'
+                } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={disabled}
+                  onChange={(e) => handleOptionToggle(value, e.target.checked)}
+                  className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
+                />
+                <span className="text-sm font-medium text-gray-700 flex-1">
+                  {label}
+                </span>
+                <span className="text-sm text-gray-500">${rateMap[value].toFixed(2)}/sqft</span>
+              </label>
+            );
+          })}
         </CardContent>
       </Card>
 
@@ -230,16 +210,11 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
               <Input
                 key={item.id}
                 label={`${item.name} (${item.unit === 'each' ? 'qty' : item.unit} × $${item.rate.toFixed(2)})`}
-                type="number"
-                min="0"
-                step="1"
+                type="number" min="0" step="1"
                 value={customItemValues[item.id] ?? ''}
                 onChange={(e) => {
                   const val = parseFloat(e.target.value);
-                  setCustomItemValues((prev) => ({
-                    ...prev,
-                    [item.id]: isNaN(val) ? 0 : val,
-                  }));
+                  setCustomItemValues((prev) => ({ ...prev, [item.id]: isNaN(val) ? 0 : val }));
                 }}
               />
             ))}
@@ -258,35 +233,27 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Labor Cost</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">({result.total > 0 ? ((result.labor / result.total) * 100).toFixed(0) : 0}%)</span>
-                  <span className="text-lg font-semibold text-gray-800">
-                    ${result.labor.toFixed(2)}
-                  </span>
+                  <span className="text-xs text-gray-400">({laborPct}%)</span>
+                  <span className="text-lg font-semibold text-gray-800">${result.labor.toFixed(2)}</span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Materials</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">({result.total > 0 ? ((result.materials.totalCost / result.total) * 100).toFixed(0) : 0}%)</span>
-                  <span className="text-lg font-semibold text-gray-800">
-                    ${result.materials.totalCost.toFixed(2)}
-                  </span>
+                  <span className="text-xs text-gray-400">({100 - laborPct}%)</span>
+                  <span className="text-lg font-semibold text-gray-800">${result.materials.totalCost.toFixed(2)}</span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Gross Profit</span>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-green-600 font-medium">({markup}%)</span>
-                  <span className="text-lg font-semibold text-green-700">
-                    ${result.profit.toFixed(2)}
-                  </span>
+                  <span className="text-lg font-semibold text-green-700">${result.profit.toFixed(2)}</span>
                 </div>
               </div>
               <div className="border-t border-primary-200 pt-3 flex justify-between items-center">
                 <span className="text-base font-semibold text-gray-700">Retail Total</span>
-                <span className="text-3xl font-bold text-primary-700">
-                  ${result.total.toFixed(2)}
-                </span>
+                <span className="text-3xl font-bold text-primary-700">${result.total.toFixed(2)}</span>
               </div>
             </CardContent>
           </Card>
@@ -340,6 +307,8 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
           </CardContent>
         </Card>
       )}
+
+      <CustomerInfoSection register={register} />
     </div>
   );
 }

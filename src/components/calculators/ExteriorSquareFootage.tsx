@@ -16,7 +16,6 @@ import {
 interface ExteriorSqftFormData {
   customer: CustomerInfo;
   houseSquareFootage: number;
-  pricingOption: ExteriorSqftOption;
   markup: number;
 }
 
@@ -25,9 +24,17 @@ interface ExteriorSquareFootageProps {
   loadedBid?: Bid;
 }
 
+const ALL_OPTIONS: { value: ExteriorSqftOption; label: string }[] = [
+  { value: 'full-exterior', label: 'Full Exterior' },
+  { value: 'trim-only', label: 'Trim Only' },
+];
+
 export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSquareFootageProps) {
   const { settings } = useSettingsStore();
   const pricing = settings.pricing;
+
+  const [selectedOptions, setSelectedOptions] = useState<ExteriorSqftOption[]>(['full-exterior']);
+  const [customItemValues, setCustomItemValues] = useState<Record<string, number>>({});
 
   // Custom simple-pricing sections with their line items
   const customSections = useMemo(() => {
@@ -41,12 +48,9 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
       .sort((a, b) => a.section.order - b.section.order);
   }, [pricing.sections, pricing.lineItems]);
 
-  const [customItemValues, setCustomItemValues] = useState<Record<string, number>>({});
-
   const { register, watch, reset } = useForm<ExteriorSqftFormData>({
     defaultValues: {
       houseSquareFootage: 0,
-      pricingOption: 'full-exterior',
       markup: 50,
     },
   });
@@ -54,32 +58,41 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
   // Pre-fill form when loading a saved bid
   useEffect(() => {
     if (loadedBid && loadedBid.calculatorType === 'exterior-sqft') {
-      const inputs = loadedBid.inputs as ExteriorSqftInputs;
+      const inputs = loadedBid.inputs as ExteriorSqftInputs & { pricingOption?: ExteriorSqftOption };
       reset({
         customer: loadedBid.customer,
         houseSquareFootage: inputs.houseSquareFootage,
-        pricingOption: inputs.pricingOption,
         markup: inputs.markup,
       });
+      const opts = inputs.pricingOptions ?? (inputs.pricingOption ? [inputs.pricingOption] : ['full-exterior']);
+      setSelectedOptions(opts);
       setCustomItemValues(inputs.customItemValues ?? {});
     }
   }, [loadedBid, reset]);
 
-  // Watch only the specific fields needed for calculation
+  const handleOptionToggle = (option: ExteriorSqftOption, checked: boolean) => {
+    if (checked) {
+      setSelectedOptions((prev) => [...prev.filter((o) => o !== option), option]);
+    } else {
+      setSelectedOptions((prev) => prev.filter((o) => o !== option));
+    }
+  };
+
   const houseSquareFootage = watch('houseSquareFootage');
-  const pricingOption = watch('pricingOption');
   const markup = watch('markup');
   const customer = watch('customer');
 
-  // Real-time calculation
+  const rateMap: Record<ExteriorSqftOption, number> = {
+    'full-exterior': pricing.exteriorSqft.fullExterior,
+    'trim-only': pricing.exteriorSqft.trimOnly,
+  };
+
   const result = useMemo(() => {
-    if (!houseSquareFootage || houseSquareFootage <= 0) {
-      return null;
-    }
+    if (!houseSquareFootage || houseSquareFootage <= 0 || selectedOptions.length === 0) return null;
 
     const inputs: ExteriorSqftInputs = {
       houseSquareFootage,
-      pricingOption,
+      pricingOptions: selectedOptions,
       markup: markup as MarkupPercentage,
       customItemValues,
     };
@@ -87,24 +100,17 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
     const calculatedResult = calculateExteriorSquareFootage(inputs, pricing);
 
     if (onResultChange) {
-      onResultChange({
-        customer,
-        inputs,
-        result: calculatedResult,
-      });
+      onResultChange({ customer, inputs, result: calculatedResult });
     }
 
     return calculatedResult;
-  }, [houseSquareFootage, pricingOption, markup, customItemValues, customer, onResultChange, pricing]);
+  }, [houseSquareFootage, selectedOptions, markup, customItemValues, customer, onResultChange, pricing]);
 
   const autoCalcs = useMemo(() => {
-    if (!houseSquareFootage || houseSquareFootage <= 0) {
-      return null;
-    }
+    if (!houseSquareFootage || houseSquareFootage <= 0) return null;
     return calculateExteriorSqftAutoMeasurements(houseSquareFootage, pricing);
   }, [houseSquareFootage, pricing]);
 
-  // Estimate gallons from auto-calculations
   const gallonEstimate = useMemo(() => {
     if (!autoCalcs) return null;
     const wallGallons = autoCalcs.sidingSqft / pricing.exteriorCoverage.wallSqftPerGallon;
@@ -112,10 +118,10 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
     return { wallGallons, trimGallons, total: wallGallons + trimGallons };
   }, [autoCalcs, pricing]);
 
+  const laborPct = pricing.sqftLaborPct ?? 85;
+
   return (
     <div className="space-y-6">
-      <CustomerInfoSection register={register} />
-
       <Card>
         <CardHeader>
           <CardTitle>House Square Footage</CardTitle>
@@ -123,47 +129,38 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
         <CardContent>
           <Input
             label="Square Footage"
-            type="number"
-            min="0"
-            step="1"
-            placeholder="2000"
-            {...register('houseSquareFootage', {
-              required: true,
-              valueAsNumber: true,
-              min: 0,
-            })}
+            type="number" min="0" step="1" placeholder="2000"
+            {...register('houseSquareFootage', { required: true, valueAsNumber: true, min: 0 })}
           />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Pricing Option</CardTitle>
+          <CardTitle>Pricing Options</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-            <input
-              type="radio"
-              value="full-exterior"
-              className="w-5 h-5 text-primary-600 border-gray-300 focus:ring-2 focus:ring-primary-500"
-              {...register('pricingOption', { required: true })}
-            />
-            <span className="text-sm font-medium text-gray-700">
-              Full Exterior (${pricing.exteriorSqft.fullExterior.toFixed(2)}/sqft)
-            </span>
-          </label>
-
-          <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-            <input
-              type="radio"
-              value="trim-only"
-              className="w-5 h-5 text-primary-600 border-gray-300 focus:ring-2 focus:ring-primary-500"
-              {...register('pricingOption', { required: true })}
-            />
-            <span className="text-sm font-medium text-gray-700">
-              Trim Only (${pricing.exteriorSqft.trimOnly.toFixed(2)}/sqft)
-            </span>
-          </label>
+          <p className="text-xs text-gray-500 mb-2">Select one or more options.</p>
+          {ALL_OPTIONS.map(({ value, label }) => {
+            const checked = selectedOptions.includes(value);
+            return (
+              <label
+                key={value}
+                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                  checked ? 'bg-primary-50 border border-primary-200' : 'hover:bg-gray-50 border border-transparent'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(e) => handleOptionToggle(value, e.target.checked)}
+                  className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
+                />
+                <span className="text-sm font-medium text-gray-700 flex-1">{label}</span>
+                <span className="text-sm text-gray-500">${rateMap[value].toFixed(2)}/sqft</span>
+              </label>
+            );
+          })}
         </CardContent>
       </Card>
 
@@ -179,16 +176,11 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
               <Input
                 key={item.id}
                 label={`${item.name} (${item.unit === 'each' ? 'qty' : item.unit} × $${item.rate.toFixed(2)})`}
-                type="number"
-                min="0"
-                step="1"
+                type="number" min="0" step="1"
                 value={customItemValues[item.id] ?? ''}
                 onChange={(e) => {
                   const val = parseFloat(e.target.value);
-                  setCustomItemValues((prev) => ({
-                    ...prev,
-                    [item.id]: isNaN(val) ? 0 : val,
-                  }));
+                  setCustomItemValues((prev) => ({ ...prev, [item.id]: isNaN(val) ? 0 : val }));
                 }}
               />
             ))}
@@ -207,35 +199,27 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Labor Cost</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">({result.total > 0 ? ((result.labor / result.total) * 100).toFixed(0) : 0}%)</span>
-                  <span className="text-lg font-semibold text-gray-800">
-                    ${result.labor.toFixed(2)}
-                  </span>
+                  <span className="text-xs text-gray-400">({laborPct}%)</span>
+                  <span className="text-lg font-semibold text-gray-800">${result.labor.toFixed(2)}</span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Materials</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">({result.total > 0 ? ((result.materials.totalCost / result.total) * 100).toFixed(0) : 0}%)</span>
-                  <span className="text-lg font-semibold text-gray-800">
-                    ${result.materials.totalCost.toFixed(2)}
-                  </span>
+                  <span className="text-xs text-gray-400">({100 - laborPct}%)</span>
+                  <span className="text-lg font-semibold text-gray-800">${result.materials.totalCost.toFixed(2)}</span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Gross Profit</span>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-green-600 font-medium">({markup}%)</span>
-                  <span className="text-lg font-semibold text-green-700">
-                    ${result.profit.toFixed(2)}
-                  </span>
+                  <span className="text-lg font-semibold text-green-700">${result.profit.toFixed(2)}</span>
                 </div>
               </div>
               <div className="border-t border-primary-200 pt-3 flex justify-between items-center">
                 <span className="text-base font-semibold text-gray-700">Retail Total</span>
-                <span className="text-3xl font-bold text-primary-700">
-                  ${result.total.toFixed(2)}
-                </span>
+                <span className="text-3xl font-bold text-primary-700">${result.total.toFixed(2)}</span>
               </div>
             </CardContent>
           </Card>
@@ -281,6 +265,8 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
           </CardContent>
         </Card>
       )}
+
+      <CustomerInfoSection register={register} />
     </div>
   );
 }

@@ -103,8 +103,6 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
 
   return (
     <div className="space-y-6">
-      <CustomerInfoSection register={register} />
-
       <MarkupSelector register={register} />
 
       {/* Rooms */}
@@ -327,6 +325,8 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
           </Card>
         </>
       )}
+
+      <CustomerInfoSection register={register} />
     </div>
   );
 }

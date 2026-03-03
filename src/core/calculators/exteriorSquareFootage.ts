@@ -27,17 +27,21 @@ export function calculateExteriorSquareFootage(
   inputs: ExteriorSqftInputs,
   pricing: PricingSettings
 ): BidResult {
-  // Calculate labor COST based on pricing option
-  let laborCost = 0;
-
-  switch (inputs.pricingOption) {
-    case 'full-exterior':
-      laborCost = inputs.houseSquareFootage * pricing.exteriorSqft.fullExterior;
-      break;
-    case 'trim-only':
-      laborCost = inputs.houseSquareFootage * pricing.exteriorSqft.trimOnly;
-      break;
+  // Sum rates for all selected pricing options
+  let totalRate = 0;
+  for (const option of inputs.pricingOptions) {
+    switch (option) {
+      case 'full-exterior': totalRate += pricing.exteriorSqft.fullExterior; break;
+      case 'trim-only': totalRate += pricing.exteriorSqft.trimOnly; break;
+    }
   }
+  const baseCost = inputs.houseSquareFootage * totalRate;
+
+  // Split base cost into labor and materials using configured ratio
+  const laborPct = pricing.sqftLaborPct ?? 85;
+  const matPct = 100 - laborPct;
+  const laborCost = baseCost * (laborPct / 100);
+  const baseMatCost = baseCost * (matPct / 100);
 
   // Calculate auto-measurements
   const autoCalcs = calculateExteriorSqftAutoMeasurements(inputs.houseSquareFootage, pricing);
@@ -57,7 +61,7 @@ export function calculateExteriorSquareFootage(
   }
   const materials: MaterialBreakdown = {
     items: customItems,
-    totalCost: customTotal,
+    totalCost: baseMatCost + customTotal,
   };
 
   // Calculate total using margin formula: total = cost / (1 - margin%)
@@ -73,7 +77,7 @@ export function calculateExteriorSquareFootage(
     total,
     breakdown: {
       houseSquareFootage: inputs.houseSquareFootage,
-      pricingOption: inputs.pricingOption,
+      pricingOptions: inputs.pricingOptions,
       autoCalculations: autoCalcs,
       markup: inputs.markup,
     },

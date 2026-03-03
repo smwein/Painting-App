@@ -8,19 +8,14 @@ import type {
 } from '../types/settings.types';
 import { getDefaultCompanySettings, createDefaultPricingSettings } from '../core/constants/defaultPricing';
 
-/** Ensure all default sections exist — adds any that are missing (migration for older stored data) */
+/** Seed default sections only for brand-new data (no sections at all).
+ *  Does NOT re-add sections the user explicitly deleted. */
 function ensureDefaultSections(settings: CompanySettings): CompanySettings {
+  if (settings.pricing.sections.length > 0) return settings;
   const defaults = createDefaultPricingSettings();
-  const defaultSections = defaults.sections.filter((s) => s.isDefault);
-  const existingIds = new Set(settings.pricing.sections.map((s) => s.id));
-  const missing = defaultSections.filter((s) => !existingIds.has(s.id));
-  if (missing.length === 0) return settings;
   return {
     ...settings,
-    pricing: {
-      ...settings.pricing,
-      sections: [...settings.pricing.sections, ...missing],
-    },
+    pricing: { ...settings.pricing, sections: defaults.sections },
   };
 }
 

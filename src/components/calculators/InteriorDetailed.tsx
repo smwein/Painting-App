@@ -324,8 +324,6 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
 
   return (
     <div className="space-y-6">
-      <CustomerInfoSection register={register} />
-
       {/* House SF Auto-Calculate */}
       <Card className="bg-blue-50 border-blue-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">House Square Footage (Auto-Calculate)</h3>
@@ -492,6 +490,8 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
           <BidSummary result={result} />
         </>
       )}
+
+      <CustomerInfoSection register={register} />
     </div>
   );
 }

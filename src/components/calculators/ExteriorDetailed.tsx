@@ -284,8 +284,6 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
 
   return (
     <div className="space-y-6">
-      <CustomerInfoSection register={register} />
-
       <Card className="bg-blue-50 border-blue-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">House Square Footage (Auto-Calculate)</h3>
         <CardContent>
@@ -461,6 +459,8 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
           <BidSummary result={result} />
         </>
       )}
+
+      <CustomerInfoSection register={register} />
     </div>
   );
 }
