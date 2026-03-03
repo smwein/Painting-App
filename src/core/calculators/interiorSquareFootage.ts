@@ -25,7 +25,7 @@ export function calculateInteriorSqftAutoMeasurements(
  * Simple calculator with house SF, pricing option, house condition, and markup
  */
 export function calculateInteriorSquareFootage(
-  inputs: InteriorSqftInputs,
+  inputs: InteriorSqftInputs & { simpleModifiers?: Record<string, boolean> },
   pricing: PricingSettings
 ): BidResult {
   // Use empty or furnished rates based on houseCondition
@@ -48,8 +48,18 @@ export function calculateInteriorSquareFootage(
   // Split base cost into labor and materials using configured ratio
   const laborPct = pricing.sqftLaborPct ?? 85;
   const matPct = 100 - laborPct;
-  const laborCost = baseCost * (laborPct / 100);
-  const baseMatCost = baseCost * (matPct / 100);
+  let laborCost = baseCost * (laborPct / 100);
+  let baseMatCost = baseCost * (matPct / 100);
+
+  // Apply simple modifiers (multiply both labor and materials)
+  if (inputs.simpleModifiers && pricing.simpleInteriorModifiers) {
+    for (const mod of pricing.simpleInteriorModifiers) {
+      if (inputs.simpleModifiers[mod.id]) {
+        laborCost *= mod.multiplier;
+        baseMatCost *= mod.multiplier;
+      }
+    }
+  }
 
   // Calculate auto-measurements
   const autoCalcs = calculateInteriorSqftAutoMeasurements(inputs.houseSquareFootage, pricing);

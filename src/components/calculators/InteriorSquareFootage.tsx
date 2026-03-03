@@ -39,6 +39,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
 
   const [selectedOptions, setSelectedOptions] = useState<InteriorSqftOption[]>(['complete']);
   const [customItemValues, setCustomItemValues] = useState<Record<string, number>>({});
+  const [simpleModifiers, setSimpleModifiers] = useState<Record<string, boolean>>({});
 
   // Custom simple-pricing sections with their line items
   const customSections = useMemo(() => {
@@ -114,14 +115,14 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
       customItemValues,
     };
 
-    const calculatedResult = calculateInteriorSquareFootage(inputs, pricing);
+    const calculatedResult = calculateInteriorSquareFootage({ ...inputs, simpleModifiers }, pricing);
 
     if (onResultChange) {
-      onResultChange({ customer, inputs, result: calculatedResult });
+      onResultChange({ customer, inputs: { ...inputs, simpleModifiers }, result: calculatedResult });
     }
 
     return calculatedResult;
-  }, [houseSquareFootage, selectedOptions, markup, houseCondition, customItemValues, customer, onResultChange, pricing]);
+  }, [houseSquareFootage, selectedOptions, markup, houseCondition, customItemValues, simpleModifiers, customer, onResultChange, pricing]);
 
   const autoCalcs = useMemo(() => {
     if (!houseSquareFootage || houseSquareFootage <= 0) return null;
@@ -199,6 +200,35 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
       </Card>
 
       <MarkupSelector register={register} />
+
+      {pricing.simpleInteriorModifiers && pricing.simpleInteriorModifiers.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Modifiers</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {pricing.simpleInteriorModifiers
+              .sort((a, b) => a.order - b.order)
+              .map((mod) => (
+                <label
+                  key={mod.id}
+                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                    simpleModifiers[mod.id] ? 'bg-primary-50 border border-primary-200' : 'hover:bg-gray-50 border border-transparent'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={simpleModifiers[mod.id] ?? false}
+                    onChange={(e) => setSimpleModifiers((prev) => ({ ...prev, [mod.id]: e.target.checked }))}
+                    className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700 flex-1">{mod.name}</span>
+                  <span className="text-sm text-gray-500">×{mod.multiplier.toFixed(2)}</span>
+                </label>
+              ))}
+          </CardContent>
+        </Card>
+      )}
 
       {customSections.map(({ section, items }) => (
         <Card key={section.id}>

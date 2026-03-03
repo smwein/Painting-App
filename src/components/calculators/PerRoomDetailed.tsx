@@ -59,6 +59,21 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
   const [rooms, setRooms] = useState<RoomEntry[]>(() => [createRoom('bedroom')]);
   const [collapsedRooms, setCollapsedRooms] = useState<Record<string, boolean>>({});
 
+  // Custom per-room sections with their line items
+  const customPerRoomSections = useMemo(() => {
+    return pricing.sections
+      .filter((s) => s.calculatorType === 'per-room')
+      .map((s) => ({
+        section: s,
+        items: pricing.lineItems.filter((li) => li.category === s.id).sort((a, b) => a.order - b.order),
+      }))
+      .filter((s) => s.items.length > 0)
+      .sort((a, b) => a.section.order - b.section.order);
+  }, [pricing.sections, pricing.lineItems]);
+
+  // State for custom line item values per room: { [roomId]: { [itemId]: qty } }
+  const [customItemValues, setCustomItemValues] = useState<Record<string, Record<string, number>>>({});
+
   const toggleRoom = (id: string) =>
     setCollapsedRooms((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -96,13 +111,14 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
     const inputs = {
       rooms,
       markup: markup as MarkupPercentage,
+      customItemValues,
     };
     const calc = calculatePerRoom(inputs, pricing);
     if (onResultChange) {
       onResultChange({ customer, inputs, result: calc });
     }
     return calc;
-  }, [rooms, markup, customer, pricing, onResultChange]);
+  }, [rooms, markup, customer, pricing, onResultChange, customItemValues]);
 
   return (
     <div className="space-y-6">
@@ -246,6 +262,39 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
                       ))}
                     </select>
                   </div>
+
+                  {/* Custom per-room sections */}
+                  {customPerRoomSections.map(({ section, items }) => (
+                    <div key={section.id} className="col-span-full pt-2 border-t border-gray-100">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">{section.name}</h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {items.map((item) => (
+                          <div key={item.id}>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              {item.name} (${item.rate.toFixed(2)}/{item.unit})
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step={item.unit === 'sqft' || item.unit === 'lf' ? '0.1' : '1'}
+                              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                              value={customItemValues[room.id]?.[item.id] ?? ''}
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value);
+                                setCustomItemValues((prev) => ({
+                                  ...prev,
+                                  [room.id]: {
+                                    ...(prev[room.id] ?? {}),
+                                    [item.id]: isNaN(val) ? 0 : val,
+                                  },
+                                }));
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </CardContent>
               )}
             </Card>

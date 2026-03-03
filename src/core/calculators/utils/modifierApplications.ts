@@ -1,6 +1,31 @@
 import type { InteriorModifiers, ExteriorModifiers } from '../../../types/calculator.types';
-import type { PricingSettings } from '../../../types/settings.types';
+import type { PricingSettings, ModifierScope } from '../../../types/settings.types';
 import { INTERIOR_MODIFIERS, EXTERIOR_MODIFIERS } from '../../constants/modifiers';
+
+/**
+ * Apply dynamic modifiers from the new configurable modifier arrays.
+ * Each modifier has a name, multiplier, scope, and order.
+ * enabledIds is a Record<string, boolean> keyed by modifier ID.
+ */
+export function applyDynamicModifiers(
+  baseLabor: number,
+  baseMaterialCost: number,
+  enabledIds: Record<string, boolean>,
+  modifierConfigs: Array<{ id: string; name: string; multiplier: number; scope: ModifierScope; order: number }>
+): { modifiedLabor: number; modifiedMaterialCost: number; appliedModifiers: string[] } {
+  let modifiedLabor = baseLabor;
+  let modifiedMaterialCost = baseMaterialCost;
+  const appliedModifiers: string[] = [];
+
+  for (const mod of modifierConfigs.sort((a, b) => a.order - b.order)) {
+    if (!enabledIds[mod.id]) continue;
+    if (mod.scope === 'labor' || mod.scope === 'both') modifiedLabor *= mod.multiplier;
+    if (mod.scope === 'materials' || mod.scope === 'both') modifiedMaterialCost *= mod.multiplier;
+    appliedModifiers.push(`${mod.name} (×${mod.multiplier})`);
+  }
+
+  return { modifiedLabor, modifiedMaterialCost, appliedModifiers };
+}
 
 /**
  * Apply interior modifiers to base labor and material costs

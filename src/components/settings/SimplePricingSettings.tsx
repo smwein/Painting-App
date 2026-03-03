@@ -80,6 +80,15 @@ export function SimplePricingSettings() {
   const [newSectionName, setNewSectionName] = useState('');
   const [showAddSection, setShowAddSection] = useState(false);
 
+  // Simple interior modifiers state
+  const [simpleModifiers, setSimpleModifiers] = useState(
+    settings.pricing.simpleInteriorModifiers ?? [
+      { id: 'simple-mod-second-dry-coat', name: 'Second Dry Coat', multiplier: 1.20, order: 1 },
+    ]
+  );
+  const [newModName, setNewModName] = useState('');
+  const [newModMultiplier, setNewModMultiplier] = useState('1.20');
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -178,8 +187,28 @@ export function SimplePricingSettings() {
     setShowAddSection(false);
   };
 
+  const handleAddSimpleModifier = () => {
+    const name = newModName.trim();
+    const multiplier = parseFloat(newModMultiplier);
+    if (!name || isNaN(multiplier) || multiplier <= 0) {
+      alert('Please enter a valid modifier name and multiplier.');
+      return;
+    }
+    const maxOrder = Math.max(...simpleModifiers.map((m) => m.order), 0);
+    setSimpleModifiers((prev) => [
+      ...prev,
+      { id: `simple-mod-${Date.now()}`, name, multiplier, order: maxOrder + 1 },
+    ]);
+    setNewModName('');
+    setNewModMultiplier('1.20');
+  };
+
+  const handleDeleteSimpleModifier = (id: string) => {
+    setSimpleModifiers((prev) => prev.filter((m) => m.id !== id));
+  };
+
   const handleSave = () => {
-    updatePricing(formData);
+    updatePricing({ ...formData, simpleInteriorModifiers: simpleModifiers });
     alert('Simple pricing settings saved successfully!');
   };
 
@@ -383,6 +412,61 @@ export function SimplePricingSettings() {
             <div className="pb-1 text-sm text-gray-600">
               Materials: <span className="font-semibold">{100 - (formData.sqftLaborPct ?? 85)}%</span>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Interior Modifiers */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Interior Modifiers</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-gray-500">
+            Modifiers appear as checkboxes on the Interior Quick Measure calculator. When enabled, they multiply both labor and materials.
+          </p>
+          {simpleModifiers.sort((a, b) => a.order - b.order).map((mod) => (
+            <div key={mod.id} className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg bg-gray-50">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={mod.name}
+                  onChange={(e) => setSimpleModifiers((prev) =>
+                    prev.map((m) => m.id === mod.id ? { ...m, name: e.target.value } : m)
+                  )}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+              <div className="w-24">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={mod.multiplier}
+                  onChange={(e) => setSimpleModifiers((prev) =>
+                    prev.map((m) => m.id === mod.id ? { ...m, multiplier: parseFloat(e.target.value) || 1 } : m)
+                  )}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+              <span className="text-xs text-gray-500 w-6">×</span>
+              <button
+                onClick={() => handleDeleteSimpleModifier(mod.id)}
+                className="text-red-400 hover:text-red-600 text-sm font-bold px-1"
+                title="Delete modifier"
+              >✕</button>
+            </div>
+          ))}
+          <div className="flex items-end gap-2 pt-2 border-t border-gray-100">
+            <div className="flex-1">
+              <Input label="New Modifier Name" type="text" value={newModName}
+                onChange={(e) => setNewModName(e.target.value)} placeholder="e.g., Extra Coat" />
+            </div>
+            <div className="w-28">
+              <Input label="Multiplier" type="number" min="0" step="0.01" value={newModMultiplier}
+                onChange={(e) => setNewModMultiplier(e.target.value)} placeholder="1.20" />
+            </div>
+            <Button onClick={handleAddSimpleModifier} variant="outline" size="sm" className="mb-0.5">+ Add</Button>
           </div>
         </CardContent>
       </Card>

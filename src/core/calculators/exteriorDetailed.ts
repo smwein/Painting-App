@@ -6,14 +6,14 @@ import type {
 } from '../../types/calculator.types';
 import type { PricingSettings } from '../../types/settings.types';
 import { calculateExteriorMaterials } from './utils/materialCalculations';
-import { applyExteriorModifiers } from './utils/modifierApplications';
+import { applyExteriorModifiers, applyDynamicModifiers } from './utils/modifierApplications';
 
 /**
  * Calculate exterior detailed bid
  * Complex calculator with 21 input fields, modifiers, materials, and markup
  */
 export function calculateExteriorDetailed(
-  inputs: ExteriorDetailedInputs,
+  inputs: ExteriorDetailedInputs & { dynamicModifiers?: Record<string, boolean> },
   pricing: PricingSettings
 ): BidResult {
   // Helper function to get rate for a line item
@@ -81,12 +81,21 @@ export function calculateExteriorDetailed(
   }, pricing);
 
   // 3. Apply modifiers (multiplicative, scope-aware)
-  const { modifiedLabor, modifiedMaterialCost, appliedModifiers } = applyExteriorModifiers(
-    baseLabor,
-    materials.totalCost,
-    inputs.modifiers,
-    pricing
-  );
+  let modifiedLabor: number;
+  let modifiedMaterialCost: number;
+  let appliedModifiers: string[];
+
+  if (inputs.dynamicModifiers && pricing.exteriorModifiers && pricing.exteriorModifiers.length > 0) {
+    const result = applyDynamicModifiers(baseLabor, materials.totalCost, inputs.dynamicModifiers, pricing.exteriorModifiers);
+    modifiedLabor = result.modifiedLabor;
+    modifiedMaterialCost = result.modifiedMaterialCost;
+    appliedModifiers = result.appliedModifiers;
+  } else {
+    const result = applyExteriorModifiers(baseLabor, materials.totalCost, inputs.modifiers, pricing);
+    modifiedLabor = result.modifiedLabor;
+    modifiedMaterialCost = result.modifiedMaterialCost;
+    appliedModifiers = result.appliedModifiers;
+  }
 
   const modifiedMaterials: MaterialBreakdown = {
     items: materials.items,

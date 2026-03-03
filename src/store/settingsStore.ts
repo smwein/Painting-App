@@ -40,6 +40,38 @@ function ensureNewPricingFields(settings: CompanySettings): CompanySettings {
     changed = true;
   }
 
+  if (p.simpleInteriorModifiers === undefined) {
+    updates.simpleInteriorModifiers = [
+      { id: 'simple-mod-second-dry-coat', name: 'Second Dry Coat', multiplier: 1.20, order: 1 },
+    ];
+    changed = true;
+  }
+
+  // Migrate old fixed modifier values to dynamic arrays
+  if (p.interiorModifiers === undefined) {
+    const vals = p.interiorModifierValues;
+    updates.interiorModifiers = [
+      { id: 'int-mod-heavily-furnished', name: vals?.heavilyFurnishedLabel ?? 'Heavily Furnished', multiplier: vals?.heavilyFurnished ?? 1.25, scope: vals?.heavilyFurnishedScope ?? 'labor', order: 1 },
+      { id: 'int-mod-empty-house', name: vals?.emptyHouseLabel ?? 'Empty House', multiplier: vals?.emptyHouse ?? 0.85, scope: vals?.emptyHouseScope ?? 'labor', order: 2 },
+      { id: 'int-mod-extensive-prep', name: vals?.extensivePrepLabel ?? 'Extensive Prep', multiplier: vals?.extensivePrep ?? 1.15, scope: vals?.extensivePrepScope ?? 'labor', order: 3 },
+      { id: 'int-mod-additional-coat', name: vals?.additionalCoatLabel ?? 'Additional Coat', multiplier: vals?.additionalCoat ?? 1.25, scope: vals?.additionalCoatScope ?? 'labor', order: 4 },
+      { id: 'int-mod-one-coat', name: vals?.oneCoatLabel ?? 'One Coat', multiplier: vals?.oneCoat ?? 0.85, scope: vals?.oneCoatScope ?? 'labor', order: 5 },
+    ];
+    changed = true;
+  }
+
+  if (p.exteriorModifiers === undefined) {
+    const vals = p.exteriorModifierValues;
+    updates.exteriorModifiers = [
+      { id: 'ext-mod-three-story', name: vals?.threeStoryLabel ?? '3 Story', multiplier: vals?.threeStory ?? 1.15, scope: vals?.threeStoryScope ?? 'labor', order: 1 },
+      { id: 'ext-mod-extensive-prep', name: vals?.extensivePrepLabel ?? 'Extensive Prep', multiplier: vals?.extensivePrep ?? 1.20, scope: vals?.extensivePrepScope ?? 'labor', order: 2 },
+      { id: 'ext-mod-hard-terrain', name: vals?.hardTerrainLabel ?? 'Hard Terrain', multiplier: vals?.hardTerrain ?? 1.15, scope: vals?.hardTerrainScope ?? 'labor', order: 3 },
+      { id: 'ext-mod-additional-coat', name: vals?.additionalCoatLabel ?? 'Additional Coat', multiplier: vals?.additionalCoat ?? 1.25, scope: vals?.additionalCoatScope ?? 'labor', order: 4 },
+      { id: 'ext-mod-one-coat', name: vals?.oneCoatLabel ?? 'One Coat', multiplier: vals?.oneCoat ?? 0.85, scope: vals?.oneCoatScope ?? 'labor', order: 5 },
+    ];
+    changed = true;
+  }
+
   if (!changed) return settings;
   return {
     ...settings,

@@ -13,7 +13,7 @@ export interface LineItemConfig {
 export interface SectionConfig {
   id: string;
   name: string;
-  calculatorType: 'interior-detailed' | 'exterior-detailed' | 'simple-pricing';
+  calculatorType: 'interior-detailed' | 'exterior-detailed' | 'simple-pricing' | 'per-room';
   isDefault: boolean; // Cannot be deleted if true
   order: number;
   defaultCollapsed?: boolean; // Whether section starts collapsed on calculator page
@@ -136,6 +136,13 @@ export interface PricingSettings {
   // Editable labor modifier values
   interiorModifierValues?: InteriorModifierValues;
   exteriorModifierValues?: ExteriorModifierValues;
+
+  // Configurable modifiers for Simple Interior calculator
+  simpleInteriorModifiers?: Array<{ id: string; name: string; multiplier: number; order: number }>;
+
+  // Dynamic modifier arrays for detailed calculators (replaces interiorModifierValues/exteriorModifierValues)
+  interiorModifiers?: Array<{ id: string; name: string; multiplier: number; scope: ModifierScope; order: number }>;
+  exteriorModifiers?: Array<{ id: string; name: string; multiplier: number; scope: ModifierScope; order: number }>;
 
   // Custom room types for Per Room calculator
   customRoomTypes?: Array<{ id: string; name: string; defaultSqft: number }>;

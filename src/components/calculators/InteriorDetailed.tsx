@@ -1,5 +1,22 @@
 import { useMemo, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Input } from '../common/Input';
 import { Card, CardContent } from '../common/Card';
 import { CustomerInfoSection } from './shared/CustomerInfoSection';
@@ -10,6 +27,22 @@ import { BidSummary } from '../results/BidSummary';
 import { PaintGallonsEstimate } from '../results/PaintGallonsEstimate';
 import { JobDurationEstimate } from '../results/JobDurationEstimate';
 import { useSettingsStore } from '../../store/settingsStore';
+
+function SortableSection({ id, children }: { id: string; children: (props: { dragHandleProps: React.HTMLAttributes<HTMLElement> }) => React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative',
+    zIndex: isDragging ? 10 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ dragHandleProps: { ...attributes, ...listeners } })}
+    </div>
+  );
+}
 import type { InteriorDetailedInputs, HouseCondition } from '../../types/calculator.types';
 import type { CustomerInfo, Bid } from '../../types/bid.types';
 import { calculateInteriorDetailed } from '../../core/calculators/interiorDetailed';
@@ -48,6 +81,15 @@ interface InteriorDetailedFormData {
 }
 
 function getInteriorModifiersList(pricing: import('../../types/settings.types').PricingSettings) {
+  // Use dynamic modifiers array if available, fallback to old fixed format
+  if (pricing.interiorModifiers && pricing.interiorModifiers.length > 0) {
+    return pricing.interiorModifiers
+      .sort((a, b) => a.order - b.order)
+      .map((mod) => ({
+        name: `dynamicMod.${mod.id}`,
+        label: `${mod.name} (×${mod.multiplier})`,
+      }));
+  }
   const vals = pricing.interiorModifierValues;
   return [
     { name: 'modifiers.heavilyFurnished', label: `${vals?.heavilyFurnishedLabel ?? 'Heavily Furnished'} (×${vals?.heavilyFurnished ?? 1.25})` },
@@ -98,17 +140,20 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
   const toggleSection = (id: string) =>
     setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  const moveSection = (sectionId: string, direction: 'up' | 'down') => {
-    const sorted = [...pricing.sections]
-      .filter((s) => s.calculatorType === 'interior-detailed')
-      .sort((a, b) => a.order - b.order);
-    const idx = sorted.findIndex((s) => s.id === sectionId);
-    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
-    if (swapIdx < 0 || swapIdx >= sorted.length) return;
-    const currentOrder = sorted[idx].order;
-    const swapOrder = sorted[swapIdx].order;
-    updateSection(sorted[idx].id, { order: swapOrder });
-    updateSection(sorted[swapIdx].id, { order: currentOrder });
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleSectionDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = allIntSections.findIndex((s) => s.id === active.id);
+    const newIndex = allIntSections.findIndex((s) => s.id === over.id);
+    const reordered = arrayMove(allIntSections, oldIndex, newIndex);
+    reordered.forEach((section, index) => {
+      updateSection(section.id, { order: index + 1 });
+    });
   };
 
   const handleDeleteSection = (sectionId: string) => {
@@ -123,6 +168,10 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
 
   // State for custom section line item quantities
   const [customValues, setCustomValues] = useState<Record<string, number>>({});
+
+  // Dynamic modifier state (for new configurable modifiers)
+  const [dynamicModifiers, setDynamicModifiers] = useState<Record<string, boolean>>({});
+  const useDynamicModifiers = !!(pricing.interiorModifiers && pricing.interiorModifiers.length > 0);
 
   const { register, watch, reset, setValue } = useForm<InteriorDetailedFormData>({
     defaultValues: {
@@ -297,7 +346,10 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
       customItemValues: customValues,
     };
 
-    return calculateInteriorDetailed(inputs, pricing);
+    return calculateInteriorDetailed(
+      useDynamicModifiers ? { ...inputs, dynamicModifiers } : inputs,
+      pricing
+    );
   }, [
     wallSqft, ceilingSqft, trimLF, doors, cabinetDoors, cabinetDrawers,
     newCabinetDoors, newCabinetDrawers, colorsAboveThree, wallpaperRemovalSqft,
@@ -306,7 +358,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
     miscWorkHours, miscellaneousDollars, paintType, markup,
     modifierHeavilyFurnished, modifierEmptyHouse, modifierExtensivePrep,
     modifierAdditionalCoat, modifierOneCoat, customValues,
-    houseCondition, pricing,
+    houseCondition, pricing, dynamicModifiers, useDynamicModifiers,
   ]);
 
   // Notify parent of changes
@@ -397,26 +449,20 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
       </Card>
 
       {/* All sections rendered in dynamic sorted order */}
-      {allIntSections.map((section, sectionIdx) => {
+      <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleSectionDragEnd}>
+        <SortableContext items={allIntSections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+          <div className="space-y-6">
+      {allIntSections.map((section) => {
         const unitLabel: Record<string, string> = { sqft: '/sqft', lf: '/LF', each: '/each', hour: '/hour', dollars: '' };
-        const isFirst = sectionIdx === 0;
-        const isLast = sectionIdx === allIntSections.length - 1;
 
-        const sectionHeader = (sectionId: string) => (
+        const sectionHeader = (sectionId: string, dragHandleProps: React.HTMLAttributes<HTMLElement>) => (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex flex-col -my-1">
-                <button
-                  onClick={() => moveSection(sectionId, 'up')}
-                  disabled={isFirst}
-                  className="text-xs text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed px-1 leading-none"
-                >&#9650;</button>
-                <button
-                  onClick={() => moveSection(sectionId, 'down')}
-                  disabled={isLast}
-                  className="text-xs text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed px-1 leading-none"
-                >&#9660;</button>
-              </div>
+              <button
+                {...dragHandleProps}
+                className="touch-none cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 text-xl px-1"
+                title="Drag to reorder"
+              >⠿</button>
               <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
             </div>
             <div className="flex items-center gap-2">
@@ -433,116 +479,152 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
           </div>
         );
 
-        if (section.id === 'int-measurements') return (
-          <Card key={section.id}>
-            {sectionHeader('int-measurements')}
-            {!collapsed['int-measurements'] && (
-              <div className="mt-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input label={`Wall Sq Ft ($${getRate('int-wall-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallSqft', { valueAsNumber: true })} />
-                  <Input label={`Ceiling Sq Ft ($${getRate('int-ceiling-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('ceilingSqft', { valueAsNumber: true })} />
-                  <Input label={`Trim LF ($${getRate('int-trim-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimLF', { valueAsNumber: true })} />
+        const renderInner = (dhp: React.HTMLAttributes<HTMLElement>) => {
+          if (section.id === 'int-measurements') return (
+            <Card>
+              {sectionHeader('int-measurements', dhp)}
+              {!collapsed['int-measurements'] && (
+                <div className="mt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input label={`Wall Sq Ft ($${getRate('int-wall-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallSqft', { valueAsNumber: true })} />
+                    <Input label={`Ceiling Sq Ft ($${getRate('int-ceiling-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('ceilingSqft', { valueAsNumber: true })} />
+                    <Input label={`Trim LF ($${getRate('int-trim-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimLF', { valueAsNumber: true })} />
+                  </div>
+                  <SectionSubtotal total={measurementsSubtotal} />
                 </div>
-                <SectionSubtotal total={measurementsSubtotal} />
-              </div>
-            )}
-          </Card>
-        );
+              )}
+            </Card>
+          );
 
-        if (section.id === 'int-doors-cabinets') return (
-          <Card key={section.id}>
-            {sectionHeader('int-doors-cabinets')}
-            {!collapsed['int-doors-cabinets'] && (
-              <div className="mt-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input label={`Doors ($${getRate('int-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doors', { valueAsNumber: true })} />
-                  <Input label={`Cabinet Doors ($${getRate('int-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDoors', { valueAsNumber: true })} />
-                  <Input label={`Cabinet Drawers ($${getRate('int-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDrawers', { valueAsNumber: true })} />
-                  <Input label={`New Cabinet Doors ($${getRate('int-new-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDoors', { valueAsNumber: true })} />
-                  <Input label={`New Cabinet Drawers ($${getRate('int-new-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDrawers', { valueAsNumber: true })} />
+          if (section.id === 'int-doors-cabinets') return (
+            <Card>
+              {sectionHeader('int-doors-cabinets', dhp)}
+              {!collapsed['int-doors-cabinets'] && (
+                <div className="mt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input label={`Doors ($${getRate('int-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doors', { valueAsNumber: true })} />
+                    <Input label={`Cabinet Doors ($${getRate('int-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDoors', { valueAsNumber: true })} />
+                    <Input label={`Cabinet Drawers ($${getRate('int-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDrawers', { valueAsNumber: true })} />
+                    <Input label={`New Cabinet Doors ($${getRate('int-new-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDoors', { valueAsNumber: true })} />
+                    <Input label={`New Cabinet Drawers ($${getRate('int-new-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDrawers', { valueAsNumber: true })} />
+                  </div>
+                  <SectionSubtotal total={doorsSubtotal} />
                 </div>
-                <SectionSubtotal total={doorsSubtotal} />
-              </div>
-            )}
-          </Card>
-        );
+              )}
+            </Card>
+          );
 
-        if (section.id === 'int-prep-work') return (
-          <Card key={section.id}>
-            {sectionHeader('int-prep-work')}
-            {!collapsed['int-prep-work'] && (
-              <div className="mt-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input label={`Wallpaper Removal Sq Ft ($${getRate('int-wallpaper-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallpaperRemovalSqft', { valueAsNumber: true })} />
-                  <Input label={`Priming LF ($${getRate('int-priming-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingLF', { valueAsNumber: true })} />
-                  <Input label={`Priming Sq Ft ($${getRate('int-priming-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingSqft', { valueAsNumber: true })} />
-                  <Input label={`Drywall Replacement Sq Ft ($${getRate('int-drywall-replacement-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('drywallReplacementSqft', { valueAsNumber: true })} />
-                  <Input label={`Popcorn Removal Sq Ft ($${getRate('int-popcorn-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('popcornRemovalSqft', { valueAsNumber: true })} />
-                  <Input label={`Wall Texture Removal Sq Ft ($${getRate('int-wall-texture-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallTextureRemovalSqft', { valueAsNumber: true })} />
-                  <Input label={`Trim Replacement LF ($${getRate('int-trim-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimReplacementLF', { valueAsNumber: true })} />
-                  <Input label={`Drywall Repairs ($${getRate('int-drywall-repair').toFixed(0)}/repair)`} type="number" min="0" step="1" placeholder="0" {...register('drywallRepairs', { valueAsNumber: true })} />
+          if (section.id === 'int-prep-work') return (
+            <Card>
+              {sectionHeader('int-prep-work', dhp)}
+              {!collapsed['int-prep-work'] && (
+                <div className="mt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input label={`Wallpaper Removal Sq Ft ($${getRate('int-wallpaper-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallpaperRemovalSqft', { valueAsNumber: true })} />
+                    <Input label={`Priming LF ($${getRate('int-priming-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingLF', { valueAsNumber: true })} />
+                    <Input label={`Priming Sq Ft ($${getRate('int-priming-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingSqft', { valueAsNumber: true })} />
+                    <Input label={`Drywall Replacement Sq Ft ($${getRate('int-drywall-replacement-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('drywallReplacementSqft', { valueAsNumber: true })} />
+                    <Input label={`Popcorn Removal Sq Ft ($${getRate('int-popcorn-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('popcornRemovalSqft', { valueAsNumber: true })} />
+                    <Input label={`Wall Texture Removal Sq Ft ($${getRate('int-wall-texture-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallTextureRemovalSqft', { valueAsNumber: true })} />
+                    <Input label={`Trim Replacement LF ($${getRate('int-trim-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimReplacementLF', { valueAsNumber: true })} />
+                    <Input label={`Drywall Repairs ($${getRate('int-drywall-repair').toFixed(0)}/repair)`} type="number" min="0" step="1" placeholder="0" {...register('drywallRepairs', { valueAsNumber: true })} />
+                  </div>
+                  <SectionSubtotal total={prepSubtotal} />
                 </div>
-                <SectionSubtotal total={prepSubtotal} />
-              </div>
-            )}
-          </Card>
-        );
+              )}
+            </Card>
+          );
 
-        if (section.id === 'int-additional') return (
-          <Card key={section.id}>
-            {sectionHeader('int-additional')}
-            {!collapsed['int-additional'] && (
-              <div className="mt-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input label={`Colors Above 3 ($${getRate('int-color-above-three').toFixed(0)}/color)`} type="number" min="0" step="1" placeholder="0" {...register('colorsAboveThree', { valueAsNumber: true })} />
-                  <Input label={`Accent Walls ($${getRate('int-accent-wall').toFixed(0)}/wall)`} type="number" min="0" step="1" placeholder="0" {...register('accentWalls', { valueAsNumber: true })} />
-                  <Input label={`Misc Work Hours ($${getRate('int-misc-work-hour').toFixed(0)}/hour)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscWorkHours', { valueAsNumber: true })} />
-                  <Input label="Miscellaneous $ (custom)" type="number" min="0" step="0.01" placeholder="0" {...register('miscellaneousDollars', { valueAsNumber: true })} />
+          if (section.id === 'int-additional') return (
+            <Card>
+              {sectionHeader('int-additional', dhp)}
+              {!collapsed['int-additional'] && (
+                <div className="mt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input label={`Colors Above 3 ($${getRate('int-color-above-three').toFixed(0)}/color)`} type="number" min="0" step="1" placeholder="0" {...register('colorsAboveThree', { valueAsNumber: true })} />
+                    <Input label={`Accent Walls ($${getRate('int-accent-wall').toFixed(0)}/wall)`} type="number" min="0" step="1" placeholder="0" {...register('accentWalls', { valueAsNumber: true })} />
+                    <Input label={`Misc Work Hours ($${getRate('int-misc-work-hour').toFixed(0)}/hour)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscWorkHours', { valueAsNumber: true })} />
+                    <Input label="Miscellaneous $ (custom)" type="number" min="0" step="0.01" placeholder="0" {...register('miscellaneousDollars', { valueAsNumber: true })} />
+                  </div>
+                  <SectionSubtotal total={additionalSubtotal} />
                 </div>
-                <SectionSubtotal total={additionalSubtotal} />
-              </div>
-            )}
-          </Card>
-        );
+              )}
+            </Card>
+          );
 
-        // Custom section
-        const sectionItems = pricing.lineItems
-          .filter((item) => item.category === section.id)
-          .sort((a, b) => a.order - b.order);
-        if (sectionItems.length === 0) return null;
+          // Custom section
+          const sectionItems = pricing.lineItems
+            .filter((item) => item.category === section.id)
+            .sort((a, b) => a.order - b.order);
+          if (sectionItems.length === 0) return null;
 
-        const sectionSubtotal = sectionItems.reduce(
-          (sum, item) => sum + (customValues[item.id] || 0) * item.rate, 0
-        );
+          const sectionSubtotal = sectionItems.reduce(
+            (sum, item) => sum + (customValues[item.id] || 0) * item.rate, 0
+          );
+
+          return (
+            <Card>
+              {sectionHeader(section.id, dhp)}
+              {!collapsed[section.id] && (
+                <div className="mt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {sectionItems.map((item) => (
+                      <Input
+                        key={item.id}
+                        label={`${item.name} ($${item.rate.toFixed(item.unit === 'sqft' || item.unit === 'lf' ? 2 : 0)}${unitLabel[item.unit] || ''})`}
+                        type="number" min="0"
+                        step={item.unit === 'sqft' || item.unit === 'lf' ? '0.1' : '1'}
+                        placeholder="0"
+                        value={customValues[item.id] ?? 0}
+                        onChange={(e) => setCustomValues((prev) => ({ ...prev, [item.id]: parseFloat(e.target.value) || 0 }))}
+                      />
+                    ))}
+                  </div>
+                  <SectionSubtotal total={sectionSubtotal} />
+                </div>
+              )}
+            </Card>
+          );
+        };
 
         return (
-          <Card key={section.id}>
-            {sectionHeader(section.id)}
-            {!collapsed[section.id] && (
-              <div className="mt-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {sectionItems.map((item) => (
-                    <Input
-                      key={item.id}
-                      label={`${item.name} ($${item.rate.toFixed(item.unit === 'sqft' || item.unit === 'lf' ? 2 : 0)}${unitLabel[item.unit] || ''})`}
-                      type="number" min="0"
-                      step={item.unit === 'sqft' || item.unit === 'lf' ? '0.1' : '1'}
-                      placeholder="0"
-                      value={customValues[item.id] ?? 0}
-                      onChange={(e) => setCustomValues((prev) => ({ ...prev, [item.id]: parseFloat(e.target.value) || 0 }))}
-                    />
-                  ))}
-                </div>
-                <SectionSubtotal total={sectionSubtotal} />
-              </div>
-            )}
-          </Card>
+          <SortableSection key={section.id} id={section.id}>
+            {({ dragHandleProps: dhp }) => renderInner(dhp)}
+          </SortableSection>
         );
       })}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       <PaintTypeSelector register={register} />
       <MarkupSelector register={register} />
-      <ModifierSection register={register} modifiers={getInteriorModifiersList(pricing)} />
+      {useDynamicModifiers ? (
+        <Card>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Modifiers</h3>
+          <CardContent className="space-y-2">
+            {pricing.interiorModifiers!.sort((a, b) => a.order - b.order).map((mod) => (
+              <label
+                key={mod.id}
+                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                  dynamicModifiers[mod.id] ? 'bg-primary-50 border border-primary-200' : 'hover:bg-gray-50 border border-transparent'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={dynamicModifiers[mod.id] ?? false}
+                  onChange={(e) => setDynamicModifiers((prev) => ({ ...prev, [mod.id]: e.target.checked }))}
+                  className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
+                />
+                <span className="text-sm font-medium text-gray-700 flex-1">{mod.name} (×{mod.multiplier})</span>
+                <span className="text-xs text-gray-400">{mod.scope === 'both' ? 'Labor + Materials' : mod.scope === 'materials' ? 'Materials' : 'Labor'}</span>
+              </label>
+            ))}
+          </CardContent>
+        </Card>
+      ) : (
+        <ModifierSection register={register} modifiers={getInteriorModifiersList(pricing)} />
+      )}
 
       {result && result.total > 0 && (
         <>

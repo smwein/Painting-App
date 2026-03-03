@@ -60,6 +60,7 @@ export interface RoomEntry {
 export interface PerRoomInputs {
   rooms: RoomEntry[];
   markup: number;
+  customItemValues?: Record<string, Record<string, number>>; // { [roomId]: { [itemId]: qty } }
 }
 
 export interface RoomResult {
@@ -84,11 +85,21 @@ export function calculatePerRoom(
   };
 
   const roomResults: RoomResult[] = inputs.rooms.map((room) => {
-    const labor =
+    let labor =
       room.wallSqft * getRate('int-wall-sqft') +
       room.ceilingSqft * getRate('int-ceiling-sqft') +
       room.trimLF * getRate('int-trim-lf') +
       room.doors * getRate('int-door');
+
+    // Add custom per-room line item costs
+    const roomCustomValues = inputs.customItemValues?.[room.id];
+    if (roomCustomValues) {
+      for (const [itemId, qty] of Object.entries(roomCustomValues)) {
+        if (!qty || qty <= 0) continue;
+        const lineItem = pricing.lineItems.find((li) => li.id === itemId);
+        if (lineItem) labor += qty * lineItem.rate;
+      }
+    }
 
     const materials = calculateInteriorMaterials({
       wallSqft: room.wallSqft,

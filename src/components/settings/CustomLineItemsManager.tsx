@@ -6,12 +6,13 @@ import { Button } from '../common/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
 import type { LineItemConfig } from '../../types/settings.types';
 
-type CalcType = 'interior-detailed' | 'exterior-detailed' | 'simple-pricing';
+type CalcType = 'interior-detailed' | 'exterior-detailed' | 'simple-pricing' | 'per-room';
 
 const CALC_LABELS: Record<CalcType, string> = {
   'interior-detailed': 'Interior Detailed',
   'exterior-detailed': 'Exterior Detailed',
   'simple-pricing': 'Simple Pricing',
+  'per-room': 'Per Room',
 };
 
 interface NewItemRow {
@@ -105,6 +106,7 @@ export function CustomLineItemsManager() {
                 <option value="interior-detailed">Interior Detailed</option>
                 <option value="exterior-detailed">Exterior Detailed</option>
                 <option value="simple-pricing">Simple Pricing</option>
+                <option value="per-room">Per Room</option>
               </Select>
 
               <Select
