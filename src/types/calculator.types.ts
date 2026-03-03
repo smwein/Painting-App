@@ -53,6 +53,7 @@ export interface InteriorSqftInputs {
   pricingOption: InteriorSqftOption;
   markup: MarkupPercentage;
   houseCondition: HouseCondition;
+  customItemValues?: Record<string, number>;
 }
 
 // Interior Square Footage Auto-calculations
@@ -128,6 +129,7 @@ export interface ExteriorSqftInputs {
   houseSquareFootage: number;
   pricingOption: ExteriorSqftOption;
   markup: MarkupPercentage;
+  customItemValues?: Record<string, number>;
 }
 
 // Exterior Square Footage Auto-calculations

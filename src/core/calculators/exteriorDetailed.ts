@@ -2,6 +2,7 @@ import type {
   ExteriorDetailedInputs,
   BidResult,
   ExteriorDetailedBreakdown,
+  MaterialBreakdown,
 } from '../../types/calculator.types';
 import type { PricingSettings } from '../../types/settings.types';
 import { calculateExteriorMaterials } from './utils/materialCalculations';
@@ -71,10 +72,7 @@ export function calculateExteriorDetailed(
     }
   }
 
-  // 2. Apply modifiers (multiplicative)
-  const { modifiedLabor, appliedModifiers } = applyExteriorModifiers(baseLabor, inputs.modifiers, pricing);
-
-  // 3. Calculate materials
+  // 2. Calculate materials FIRST (so modifiers can apply to them if scoped)
   const materials = calculateExteriorMaterials({
     wallSqft: inputs.wallSqft,
     trimLF: inputs.trimFasciaSoffitLF,
@@ -82,8 +80,21 @@ export function calculateExteriorDetailed(
     paintType: inputs.paintType,
   }, pricing);
 
+  // 3. Apply modifiers (multiplicative, scope-aware)
+  const { modifiedLabor, modifiedMaterialCost, appliedModifiers } = applyExteriorModifiers(
+    baseLabor,
+    materials.totalCost,
+    inputs.modifiers,
+    pricing
+  );
+
+  const modifiedMaterials: MaterialBreakdown = {
+    items: materials.items,
+    totalCost: modifiedMaterialCost,
+  };
+
   // 4. Calculate total using margin formula: total = cost / (1 - margin%)
-  const subtotal = modifiedLabor + materials.totalCost;
+  const subtotal = modifiedLabor + modifiedMaterialCost;
   const marginFactor = Math.max(1 - inputs.markup / 100, 0.01);
   const total = subtotal / marginFactor;
   const profit = total - subtotal;
@@ -102,7 +113,7 @@ export function calculateExteriorDetailed(
 
   return {
     labor: modifiedLabor,
-    materials,
+    materials: modifiedMaterials,
     profit,
     total,
     breakdown,

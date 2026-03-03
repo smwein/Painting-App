@@ -3,7 +3,7 @@ import { useSettingsStore } from '../../store/settingsStore';
 import { Input } from '../common/Input';
 import { Button } from '../common/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
-import type { InteriorModifierValues, ExteriorModifierValues } from '../../types/settings.types';
+import type { InteriorModifierValues, ExteriorModifierValues, ModifierScope } from '../../types/settings.types';
 
 const DEFAULT_INTERIOR_MODIFIERS: InteriorModifierValues = {
   heavilyFurnished: 1.25,
@@ -151,107 +151,83 @@ export function DetailedPricingSettings() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Interior Labor Modifiers</CardTitle>
+            <CardTitle>Interior Modifiers</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Input
-              label="Heavily Furnished (multiplier)"
-              type="number"
-              min="0"
-              step="0.01"
-              value={interiorMods.heavilyFurnished}
-              onChange={(e) => setInteriorMods((p) => ({ ...p, heavilyFurnished: parseFloat(e.target.value) || 1 }))}
-              helperText="Applied when house is heavily furnished"
-            />
-            <Input
-              label="Empty House (multiplier)"
-              type="number"
-              min="0"
-              step="0.01"
-              value={interiorMods.emptyHouse}
-              onChange={(e) => setInteriorMods((p) => ({ ...p, emptyHouse: parseFloat(e.target.value) || 1 }))}
-              helperText="Applied when house is empty"
-            />
-            <Input
-              label="Extensive Prep (multiplier)"
-              type="number"
-              min="0"
-              step="0.01"
-              value={interiorMods.extensivePrep}
-              onChange={(e) => setInteriorMods((p) => ({ ...p, extensivePrep: parseFloat(e.target.value) || 1 }))}
-              helperText="Applied for extensive prep work"
-            />
-            <Input
-              label="Additional Coat (multiplier)"
-              type="number"
-              min="0"
-              step="0.01"
-              value={interiorMods.additionalCoat}
-              onChange={(e) => setInteriorMods((p) => ({ ...p, additionalCoat: parseFloat(e.target.value) || 1 }))}
-              helperText="Applied for an additional coat"
-            />
-            <Input
-              label="One Coat (multiplier)"
-              type="number"
-              min="0"
-              step="0.01"
-              value={interiorMods.oneCoat}
-              onChange={(e) => setInteriorMods((p) => ({ ...p, oneCoat: parseFloat(e.target.value) || 1 }))}
-              helperText="Applied to reduce to 1 coat"
-            />
+          <CardContent className="space-y-4">
+            {(
+              [
+                { label: 'Heavily Furnished', key: 'heavilyFurnished', scopeKey: 'heavilyFurnishedScope', helper: 'Applied when house is heavily furnished' },
+                { label: 'Empty House', key: 'emptyHouse', scopeKey: 'emptyHouseScope', helper: 'Applied when house is empty' },
+                { label: 'Extensive Prep', key: 'extensivePrep', scopeKey: 'extensivePrepScope', helper: 'Applied for extensive prep work' },
+                { label: 'Additional Coat', key: 'additionalCoat', scopeKey: 'additionalCoatScope', helper: 'Applied for an additional coat' },
+                { label: 'One Coat', key: 'oneCoat', scopeKey: 'oneCoatScope', helper: 'Applied to reduce to 1 coat' },
+              ] as { label: string; key: keyof InteriorModifierValues; scopeKey: keyof InteriorModifierValues; helper: string }[]
+            ).map(({ label, key, scopeKey, helper }) => (
+              <div key={key} className="space-y-1">
+                <Input
+                  label={`${label} (multiplier)`}
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={interiorMods[key] as number}
+                  onChange={(e) => setInteriorMods((p) => ({ ...p, [key]: parseFloat(e.target.value) || 1 }))}
+                  helperText={helper}
+                />
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-gray-600 w-20 flex-shrink-0">Applies to:</label>
+                  <select
+                    className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    value={(interiorMods[scopeKey] as ModifierScope | undefined) ?? 'labor'}
+                    onChange={(e) => setInteriorMods((p) => ({ ...p, [scopeKey]: e.target.value as ModifierScope }))}
+                  >
+                    <option value="labor">Labor only</option>
+                    <option value="materials">Materials only</option>
+                    <option value="both">Labor + Materials</option>
+                  </select>
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Exterior Labor Modifiers</CardTitle>
+            <CardTitle>Exterior Modifiers</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Input
-              label="3 Story (multiplier)"
-              type="number"
-              min="0"
-              step="0.01"
-              value={exteriorMods.threeStory}
-              onChange={(e) => setExteriorMods((p) => ({ ...p, threeStory: parseFloat(e.target.value) || 1 }))}
-              helperText="Applied for 3-story buildings"
-            />
-            <Input
-              label="Extensive Prep (multiplier)"
-              type="number"
-              min="0"
-              step="0.01"
-              value={exteriorMods.extensivePrep}
-              onChange={(e) => setExteriorMods((p) => ({ ...p, extensivePrep: parseFloat(e.target.value) || 1 }))}
-              helperText="Applied for extensive prep work"
-            />
-            <Input
-              label="Hard Terrain (multiplier)"
-              type="number"
-              min="0"
-              step="0.01"
-              value={exteriorMods.hardTerrain}
-              onChange={(e) => setExteriorMods((p) => ({ ...p, hardTerrain: parseFloat(e.target.value) || 1 }))}
-              helperText="Applied for difficult terrain"
-            />
-            <Input
-              label="Additional Coat (multiplier)"
-              type="number"
-              min="0"
-              step="0.01"
-              value={exteriorMods.additionalCoat}
-              onChange={(e) => setExteriorMods((p) => ({ ...p, additionalCoat: parseFloat(e.target.value) || 1 }))}
-              helperText="Applied for an additional coat"
-            />
-            <Input
-              label="One Coat (multiplier)"
-              type="number"
-              min="0"
-              step="0.01"
-              value={exteriorMods.oneCoat}
-              onChange={(e) => setExteriorMods((p) => ({ ...p, oneCoat: parseFloat(e.target.value) || 1 }))}
-              helperText="Applied to reduce to 1 coat"
-            />
+          <CardContent className="space-y-4">
+            {(
+              [
+                { label: '3 Story', key: 'threeStory', scopeKey: 'threeStoryScope', helper: 'Applied for 3-story buildings' },
+                { label: 'Extensive Prep', key: 'extensivePrep', scopeKey: 'extensivePrepScope', helper: 'Applied for extensive prep work' },
+                { label: 'Hard Terrain', key: 'hardTerrain', scopeKey: 'hardTerrainScope', helper: 'Applied for difficult terrain' },
+                { label: 'Additional Coat', key: 'additionalCoat', scopeKey: 'additionalCoatScope', helper: 'Applied for an additional coat' },
+                { label: 'One Coat', key: 'oneCoat', scopeKey: 'oneCoatScope', helper: 'Applied to reduce to 1 coat' },
+              ] as { label: string; key: keyof ExteriorModifierValues; scopeKey: keyof ExteriorModifierValues; helper: string }[]
+            ).map(({ label, key, scopeKey, helper }) => (
+              <div key={key} className="space-y-1">
+                <Input
+                  label={`${label} (multiplier)`}
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={exteriorMods[key] as number}
+                  onChange={(e) => setExteriorMods((p) => ({ ...p, [key]: parseFloat(e.target.value) || 1 }))}
+                  helperText={helper}
+                />
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-gray-600 w-20 flex-shrink-0">Applies to:</label>
+                  <select
+                    className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    value={(exteriorMods[scopeKey] as ModifierScope | undefined) ?? 'labor'}
+                    onChange={(e) => setExteriorMods((p) => ({ ...p, [scopeKey]: e.target.value as ModifierScope }))}
+                  >
+                    <option value="labor">Labor only</option>
+                    <option value="materials">Materials only</option>
+                    <option value="both">Labor + Materials</option>
+                  </select>
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>

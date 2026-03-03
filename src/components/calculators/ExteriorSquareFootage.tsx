@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Input } from '../common/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
@@ -29,6 +29,20 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
   const { settings } = useSettingsStore();
   const pricing = settings.pricing;
 
+  // Custom simple-pricing sections with their line items
+  const customSections = useMemo(() => {
+    return pricing.sections
+      .filter((s) => s.calculatorType === 'simple-pricing')
+      .map((s) => ({
+        section: s,
+        items: pricing.lineItems.filter((li) => li.category === s.id).sort((a, b) => a.order - b.order),
+      }))
+      .filter((s) => s.items.length > 0)
+      .sort((a, b) => a.section.order - b.section.order);
+  }, [pricing.sections, pricing.lineItems]);
+
+  const [customItemValues, setCustomItemValues] = useState<Record<string, number>>({});
+
   const { register, watch, reset } = useForm<ExteriorSqftFormData>({
     defaultValues: {
       houseSquareFootage: 0,
@@ -47,6 +61,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
         pricingOption: inputs.pricingOption,
         markup: inputs.markup,
       });
+      setCustomItemValues(inputs.customItemValues ?? {});
     }
   }, [loadedBid, reset]);
 
@@ -66,6 +81,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
       houseSquareFootage,
       pricingOption,
       markup: markup as MarkupPercentage,
+      customItemValues,
     };
 
     const calculatedResult = calculateExteriorSquareFootage(inputs, pricing);
@@ -79,7 +95,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
     }
 
     return calculatedResult;
-  }, [houseSquareFootage, pricingOption, markup, customer, onResultChange, pricing]);
+  }, [houseSquareFootage, pricingOption, markup, customItemValues, customer, onResultChange, pricing]);
 
   const autoCalcs = useMemo(() => {
     if (!houseSquareFootage || houseSquareFootage <= 0) {
@@ -153,6 +169,33 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
 
       <MarkupSelector register={register} />
 
+      {customSections.map(({ section, items }) => (
+        <Card key={section.id}>
+          <CardHeader>
+            <CardTitle>{section.name}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {items.map((item) => (
+              <Input
+                key={item.id}
+                label={`${item.name} (${item.unit === 'each' ? 'qty' : item.unit} × $${item.rate.toFixed(2)})`}
+                type="number"
+                min="0"
+                step="1"
+                value={customItemValues[item.id] ?? ''}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  setCustomItemValues((prev) => ({
+                    ...prev,
+                    [item.id]: isNaN(val) ? 0 : val,
+                  }));
+                }}
+              />
+            ))}
+          </CardContent>
+        </Card>
+      ))}
+
       {result && (
         <>
           <JobDurationEstimate laborCost={result.labor} pricing={pricing} />
@@ -167,6 +210,15 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
                   <span className="text-xs text-gray-400">({result.total > 0 ? ((result.labor / result.total) * 100).toFixed(0) : 0}%)</span>
                   <span className="text-lg font-semibold text-gray-800">
                     ${result.labor.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Materials</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">({result.total > 0 ? ((result.materials.totalCost / result.total) * 100).toFixed(0) : 0}%)</span>
+                  <span className="text-lg font-semibold text-gray-800">
+                    ${result.materials.totalCost.toFixed(2)}
                   </span>
                 </div>
               </div>

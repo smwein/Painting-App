@@ -26,22 +26,35 @@ export interface CrewRateConfig {
   description?: string; // Editable helper text
 }
 
+// Scope of a modifier: labor only, materials only, or both
+export type ModifierScope = 'labor' | 'materials' | 'both';
+
 // Interior labor modifier values (configurable)
 export interface InteriorModifierValues {
   heavilyFurnished: number;
+  heavilyFurnishedScope?: ModifierScope;
   emptyHouse: number;
+  emptyHouseScope?: ModifierScope;
   extensivePrep: number;
+  extensivePrepScope?: ModifierScope;
   additionalCoat: number;
+  additionalCoatScope?: ModifierScope;
   oneCoat: number;
+  oneCoatScope?: ModifierScope;
 }
 
 // Exterior labor modifier values (configurable)
 export interface ExteriorModifierValues {
   threeStory: number;
+  threeStoryScope?: ModifierScope;
   extensivePrep: number;
+  extensivePrepScope?: ModifierScope;
   hardTerrain: number;
+  hardTerrainScope?: ModifierScope;
   additionalCoat: number;
+  additionalCoatScope?: ModifierScope;
   oneCoat: number;
+  oneCoatScope?: ModifierScope;
 }
 
 // All pricing configuration (formerly hardcoded)

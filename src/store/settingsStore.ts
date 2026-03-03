@@ -97,11 +97,6 @@ export const useSettingsStore = create<SettingsState>()(
 
       deleteLineItem: (id) =>
         set((state) => {
-          const item = state.settings.pricing.lineItems.find((i) => i.id === id);
-          if (item?.isDefault) {
-            console.warn('Cannot delete default line item');
-            return state;
-          }
 
           return {
             settings: {
@@ -156,12 +151,6 @@ export const useSettingsStore = create<SettingsState>()(
 
       deleteSection: (id) =>
         set((state) => {
-          const section = state.settings.pricing.sections.find((s) => s.id === id);
-          if (section?.isDefault) {
-            console.warn('Cannot delete default section');
-            return state;
-          }
-
           // Also remove any line items in this section
           return {
             settings: {

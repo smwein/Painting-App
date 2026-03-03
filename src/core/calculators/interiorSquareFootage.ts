@@ -54,10 +54,22 @@ export function calculateInteriorSquareFootage(
   // Calculate auto-measurements
   const autoCalcs = calculateInteriorSqftAutoMeasurements(inputs.houseSquareFootage, pricing);
 
-  // No materials in simple method
+  // Sum custom section line items into materials
+  const customItems: MaterialBreakdown['items'] = [];
+  let customTotal = 0;
+  if (inputs.customItemValues) {
+    for (const [itemId, qty] of Object.entries(inputs.customItemValues)) {
+      if (!qty || qty <= 0) continue;
+      const lineItem = pricing.lineItems.find((li) => li.id === itemId);
+      if (!lineItem) continue;
+      const cost = qty * lineItem.rate;
+      customItems.push({ name: lineItem.name, quantity: qty, pricePerGallon: lineItem.rate, cost });
+      customTotal += cost;
+    }
+  }
   const materials: MaterialBreakdown = {
-    items: [],
-    totalCost: 0,
+    items: customItems,
+    totalCost: customTotal,
   };
 
   // Calculate total using margin formula: total = cost / (1 - margin%)
