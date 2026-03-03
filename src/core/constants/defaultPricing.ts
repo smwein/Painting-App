@@ -65,6 +65,10 @@ export function createDefaultPricingSettings(): PricingSettings {
     // Margin options (from pricing.ts)
     markupOptions: [30, 35, 40, 45, 50],
 
+    // Interior Detailed — furnished vs empty measurement rates
+    interiorDetailedFurnishedRates: { wallSqft: 1.00, ceilingSqft: 0.50, trimLF: 0.75 },
+    interiorDetailedEmptyRates: { wallSqft: 0.75, ceilingSqft: 0.35, trimLF: 0.60 },
+
     // Sqft calculator labor vs materials split
     sqftLaborPct: 85,
 

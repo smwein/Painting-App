@@ -17,7 +17,14 @@ export function calculateInteriorDetailed(
   pricing: PricingSettings
 ): BidResult {
   // Helper function to get rate for a line item
+  // Wall/ceiling/trim use furnished vs empty rates when configured
   const getRate = (lineItemId: string): number => {
+    const conditionRates = inputs.houseCondition === 'empty'
+      ? pricing.interiorDetailedEmptyRates
+      : pricing.interiorDetailedFurnishedRates;
+    if (lineItemId === 'int-wall-sqft' && conditionRates) return conditionRates.wallSqft;
+    if (lineItemId === 'int-ceiling-sqft' && conditionRates) return conditionRates.ceilingSqft;
+    if (lineItemId === 'int-trim-lf' && conditionRates) return conditionRates.trimLF;
     const item = pricing.lineItems.find((i) => i.id === lineItemId);
     return item?.rate || 0;
   };

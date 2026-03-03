@@ -40,6 +40,14 @@ export function DetailedPricingSettings() {
     pricing.exteriorModifierValues ?? DEFAULT_EXTERIOR_MODIFIERS
   );
 
+  // Interior Detailed furnished/empty rates
+  const [furnishedRates, setFurnishedRates] = useState(
+    pricing.interiorDetailedFurnishedRates ?? { wallSqft: 1.00, ceilingSqft: 0.50, trimLF: 0.75 }
+  );
+  const [emptyRates, setEmptyRates] = useState(
+    pricing.interiorDetailedEmptyRates ?? { wallSqft: 0.75, ceilingSqft: 0.35, trimLF: 0.60 }
+  );
+
   // Paint prices local state (saved with button)
   const [interiorPaint, setInteriorPaint] = useState(pricing.interiorPaint);
   const [exteriorPaint, setExteriorPaint] = useState(pricing.exteriorPaint);
@@ -59,6 +67,8 @@ export function DetailedPricingSettings() {
       exteriorModifierValues: exteriorMods,
       interiorPaint,
       exteriorPaint,
+      interiorDetailedFurnishedRates: furnishedRates,
+      interiorDetailedEmptyRates: emptyRates,
     });
     alert('Detailed pricing settings saved successfully!');
   };
@@ -325,6 +335,63 @@ export function DetailedPricingSettings() {
           <h3 className="text-lg font-semibold text-gray-900">Exterior Detailed</h3>
           {renderSections(exteriorSections)}
         </div>
+      </div>
+
+      {/* Interior Detailed — Furnished vs Empty Rates */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Interior Furnished Rates</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-gray-500">Rates used when house is set to "Furnished".</p>
+            <Input
+              label="Wall Sq Ft ($/sqft)"
+              type="number" min="0" step="0.01"
+              value={furnishedRates.wallSqft}
+              onChange={(e) => setFurnishedRates((p) => ({ ...p, wallSqft: parseFloat(e.target.value) || 0 }))}
+            />
+            <Input
+              label="Ceiling Sq Ft ($/sqft)"
+              type="number" min="0" step="0.01"
+              value={furnishedRates.ceilingSqft}
+              onChange={(e) => setFurnishedRates((p) => ({ ...p, ceilingSqft: parseFloat(e.target.value) || 0 }))}
+            />
+            <Input
+              label="Trim LF ($/LF)"
+              type="number" min="0" step="0.01"
+              value={furnishedRates.trimLF}
+              onChange={(e) => setFurnishedRates((p) => ({ ...p, trimLF: parseFloat(e.target.value) || 0 }))}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Interior Empty Rates</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-gray-500">Rates used when house is set to "Empty".</p>
+            <Input
+              label="Wall Sq Ft ($/sqft)"
+              type="number" min="0" step="0.01"
+              value={emptyRates.wallSqft}
+              onChange={(e) => setEmptyRates((p) => ({ ...p, wallSqft: parseFloat(e.target.value) || 0 }))}
+            />
+            <Input
+              label="Ceiling Sq Ft ($/sqft)"
+              type="number" min="0" step="0.01"
+              value={emptyRates.ceilingSqft}
+              onChange={(e) => setEmptyRates((p) => ({ ...p, ceilingSqft: parseFloat(e.target.value) || 0 }))}
+            />
+            <Input
+              label="Trim LF ($/LF)"
+              type="number" min="0" step="0.01"
+              value={emptyRates.trimLF}
+              onChange={(e) => setEmptyRates((p) => ({ ...p, trimLF: parseFloat(e.target.value) || 0 }))}
+            />
+          </CardContent>
+        </Card>
       </div>
 
       {/* Labor Modifier Values */}

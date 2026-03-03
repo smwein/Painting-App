@@ -108,6 +108,9 @@ export interface InteriorDetailedInputs {
   paintType: PaintType;
   markup: MarkupPercentage;
 
+  // House condition (affects wall/ceiling/trim rates)
+  houseCondition?: HouseCondition;
+
   // Modifiers
   modifiers: InteriorModifiers;
 

@@ -106,6 +106,10 @@ export interface PricingSettings {
     trim: number;
   };
 
+  // Interior Detailed furnished vs empty rates (wall/ceiling/trim)
+  interiorDetailedFurnishedRates?: { wallSqft: number; ceilingSqft: number; trimLF: number };
+  interiorDetailedEmptyRates?: { wallSqft: number; ceilingSqft: number; trimLF: number };
+
   // Markup options
   markupOptions: number[];
 

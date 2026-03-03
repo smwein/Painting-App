@@ -10,7 +10,7 @@ import { BidSummary } from '../results/BidSummary';
 import { PaintGallonsEstimate } from '../results/PaintGallonsEstimate';
 import { JobDurationEstimate } from '../results/JobDurationEstimate';
 import { useSettingsStore } from '../../store/settingsStore';
-import type { InteriorDetailedInputs } from '../../types/calculator.types';
+import type { InteriorDetailedInputs, HouseCondition } from '../../types/calculator.types';
 import type { CustomerInfo, Bid } from '../../types/bid.types';
 import { calculateInteriorDetailed } from '../../core/calculators/interiorDetailed';
 import { calculateInteriorSqftAutoMeasurements } from '../../core/calculators/interiorSquareFootage';
@@ -74,7 +74,15 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
   const { settings } = useSettingsStore();
   const pricing = settings.pricing;
 
+  const [houseCondition, setHouseCondition] = useState<HouseCondition>('furnished');
+
   const getRate = (lineItemId: string): number => {
+    const conditionRates = houseCondition === 'empty'
+      ? pricing.interiorDetailedEmptyRates
+      : pricing.interiorDetailedFurnishedRates;
+    if (lineItemId === 'int-wall-sqft' && conditionRates) return conditionRates.wallSqft;
+    if (lineItemId === 'int-ceiling-sqft' && conditionRates) return conditionRates.ceilingSqft;
+    if (lineItemId === 'int-trim-lf' && conditionRates) return conditionRates.trimLF;
     const item = pricing.lineItems.find((i) => i.id === lineItemId);
     return item?.rate ?? 0;
   };
@@ -223,6 +231,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
         'modifiers.oneCoat': inputs.modifiers.oneCoat,
       });
       if (inputs.customItemValues) setCustomValues(inputs.customItemValues);
+      if (inputs.houseCondition) setHouseCondition(inputs.houseCondition);
     }
   }, [loadedBid, reset]);
 
@@ -251,6 +260,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
       miscellaneousDollars: miscellaneousDollars || 0,
       paintType: paintType,
       markup: markup as import('../../types/calculator.types').MarkupPercentage,
+      houseCondition,
       modifiers: {
         heavilyFurnished: modifierHeavilyFurnished || false,
         emptyHouse: modifierEmptyHouse || false,
@@ -270,7 +280,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
     miscWorkHours, miscellaneousDollars, paintType, markup,
     modifierHeavilyFurnished, modifierEmptyHouse, modifierExtensivePrep,
     modifierAdditionalCoat, modifierOneCoat, customValues,
-    pricing,
+    houseCondition, pricing,
   ]);
 
   // Notify parent of changes
@@ -299,6 +309,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
         miscellaneousDollars: miscellaneousDollars || 0,
         paintType: paintType,
         markup: markup as import('../../types/calculator.types').MarkupPercentage,
+        houseCondition,
         modifiers: {
           heavilyFurnished: modifierHeavilyFurnished || false,
           emptyHouse: modifierEmptyHouse || false,
@@ -324,6 +335,25 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
 
   return (
     <div className="space-y-6">
+      {/* House Condition */}
+      <Card className="bg-green-50 border-green-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">House Condition</h3>
+        <CardContent>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Is the house furnished?</label>
+          <select
+            value={houseCondition}
+            onChange={(e) => setHouseCondition(e.target.value as HouseCondition)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+          >
+            <option value="furnished">Furnished</option>
+            <option value="empty">Empty</option>
+          </select>
+          <p className="text-xs text-gray-500 mt-2">
+            Affects wall, ceiling, and trim labor rates.
+          </p>
+        </CardContent>
+      </Card>
+
       {/* House SF Auto-Calculate */}
       <Card className="bg-blue-50 border-blue-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">House Square Footage (Auto-Calculate)</h3>
