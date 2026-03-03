@@ -144,6 +144,16 @@ export interface PricingSettings {
   interiorModifiers?: Array<{ id: string; name: string; multiplier: number; scope: ModifierScope; order: number }>;
   exteriorModifiers?: Array<{ id: string; name: string; multiplier: number; scope: ModifierScope; order: number }>;
 
+  // Per Room auto-calc multipliers (roomSqft × multiplier = measurement)
+  perRoomMultipliers?: {
+    wall: number;
+    ceiling: number;
+    trim: number;
+  };
+
+  // Hidden line items (admins can remove individual fields from default sections)
+  hiddenLineItems?: string[];
+
   // Custom room types for Per Room calculator
   customRoomTypes?: Array<{ id: string; name: string; defaultSqft: number }>;
 

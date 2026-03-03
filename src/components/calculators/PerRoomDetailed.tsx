@@ -33,6 +33,8 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
 
   const allRoomTypes = getAllRoomTypes(pricing);
 
+  const multipliers = pricing.perRoomMultipliers ?? { wall: 1.0, ceiling: 0.31, trim: 0.11 };
+
   const createRoom = (type: RoomType = 'bedroom'): RoomEntry => {
     const roomDef = allRoomTypes.find((r) => r.id === type);
     const sf = roomDef?.defaultSqft ?? ROOM_DEFAULT_SF[type] ?? 150;
@@ -41,11 +43,13 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
       id: crypto.randomUUID(),
       roomType: type,
       roomLabel: label,
-      wallSqft: sf,
-      ceilingSqft: Math.round(sf * 0.31),
-      trimLF: Math.round(sf * 0.11),
+      roomSqft: sf,
+      wallSqft: Math.round(sf * multipliers.wall),
+      ceilingSqft: Math.round(sf * multipliers.ceiling),
+      trimLF: Math.round(sf * multipliers.trim),
       doors: type === 'bathroom' || type === 'closet' ? 1 : 2,
       paintType: 'SuperPaint',
+      houseCondition: 'furnished',
     };
   };
 
@@ -94,13 +98,21 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
       if (updates.roomType && updates.roomType !== r.roomType) {
         const roomDef = allRoomTypes.find((rt) => rt.id === updates.roomType);
         const sf = roomDef?.defaultSqft ?? ROOM_DEFAULT_SF[updates.roomType!] ?? 150;
-        updated.wallSqft = sf;
-        updated.ceilingSqft = Math.round(sf * 0.31);
-        updated.trimLF = Math.round(sf * 0.11);
+        updated.roomSqft = sf;
+        updated.wallSqft = Math.round(sf * multipliers.wall);
+        updated.ceilingSqft = Math.round(sf * multipliers.ceiling);
+        updated.trimLF = Math.round(sf * multipliers.trim);
         updated.doors = updates.roomType === 'bathroom' || updates.roomType === 'closet' ? 1 : 2;
         if (!updates.roomLabel) {
           updated.roomLabel = roomDef?.name ?? ROOM_TYPE_LABELS[updates.roomType!] ?? updates.roomType!;
         }
+      }
+      // Auto-fill measurements if room sqft changed
+      if (updates.roomSqft !== undefined && updates.roomSqft !== r.roomSqft) {
+        const sf = updates.roomSqft;
+        updated.wallSqft = Math.round(sf * multipliers.wall);
+        updated.ceilingSqft = Math.round(sf * multipliers.ceiling);
+        updated.trimLF = Math.round(sf * multipliers.trim);
       }
       return updated;
     }));
@@ -133,11 +145,21 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
 
         {rooms.map((room, idx) => {
           const isCollapsed = collapsedRooms[room.id];
+          const condition = room.houseCondition ?? 'furnished';
+          const condRates = condition === 'empty'
+            ? pricing.interiorDetailedEmptyRates
+            : pricing.interiorDetailedFurnishedRates;
           const getRate = (id: string) => pricing.lineItems.find((i) => i.id === id)?.rate ?? 0;
+          const getRoomRate = (id: string) => {
+            if (id === 'int-wall-sqft' && condRates) return condRates.wallSqft;
+            if (id === 'int-ceiling-sqft' && condRates) return condRates.ceilingSqft;
+            if (id === 'int-trim-lf' && condRates) return condRates.trimLF;
+            return getRate(id);
+          };
           const roomLabor =
-            room.wallSqft * getRate('int-wall-sqft') +
-            room.ceilingSqft * getRate('int-ceiling-sqft') +
-            room.trimLF * getRate('int-trim-lf') +
+            room.wallSqft * getRoomRate('int-wall-sqft') +
+            room.ceilingSqft * getRoomRate('int-ceiling-sqft') +
+            room.trimLF * getRoomRate('int-trim-lf') +
             room.doors * getRate('int-door');
 
           return (
@@ -174,7 +196,7 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
 
               {!isCollapsed && (
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Room Type</label>
                       <select
@@ -197,12 +219,39 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
                         placeholder="e.g. Master Bedroom"
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Furnished or Empty?</label>
+                      <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        value={room.houseCondition ?? 'furnished'}
+                        onChange={(e) => updateRoom(room.id, { houseCondition: e.target.value as 'furnished' | 'empty' })}
+                      >
+                        <option value="furnished">Furnished</option>
+                        <option value="empty">Empty</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Room Square Footage */}
+                  <div className="w-48">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Room Square Footage
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                      value={room.roomSqft ?? 0}
+                      onChange={(e) => updateRoom(room.id, { roomSqft: parseFloat(e.target.value) || 0 })}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Auto-populates measurements below</p>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Wall Sq Ft (${getRate('int-wall-sqft').toFixed(2)}/sqft)
+                        Wall Sq Ft (${getRoomRate('int-wall-sqft').toFixed(2)}/sqft)
                       </label>
                       <input
                         type="number"
@@ -214,7 +263,7 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Ceiling Sq Ft (${getRate('int-ceiling-sqft').toFixed(2)}/sqft)
+                        Ceiling Sq Ft (${getRoomRate('int-ceiling-sqft').toFixed(2)}/sqft)
                       </label>
                       <input
                         type="number"
@@ -226,7 +275,7 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Trim LF (${getRate('int-trim-lf').toFixed(2)}/lf)
+                        Trim LF (${getRoomRate('int-trim-lf').toFixed(2)}/lf)
                       </label>
                       <input
                         type="number"

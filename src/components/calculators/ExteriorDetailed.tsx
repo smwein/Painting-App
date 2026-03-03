@@ -111,10 +111,28 @@ function SectionSubtotal({ total }: { total: number }) {
 }
 
 export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailedProps) {
-  const { settings, updateSection, deleteSection } = useSettingsStore();
+  const { settings, updateSection, deleteSection, toggleHiddenLineItem } = useSettingsStore();
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'admin';
   const pricing = settings.pricing;
+  const hiddenItems = pricing.hiddenLineItems ?? [];
+  const isHidden = (id: string) => hiddenItems.includes(id);
+
+  const HideableField = ({ lineItemId, children }: { lineItemId: string; children: React.ReactNode }) => {
+    if (isHidden(lineItemId)) return null;
+    return (
+      <div className="relative">
+        {isAdmin && (
+          <button
+            onClick={() => toggleHiddenLineItem(lineItemId)}
+            className="absolute -top-1 -right-1 z-10 text-red-400 hover:text-red-600 text-xs bg-white rounded-full w-4 h-4 flex items-center justify-center border border-red-200 shadow-sm"
+            title="Hide this field"
+          >&#10005;</button>
+        )}
+        {children}
+      </div>
+    );
+  };
 
   const getRate = (lineItemId: string): number => {
     const item = pricing.lineItems.find((i) => i.id === lineItemId);
@@ -403,12 +421,10 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
               <button onClick={() => toggleSection(sectionId)} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
                 {collapsed[sectionId] ? '+ Show' : '− Hide'}
               </button>
-              {!section.isDefault && (
-                <button
-                  onClick={() => handleDeleteSection(sectionId)}
-                  className="text-sm text-red-400 hover:text-red-600 font-bold px-1"
-                >&#10005;</button>
-              )}
+              <button
+                onClick={() => handleDeleteSection(sectionId)}
+                className="text-sm text-red-400 hover:text-red-600 font-bold px-1"
+              >&#10005;</button>
             </div>
           </div>
         );
@@ -420,8 +436,8 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
               {!collapsed['ext-measurements'] && (
                 <div className="mt-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input label={`Wall/Siding Sq Ft ($${getRate('ext-wall-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallSqft', { valueAsNumber: true })} />
-                    <Input label={`Trim/Fascia/Soffit LF ($${getRate('ext-trim-fascia-soffit-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimFasciaSoffitLF', { valueAsNumber: true })} />
+                    <HideableField lineItemId="ext-wall-sqft"><Input label={`Wall/Siding Sq Ft ($${getRate('ext-wall-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallSqft', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="ext-trim-fascia-soffit-lf"><Input label={`Trim/Fascia/Soffit LF ($${getRate('ext-trim-fascia-soffit-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimFasciaSoffitLF', { valueAsNumber: true })} /></HideableField>
                   </div>
                   <SectionSubtotal total={measurementsSubtotal} />
                 </div>
@@ -435,9 +451,9 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
               {!collapsed['ext-doors-shutters'] && (
                 <div className="mt-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input label={`Doors ($${getRate('ext-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doors', { valueAsNumber: true })} />
-                    <Input label={`Shutters ($${getRate('ext-shutter').toFixed(0)}/shutter)`} type="number" min="0" step="1" placeholder="0" {...register('shutters', { valueAsNumber: true })} />
-                    <Input label={`Doors to Refinish ($${getRate('ext-door-refinish').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doorsToRefinish', { valueAsNumber: true })} />
+                    <HideableField lineItemId="ext-door"><Input label={`Doors ($${getRate('ext-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doors', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="ext-shutter"><Input label={`Shutters ($${getRate('ext-shutter').toFixed(0)}/shutter)`} type="number" min="0" step="1" placeholder="0" {...register('shutters', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="ext-door-refinish"><Input label={`Doors to Refinish ($${getRate('ext-door-refinish').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doorsToRefinish', { valueAsNumber: true })} /></HideableField>
                   </div>
                   <SectionSubtotal total={doorsSubtotal} />
                 </div>
@@ -451,8 +467,8 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
               {!collapsed['ext-prep-work'] && (
                 <div className="mt-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input label={`Priming Sq Ft ($${getRate('ext-priming-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingSqft', { valueAsNumber: true })} />
-                    <Input label={`Priming LF ($${getRate('ext-priming-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingLF', { valueAsNumber: true })} />
+                    <HideableField lineItemId="ext-priming-sqft"><Input label={`Priming Sq Ft ($${getRate('ext-priming-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingSqft', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="ext-priming-lf"><Input label={`Priming LF ($${getRate('ext-priming-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingLF', { valueAsNumber: true })} /></HideableField>
                   </div>
                   <SectionSubtotal total={prepSubtotal} />
                 </div>
@@ -466,10 +482,10 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
               {!collapsed['ext-replacements-repairs'] && (
                 <div className="mt-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input label={`Siding Replacement Sq Ft ($${getRate('ext-siding-replacement-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('sidingReplacementSqft', { valueAsNumber: true })} />
-                    <Input label={`Trim Replacement LF ($${getRate('ext-trim-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimReplacementLF', { valueAsNumber: true })} />
-                    <Input label={`Soffit/Fascia Replacement LF ($${getRate('ext-soffit-fascia-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('soffitFasciaReplacementLF', { valueAsNumber: true })} />
-                    <Input label={`Bondo Repairs ($${getRate('ext-bondo-repair').toFixed(0)}/repair)`} type="number" min="0" step="1" placeholder="0" {...register('bondoRepairs', { valueAsNumber: true })} />
+                    <HideableField lineItemId="ext-siding-replacement-sqft"><Input label={`Siding Replacement Sq Ft ($${getRate('ext-siding-replacement-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('sidingReplacementSqft', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="ext-trim-replacement-lf"><Input label={`Trim Replacement LF ($${getRate('ext-trim-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimReplacementLF', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="ext-soffit-fascia-replacement-lf"><Input label={`Soffit/Fascia Replacement LF ($${getRate('ext-soffit-fascia-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('soffitFasciaReplacementLF', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="ext-bondo-repair"><Input label={`Bondo Repairs ($${getRate('ext-bondo-repair').toFixed(0)}/repair)`} type="number" min="0" step="1" placeholder="0" {...register('bondoRepairs', { valueAsNumber: true })} /></HideableField>
                   </div>
                   <SectionSubtotal total={replacementsSubtotal} />
                 </div>
@@ -483,10 +499,10 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
               {!collapsed['ext-additional'] && (
                 <div className="mt-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input label={`Deck Staining Sq Ft ($${getRate('ext-deck-staining-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('deckStainingSqft', { valueAsNumber: true })} />
-                    <Input label={`Misc Pressure Washing Sq Ft ($${getRate('ext-misc-pressure-washing-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscPressureWashingSqft', { valueAsNumber: true })} />
-                    <Input label={`Misc Work Hours ($${getRate('ext-misc-work-hour').toFixed(0)}/hour)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscWorkHours', { valueAsNumber: true })} />
-                    <Input label="Miscellaneous $ (custom)" type="number" min="0" step="0.01" placeholder="0" {...register('miscellaneousDollars', { valueAsNumber: true })} />
+                    <HideableField lineItemId="ext-deck-staining-sqft"><Input label={`Deck Staining Sq Ft ($${getRate('ext-deck-staining-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('deckStainingSqft', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="ext-misc-pressure-washing-sqft"><Input label={`Misc Pressure Washing Sq Ft ($${getRate('ext-misc-pressure-washing-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscPressureWashingSqft', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="ext-misc-work-hour"><Input label={`Misc Work Hours ($${getRate('ext-misc-work-hour').toFixed(0)}/hour)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscWorkHours', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="ext-miscellaneous-dollars"><Input label="Miscellaneous $ (custom)" type="number" min="0" step="0.01" placeholder="0" {...register('miscellaneousDollars', { valueAsNumber: true })} /></HideableField>
                   </div>
                   <SectionSubtotal total={additionalSubtotal} />
                 </div>
@@ -562,8 +578,8 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
                 {!collapsed['ext-measurements'] && (
                   <div className="mt-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Input label={`Wall/Siding Sq Ft ($${getRate('ext-wall-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallSqft', { valueAsNumber: true })} />
-                      <Input label={`Trim/Fascia/Soffit LF ($${getRate('ext-trim-fascia-soffit-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimFasciaSoffitLF', { valueAsNumber: true })} />
+                      <HideableField lineItemId="ext-wall-sqft"><Input label={`Wall/Siding Sq Ft ($${getRate('ext-wall-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallSqft', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="ext-trim-fascia-soffit-lf"><Input label={`Trim/Fascia/Soffit LF ($${getRate('ext-trim-fascia-soffit-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimFasciaSoffitLF', { valueAsNumber: true })} /></HideableField>
                     </div>
                     <SectionSubtotal total={measurementsSubtotal} />
                   </div>
@@ -577,9 +593,9 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
                 {!collapsed['ext-doors-shutters'] && (
                   <div className="mt-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Input label={`Doors ($${getRate('ext-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doors', { valueAsNumber: true })} />
-                      <Input label={`Shutters ($${getRate('ext-shutter').toFixed(0)}/shutter)`} type="number" min="0" step="1" placeholder="0" {...register('shutters', { valueAsNumber: true })} />
-                      <Input label={`Doors to Refinish ($${getRate('ext-door-refinish').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doorsToRefinish', { valueAsNumber: true })} />
+                      <HideableField lineItemId="ext-door"><Input label={`Doors ($${getRate('ext-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doors', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="ext-shutter"><Input label={`Shutters ($${getRate('ext-shutter').toFixed(0)}/shutter)`} type="number" min="0" step="1" placeholder="0" {...register('shutters', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="ext-door-refinish"><Input label={`Doors to Refinish ($${getRate('ext-door-refinish').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doorsToRefinish', { valueAsNumber: true })} /></HideableField>
                     </div>
                     <SectionSubtotal total={doorsSubtotal} />
                   </div>
@@ -593,8 +609,8 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
                 {!collapsed['ext-prep-work'] && (
                   <div className="mt-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Input label={`Priming Sq Ft ($${getRate('ext-priming-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingSqft', { valueAsNumber: true })} />
-                      <Input label={`Priming LF ($${getRate('ext-priming-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingLF', { valueAsNumber: true })} />
+                      <HideableField lineItemId="ext-priming-sqft"><Input label={`Priming Sq Ft ($${getRate('ext-priming-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingSqft', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="ext-priming-lf"><Input label={`Priming LF ($${getRate('ext-priming-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingLF', { valueAsNumber: true })} /></HideableField>
                     </div>
                     <SectionSubtotal total={prepSubtotal} />
                   </div>
@@ -608,10 +624,10 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
                 {!collapsed['ext-replacements-repairs'] && (
                   <div className="mt-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Input label={`Siding Replacement Sq Ft ($${getRate('ext-siding-replacement-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('sidingReplacementSqft', { valueAsNumber: true })} />
-                      <Input label={`Trim Replacement LF ($${getRate('ext-trim-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimReplacementLF', { valueAsNumber: true })} />
-                      <Input label={`Soffit/Fascia Replacement LF ($${getRate('ext-soffit-fascia-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('soffitFasciaReplacementLF', { valueAsNumber: true })} />
-                      <Input label={`Bondo Repairs ($${getRate('ext-bondo-repair').toFixed(0)}/repair)`} type="number" min="0" step="1" placeholder="0" {...register('bondoRepairs', { valueAsNumber: true })} />
+                      <HideableField lineItemId="ext-siding-replacement-sqft"><Input label={`Siding Replacement Sq Ft ($${getRate('ext-siding-replacement-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('sidingReplacementSqft', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="ext-trim-replacement-lf"><Input label={`Trim Replacement LF ($${getRate('ext-trim-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimReplacementLF', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="ext-soffit-fascia-replacement-lf"><Input label={`Soffit/Fascia Replacement LF ($${getRate('ext-soffit-fascia-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('soffitFasciaReplacementLF', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="ext-bondo-repair"><Input label={`Bondo Repairs ($${getRate('ext-bondo-repair').toFixed(0)}/repair)`} type="number" min="0" step="1" placeholder="0" {...register('bondoRepairs', { valueAsNumber: true })} /></HideableField>
                     </div>
                     <SectionSubtotal total={replacementsSubtotal} />
                   </div>
@@ -625,10 +641,10 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
                 {!collapsed['ext-additional'] && (
                   <div className="mt-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Input label={`Deck Staining Sq Ft ($${getRate('ext-deck-staining-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('deckStainingSqft', { valueAsNumber: true })} />
-                      <Input label={`Misc Pressure Washing Sq Ft ($${getRate('ext-misc-pressure-washing-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscPressureWashingSqft', { valueAsNumber: true })} />
-                      <Input label={`Misc Work Hours ($${getRate('ext-misc-work-hour').toFixed(0)}/hour)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscWorkHours', { valueAsNumber: true })} />
-                      <Input label="Miscellaneous $ (custom)" type="number" min="0" step="0.01" placeholder="0" {...register('miscellaneousDollars', { valueAsNumber: true })} />
+                      <HideableField lineItemId="ext-deck-staining-sqft"><Input label={`Deck Staining Sq Ft ($${getRate('ext-deck-staining-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('deckStainingSqft', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="ext-misc-pressure-washing-sqft"><Input label={`Misc Pressure Washing Sq Ft ($${getRate('ext-misc-pressure-washing-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscPressureWashingSqft', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="ext-misc-work-hour"><Input label={`Misc Work Hours ($${getRate('ext-misc-work-hour').toFixed(0)}/hour)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscWorkHours', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="ext-miscellaneous-dollars"><Input label="Miscellaneous $ (custom)" type="number" min="0" step="0.01" placeholder="0" {...register('miscellaneousDollars', { valueAsNumber: true })} /></HideableField>
                     </div>
                     <SectionSubtotal total={additionalSubtotal} />
                   </div>

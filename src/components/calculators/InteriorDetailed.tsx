@@ -117,10 +117,28 @@ function SectionSubtotal({ total }: { total: number }) {
 }
 
 export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailedProps) {
-  const { settings, updateSection, deleteSection } = useSettingsStore();
+  const { settings, updateSection, deleteSection, toggleHiddenLineItem } = useSettingsStore();
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'admin';
   const pricing = settings.pricing;
+  const hiddenItems = pricing.hiddenLineItems ?? [];
+  const isHidden = (id: string) => hiddenItems.includes(id);
+
+  const HideableField = ({ lineItemId, children }: { lineItemId: string; children: React.ReactNode }) => {
+    if (isHidden(lineItemId)) return null;
+    return (
+      <div className="relative">
+        {isAdmin && (
+          <button
+            onClick={() => toggleHiddenLineItem(lineItemId)}
+            className="absolute -top-1 -right-1 z-10 text-red-400 hover:text-red-600 text-xs bg-white rounded-full w-4 h-4 flex items-center justify-center border border-red-200 shadow-sm"
+            title="Hide this field"
+          >&#10005;</button>
+        )}
+        {children}
+      </div>
+    );
+  };
 
   const [houseCondition, setHouseCondition] = useState<HouseCondition>('furnished');
 
@@ -475,12 +493,10 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
               <button onClick={() => toggleSection(sectionId)} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
                 {collapsed[sectionId] ? '+ Show' : '− Hide'}
               </button>
-              {!section.isDefault && (
-                <button
-                  onClick={() => handleDeleteSection(sectionId)}
-                  className="text-sm text-red-400 hover:text-red-600 font-bold px-1"
-                >&#10005;</button>
-              )}
+              <button
+                onClick={() => handleDeleteSection(sectionId)}
+                className="text-sm text-red-400 hover:text-red-600 font-bold px-1"
+              >&#10005;</button>
             </div>
           </div>
         );
@@ -492,9 +508,9 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
               {!collapsed['int-measurements'] && (
                 <div className="mt-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input label={`Wall Sq Ft ($${getRate('int-wall-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallSqft', { valueAsNumber: true })} />
-                    <Input label={`Ceiling Sq Ft ($${getRate('int-ceiling-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('ceilingSqft', { valueAsNumber: true })} />
-                    <Input label={`Trim LF ($${getRate('int-trim-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimLF', { valueAsNumber: true })} />
+                    <HideableField lineItemId="int-wall-sqft"><Input label={`Wall Sq Ft ($${getRate('int-wall-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallSqft', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-ceiling-sqft"><Input label={`Ceiling Sq Ft ($${getRate('int-ceiling-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('ceilingSqft', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-trim-lf"><Input label={`Trim LF ($${getRate('int-trim-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimLF', { valueAsNumber: true })} /></HideableField>
                   </div>
                   <SectionSubtotal total={measurementsSubtotal} />
                 </div>
@@ -508,11 +524,11 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
               {!collapsed['int-doors-cabinets'] && (
                 <div className="mt-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input label={`Doors ($${getRate('int-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doors', { valueAsNumber: true })} />
-                    <Input label={`Cabinet Doors ($${getRate('int-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDoors', { valueAsNumber: true })} />
-                    <Input label={`Cabinet Drawers ($${getRate('int-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDrawers', { valueAsNumber: true })} />
-                    <Input label={`New Cabinet Doors ($${getRate('int-new-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDoors', { valueAsNumber: true })} />
-                    <Input label={`New Cabinet Drawers ($${getRate('int-new-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDrawers', { valueAsNumber: true })} />
+                    <HideableField lineItemId="int-door"><Input label={`Doors ($${getRate('int-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doors', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-cabinet-door"><Input label={`Cabinet Doors ($${getRate('int-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDoors', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-cabinet-drawer"><Input label={`Cabinet Drawers ($${getRate('int-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDrawers', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-new-cabinet-door"><Input label={`New Cabinet Doors ($${getRate('int-new-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDoors', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-new-cabinet-drawer"><Input label={`New Cabinet Drawers ($${getRate('int-new-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDrawers', { valueAsNumber: true })} /></HideableField>
                   </div>
                   <SectionSubtotal total={doorsSubtotal} />
                 </div>
@@ -526,14 +542,14 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
               {!collapsed['int-prep-work'] && (
                 <div className="mt-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input label={`Wallpaper Removal Sq Ft ($${getRate('int-wallpaper-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallpaperRemovalSqft', { valueAsNumber: true })} />
-                    <Input label={`Priming LF ($${getRate('int-priming-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingLF', { valueAsNumber: true })} />
-                    <Input label={`Priming Sq Ft ($${getRate('int-priming-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingSqft', { valueAsNumber: true })} />
-                    <Input label={`Drywall Replacement Sq Ft ($${getRate('int-drywall-replacement-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('drywallReplacementSqft', { valueAsNumber: true })} />
-                    <Input label={`Popcorn Removal Sq Ft ($${getRate('int-popcorn-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('popcornRemovalSqft', { valueAsNumber: true })} />
-                    <Input label={`Wall Texture Removal Sq Ft ($${getRate('int-wall-texture-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallTextureRemovalSqft', { valueAsNumber: true })} />
-                    <Input label={`Trim Replacement LF ($${getRate('int-trim-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimReplacementLF', { valueAsNumber: true })} />
-                    <Input label={`Drywall Repairs ($${getRate('int-drywall-repair').toFixed(0)}/repair)`} type="number" min="0" step="1" placeholder="0" {...register('drywallRepairs', { valueAsNumber: true })} />
+                    <HideableField lineItemId="int-wallpaper-removal-sqft"><Input label={`Wallpaper Removal Sq Ft ($${getRate('int-wallpaper-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallpaperRemovalSqft', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-priming-lf"><Input label={`Priming LF ($${getRate('int-priming-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingLF', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-priming-sqft"><Input label={`Priming Sq Ft ($${getRate('int-priming-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingSqft', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-drywall-replacement-sqft"><Input label={`Drywall Replacement Sq Ft ($${getRate('int-drywall-replacement-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('drywallReplacementSqft', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-popcorn-removal-sqft"><Input label={`Popcorn Removal Sq Ft ($${getRate('int-popcorn-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('popcornRemovalSqft', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-wall-texture-removal-sqft"><Input label={`Wall Texture Removal Sq Ft ($${getRate('int-wall-texture-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallTextureRemovalSqft', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-trim-replacement-lf"><Input label={`Trim Replacement LF ($${getRate('int-trim-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimReplacementLF', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-drywall-repair"><Input label={`Drywall Repairs ($${getRate('int-drywall-repair').toFixed(0)}/repair)`} type="number" min="0" step="1" placeholder="0" {...register('drywallRepairs', { valueAsNumber: true })} /></HideableField>
                   </div>
                   <SectionSubtotal total={prepSubtotal} />
                 </div>
@@ -547,10 +563,10 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
               {!collapsed['int-additional'] && (
                 <div className="mt-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input label={`Colors Above 3 ($${getRate('int-color-above-three').toFixed(0)}/color)`} type="number" min="0" step="1" placeholder="0" {...register('colorsAboveThree', { valueAsNumber: true })} />
-                    <Input label={`Accent Walls ($${getRate('int-accent-wall').toFixed(0)}/wall)`} type="number" min="0" step="1" placeholder="0" {...register('accentWalls', { valueAsNumber: true })} />
-                    <Input label={`Misc Work Hours ($${getRate('int-misc-work-hour').toFixed(0)}/hour)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscWorkHours', { valueAsNumber: true })} />
-                    <Input label="Miscellaneous $ (custom)" type="number" min="0" step="0.01" placeholder="0" {...register('miscellaneousDollars', { valueAsNumber: true })} />
+                    <HideableField lineItemId="int-color-above-three"><Input label={`Colors Above 3 ($${getRate('int-color-above-three').toFixed(0)}/color)`} type="number" min="0" step="1" placeholder="0" {...register('colorsAboveThree', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-accent-wall"><Input label={`Accent Walls ($${getRate('int-accent-wall').toFixed(0)}/wall)`} type="number" min="0" step="1" placeholder="0" {...register('accentWalls', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-misc-work-hour"><Input label={`Misc Work Hours ($${getRate('int-misc-work-hour').toFixed(0)}/hour)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscWorkHours', { valueAsNumber: true })} /></HideableField>
+                    <HideableField lineItemId="int-miscellaneous-dollars"><Input label="Miscellaneous $ (custom)" type="number" min="0" step="0.01" placeholder="0" {...register('miscellaneousDollars', { valueAsNumber: true })} /></HideableField>
                   </div>
                   <SectionSubtotal total={additionalSubtotal} />
                 </div>
@@ -626,9 +642,9 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
                 {!collapsed['int-measurements'] && (
                   <div className="mt-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Input label={`Wall Sq Ft ($${getRate('int-wall-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallSqft', { valueAsNumber: true })} />
-                      <Input label={`Ceiling Sq Ft ($${getRate('int-ceiling-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('ceilingSqft', { valueAsNumber: true })} />
-                      <Input label={`Trim LF ($${getRate('int-trim-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimLF', { valueAsNumber: true })} />
+                      <HideableField lineItemId="int-wall-sqft"><Input label={`Wall Sq Ft ($${getRate('int-wall-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallSqft', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-ceiling-sqft"><Input label={`Ceiling Sq Ft ($${getRate('int-ceiling-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('ceilingSqft', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-trim-lf"><Input label={`Trim LF ($${getRate('int-trim-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimLF', { valueAsNumber: true })} /></HideableField>
                     </div>
                     <SectionSubtotal total={measurementsSubtotal} />
                   </div>
@@ -642,11 +658,11 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
                 {!collapsed['int-doors-cabinets'] && (
                   <div className="mt-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Input label={`Doors ($${getRate('int-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doors', { valueAsNumber: true })} />
-                      <Input label={`Cabinet Doors ($${getRate('int-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDoors', { valueAsNumber: true })} />
-                      <Input label={`Cabinet Drawers ($${getRate('int-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDrawers', { valueAsNumber: true })} />
-                      <Input label={`New Cabinet Doors ($${getRate('int-new-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDoors', { valueAsNumber: true })} />
-                      <Input label={`New Cabinet Drawers ($${getRate('int-new-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDrawers', { valueAsNumber: true })} />
+                      <HideableField lineItemId="int-door"><Input label={`Doors ($${getRate('int-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doors', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-cabinet-door"><Input label={`Cabinet Doors ($${getRate('int-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDoors', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-cabinet-drawer"><Input label={`Cabinet Drawers ($${getRate('int-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('cabinetDrawers', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-new-cabinet-door"><Input label={`New Cabinet Doors ($${getRate('int-new-cabinet-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDoors', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-new-cabinet-drawer"><Input label={`New Cabinet Drawers ($${getRate('int-new-cabinet-drawer').toFixed(0)}/drawer)`} type="number" min="0" step="1" placeholder="0" {...register('newCabinetDrawers', { valueAsNumber: true })} /></HideableField>
                     </div>
                     <SectionSubtotal total={doorsSubtotal} />
                   </div>
@@ -660,14 +676,14 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
                 {!collapsed['int-prep-work'] && (
                   <div className="mt-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Input label={`Wallpaper Removal Sq Ft ($${getRate('int-wallpaper-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallpaperRemovalSqft', { valueAsNumber: true })} />
-                      <Input label={`Priming LF ($${getRate('int-priming-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingLF', { valueAsNumber: true })} />
-                      <Input label={`Priming Sq Ft ($${getRate('int-priming-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingSqft', { valueAsNumber: true })} />
-                      <Input label={`Drywall Replacement Sq Ft ($${getRate('int-drywall-replacement-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('drywallReplacementSqft', { valueAsNumber: true })} />
-                      <Input label={`Popcorn Removal Sq Ft ($${getRate('int-popcorn-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('popcornRemovalSqft', { valueAsNumber: true })} />
-                      <Input label={`Wall Texture Removal Sq Ft ($${getRate('int-wall-texture-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallTextureRemovalSqft', { valueAsNumber: true })} />
-                      <Input label={`Trim Replacement LF ($${getRate('int-trim-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimReplacementLF', { valueAsNumber: true })} />
-                      <Input label={`Drywall Repairs ($${getRate('int-drywall-repair').toFixed(0)}/repair)`} type="number" min="0" step="1" placeholder="0" {...register('drywallRepairs', { valueAsNumber: true })} />
+                      <HideableField lineItemId="int-wallpaper-removal-sqft"><Input label={`Wallpaper Removal Sq Ft ($${getRate('int-wallpaper-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallpaperRemovalSqft', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-priming-lf"><Input label={`Priming LF ($${getRate('int-priming-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingLF', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-priming-sqft"><Input label={`Priming Sq Ft ($${getRate('int-priming-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingSqft', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-drywall-replacement-sqft"><Input label={`Drywall Replacement Sq Ft ($${getRate('int-drywall-replacement-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('drywallReplacementSqft', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-popcorn-removal-sqft"><Input label={`Popcorn Removal Sq Ft ($${getRate('int-popcorn-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('popcornRemovalSqft', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-wall-texture-removal-sqft"><Input label={`Wall Texture Removal Sq Ft ($${getRate('int-wall-texture-removal-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallTextureRemovalSqft', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-trim-replacement-lf"><Input label={`Trim Replacement LF ($${getRate('int-trim-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimReplacementLF', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-drywall-repair"><Input label={`Drywall Repairs ($${getRate('int-drywall-repair').toFixed(0)}/repair)`} type="number" min="0" step="1" placeholder="0" {...register('drywallRepairs', { valueAsNumber: true })} /></HideableField>
                     </div>
                     <SectionSubtotal total={prepSubtotal} />
                   </div>
@@ -681,10 +697,10 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
                 {!collapsed['int-additional'] && (
                   <div className="mt-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Input label={`Colors Above 3 ($${getRate('int-color-above-three').toFixed(0)}/color)`} type="number" min="0" step="1" placeholder="0" {...register('colorsAboveThree', { valueAsNumber: true })} />
-                      <Input label={`Accent Walls ($${getRate('int-accent-wall').toFixed(0)}/wall)`} type="number" min="0" step="1" placeholder="0" {...register('accentWalls', { valueAsNumber: true })} />
-                      <Input label={`Misc Work Hours ($${getRate('int-misc-work-hour').toFixed(0)}/hour)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscWorkHours', { valueAsNumber: true })} />
-                      <Input label="Miscellaneous $ (custom)" type="number" min="0" step="0.01" placeholder="0" {...register('miscellaneousDollars', { valueAsNumber: true })} />
+                      <HideableField lineItemId="int-color-above-three"><Input label={`Colors Above 3 ($${getRate('int-color-above-three').toFixed(0)}/color)`} type="number" min="0" step="1" placeholder="0" {...register('colorsAboveThree', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-accent-wall"><Input label={`Accent Walls ($${getRate('int-accent-wall').toFixed(0)}/wall)`} type="number" min="0" step="1" placeholder="0" {...register('accentWalls', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-misc-work-hour"><Input label={`Misc Work Hours ($${getRate('int-misc-work-hour').toFixed(0)}/hour)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscWorkHours', { valueAsNumber: true })} /></HideableField>
+                      <HideableField lineItemId="int-miscellaneous-dollars"><Input label="Miscellaneous $ (custom)" type="number" min="0" step="0.01" placeholder="0" {...register('miscellaneousDollars', { valueAsNumber: true })} /></HideableField>
                     </div>
                     <SectionSubtotal total={additionalSubtotal} />
                   </div>

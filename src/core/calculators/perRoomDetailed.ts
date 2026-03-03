@@ -14,6 +14,7 @@ export const ROOM_TYPE_LABELS: Record<string, string> = {
   'basement': 'Basement',
   'hallway': 'Hallway',
   'office': 'Office',
+  'other': 'Other',
 };
 
 // Default SF estimates per room type (for auto-fill)
@@ -27,12 +28,13 @@ export const ROOM_DEFAULT_SF: Record<string, number> = {
   'basement': 500,
   'hallway': 100,
   'office': 150,
+  'other': 150,
 };
 
 // Built-in room type IDs
 export const BUILT_IN_ROOM_TYPES: string[] = [
   'bedroom', 'living-room', 'kitchen', 'bathroom', 'closet',
-  'dining-room', 'basement', 'hallway', 'office',
+  'dining-room', 'basement', 'hallway', 'office', 'other',
 ];
 
 // Merge built-in room types with custom room types from settings
@@ -50,11 +52,13 @@ export interface RoomEntry {
   id: string;
   roomType: RoomType;
   roomLabel: string; // e.g. "Master Bedroom", "Bedroom 2"
+  roomSqft: number; // Room square footage for auto-calculation
   wallSqft: number;
   ceilingSqft: number;
   trimLF: number;
   doors: number;
   paintType: PaintType;
+  houseCondition: 'furnished' | 'empty';
 }
 
 export interface PerRoomInputs {
@@ -84,11 +88,22 @@ export function calculatePerRoom(
     return item?.rate || 0;
   };
 
+  const getRoomRate = (lineItemId: string, condition: 'furnished' | 'empty'): number => {
+    const conditionRates = condition === 'empty'
+      ? pricing.interiorDetailedEmptyRates
+      : pricing.interiorDetailedFurnishedRates;
+    if (lineItemId === 'int-wall-sqft' && conditionRates) return conditionRates.wallSqft;
+    if (lineItemId === 'int-ceiling-sqft' && conditionRates) return conditionRates.ceilingSqft;
+    if (lineItemId === 'int-trim-lf' && conditionRates) return conditionRates.trimLF;
+    return getRate(lineItemId);
+  };
+
   const roomResults: RoomResult[] = inputs.rooms.map((room) => {
+    const condition = room.houseCondition ?? 'furnished';
     let labor =
-      room.wallSqft * getRate('int-wall-sqft') +
-      room.ceilingSqft * getRate('int-ceiling-sqft') +
-      room.trimLF * getRate('int-trim-lf') +
+      room.wallSqft * getRoomRate('int-wall-sqft', condition) +
+      room.ceilingSqft * getRoomRate('int-ceiling-sqft', condition) +
+      room.trimLF * getRoomRate('int-trim-lf', condition) +
       room.doors * getRate('int-door');
 
     // Add custom per-room line item costs

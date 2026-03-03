@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Card, CardContent } from '../common/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '../common/Card';
+import { Input } from '../common/Input';
 import { Button } from '../common/Button';
 import { useSettingsStore } from '../../store/settingsStore';
 import {
@@ -15,6 +16,19 @@ export function PerRoomSettings() {
 
   const [newName, setNewName] = useState('');
   const [newDefaultSqft, setNewDefaultSqft] = useState(150);
+
+  // Local state for furnished/empty rates (reuses Interior Detailed rates)
+  const [furnishedRates, setFurnishedRates] = useState(
+    pricing.interiorDetailedFurnishedRates ?? { wallSqft: 1.0, ceilingSqft: 0.5, trimLF: 0.75 }
+  );
+  const [emptyRates, setEmptyRates] = useState(
+    pricing.interiorDetailedEmptyRates ?? { wallSqft: 0.85, ceilingSqft: 0.42, trimLF: 0.64 }
+  );
+
+  // Local state for per-room multipliers
+  const [multipliers, setMultipliers] = useState(
+    pricing.perRoomMultipliers ?? { wall: 1.0, ceiling: 0.31, trim: 0.11 }
+  );
 
   const addRoomType = () => {
     const trimmed = newName.trim();
@@ -35,8 +49,125 @@ export function PerRoomSettings() {
     }
   };
 
+  const handleSave = () => {
+    updatePricing({
+      interiorDetailedFurnishedRates: furnishedRates,
+      interiorDetailedEmptyRates: emptyRates,
+      perRoomMultipliers: multipliers,
+    });
+    alert('Per Room settings saved successfully!');
+  };
+
   return (
     <div className="space-y-6">
+      {/* Furnished Pricing */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Furnished Room Pricing (per unit)</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Input
+            label="Wall Sq Ft Rate"
+            type="number"
+            min="0"
+            step="0.01"
+            value={furnishedRates.wallSqft}
+            onChange={(e) => setFurnishedRates((prev) => ({ ...prev, wallSqft: parseFloat(e.target.value) || 0 }))}
+          />
+          <Input
+            label="Ceiling Sq Ft Rate"
+            type="number"
+            min="0"
+            step="0.01"
+            value={furnishedRates.ceilingSqft}
+            onChange={(e) => setFurnishedRates((prev) => ({ ...prev, ceilingSqft: parseFloat(e.target.value) || 0 }))}
+          />
+          <Input
+            label="Trim LF Rate"
+            type="number"
+            min="0"
+            step="0.01"
+            value={furnishedRates.trimLF}
+            onChange={(e) => setFurnishedRates((prev) => ({ ...prev, trimLF: parseFloat(e.target.value) || 0 }))}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Empty Pricing */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Empty Room Pricing (per unit)</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Input
+            label="Wall Sq Ft Rate"
+            type="number"
+            min="0"
+            step="0.01"
+            value={emptyRates.wallSqft}
+            onChange={(e) => setEmptyRates((prev) => ({ ...prev, wallSqft: parseFloat(e.target.value) || 0 }))}
+          />
+          <Input
+            label="Ceiling Sq Ft Rate"
+            type="number"
+            min="0"
+            step="0.01"
+            value={emptyRates.ceilingSqft}
+            onChange={(e) => setEmptyRates((prev) => ({ ...prev, ceilingSqft: parseFloat(e.target.value) || 0 }))}
+          />
+          <Input
+            label="Trim LF Rate"
+            type="number"
+            min="0"
+            step="0.01"
+            value={emptyRates.trimLF}
+            onChange={(e) => setEmptyRates((prev) => ({ ...prev, trimLF: parseFloat(e.target.value) || 0 }))}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Auto-Calculate Multipliers */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Auto-Calculate Multipliers</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-gray-500">
+            When a room's square footage is entered, these multipliers auto-populate wall, ceiling, and trim measurements.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Input
+              label="Wall Multiplier"
+              type="number"
+              min="0"
+              step="0.01"
+              value={multipliers.wall}
+              onChange={(e) => setMultipliers((prev) => ({ ...prev, wall: parseFloat(e.target.value) || 0 }))}
+              helperText="Room SF × this = Wall SF"
+            />
+            <Input
+              label="Ceiling Multiplier"
+              type="number"
+              min="0"
+              step="0.01"
+              value={multipliers.ceiling}
+              onChange={(e) => setMultipliers((prev) => ({ ...prev, ceiling: parseFloat(e.target.value) || 0 }))}
+              helperText="Room SF × this = Ceiling SF"
+            />
+            <Input
+              label="Trim Multiplier"
+              type="number"
+              min="0"
+              step="0.01"
+              value={multipliers.trim}
+              onChange={(e) => setMultipliers((prev) => ({ ...prev, trim: parseFloat(e.target.value) || 0 }))}
+              helperText="Room SF × this = Trim LF"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Built-in Room Types */}
       <Card>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Built-in Room Types</h3>
         <CardContent>
@@ -51,6 +182,7 @@ export function PerRoomSettings() {
         </CardContent>
       </Card>
 
+      {/* Custom Room Types */}
       <Card>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Custom Room Types</h3>
         <CardContent>
@@ -105,6 +237,12 @@ export function PerRoomSettings() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="flex justify-end">
+        <Button onClick={handleSave} variant="primary">
+          Save Per Room Settings
+        </Button>
+      </div>
     </div>
   );
 }

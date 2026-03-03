@@ -50,6 +50,11 @@ function ensureNewPricingFields(settings: CompanySettings): CompanySettings {
     changed = true;
   }
 
+  if (p.perRoomMultipliers === undefined) {
+    updates.perRoomMultipliers = { wall: 1.0, ceiling: 0.31, trim: 0.11 };
+    changed = true;
+  }
+
   // Migrate old fixed modifier values to dynamic arrays
   if (p.interiorModifiers === undefined) {
     const vals = p.interiorModifierValues;
@@ -92,6 +97,7 @@ interface SettingsState {
   addSection: (section: Omit<SectionConfig, 'id' | 'order'>) => void;
   updateSection: (id: string, updates: Partial<SectionConfig>) => void;
   deleteSection: (id: string) => void;
+  toggleHiddenLineItem: (lineItemId: string) => void;
   resetSettings: () => void;
 }
 
@@ -219,6 +225,23 @@ export const useSettingsStore = create<SettingsState>()(
                 lineItems: state.settings.pricing.lineItems.filter(
                   (item) => item.category !== id
                 ),
+              },
+            },
+          };
+        }),
+
+      toggleHiddenLineItem: (lineItemId) =>
+        set((state) => {
+          const hidden = state.settings.pricing.hiddenLineItems ?? [];
+          const isHidden = hidden.includes(lineItemId);
+          return {
+            settings: {
+              ...state.settings,
+              pricing: {
+                ...state.settings.pricing,
+                hiddenLineItems: isHidden
+                  ? hidden.filter((id) => id !== lineItemId)
+                  : [...hidden, lineItemId],
               },
             },
           };
