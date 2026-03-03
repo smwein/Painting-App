@@ -27,6 +27,7 @@ import { BidSummary } from '../results/BidSummary';
 import { PaintGallonsEstimate } from '../results/PaintGallonsEstimate';
 import { JobDurationEstimate } from '../results/JobDurationEstimate';
 import { useSettingsStore } from '../../store/settingsStore';
+import { useAuthStore } from '../../store/authStore';
 import type { ExteriorDetailedInputs } from '../../types/calculator.types';
 import type { CustomerInfo, Bid } from '../../types/bid.types';
 import { calculateExteriorDetailed } from '../../core/calculators/exteriorDetailed';
@@ -111,6 +112,8 @@ function SectionSubtotal({ total }: { total: number }) {
 
 export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailedProps) {
   const { settings, updateSection, deleteSection } = useSettingsStore();
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === 'admin';
   const pricing = settings.pricing;
 
   const getRate = (lineItemId: string): number => {
@@ -377,6 +380,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
       </Card>
 
       {/* All sections rendered in dynamic sorted order */}
+      {isAdmin ? (
       <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleSectionDragEnd}>
         <SortableContext items={allExtSections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-6">
@@ -386,11 +390,13 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
         const sectionHeader = (sectionId: string, dragHandleProps: React.HTMLAttributes<HTMLElement>) => (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <button
-                {...dragHandleProps}
-                className="touch-none cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 text-xl px-1"
-                title="Drag to reorder"
-              >⠿</button>
+              {isAdmin && (
+                <button
+                  {...dragHandleProps}
+                  className="touch-none cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 text-xl px-1"
+                  title="Drag to reorder"
+                >⠿</button>
+              )}
               <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
             </div>
             <div className="flex items-center gap-2">
@@ -532,6 +538,140 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
           </div>
         </SortableContext>
       </DndContext>
+      ) : (
+        <div className="space-y-6">
+          {allExtSections.map((section) => {
+            const unitLabel: Record<string, string> = { sqft: '/sqft', lf: '/LF', each: '/each', hour: '/hour', dollars: '' };
+
+            const sectionHeader = (sectionId: string) => (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => toggleSection(sectionId)} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+                    {collapsed[sectionId] ? '+ Show' : '− Hide'}
+                  </button>
+                </div>
+              </div>
+            );
+
+            if (section.id === 'ext-measurements') return (
+              <Card key={section.id}>
+                {sectionHeader('ext-measurements')}
+                {!collapsed['ext-measurements'] && (
+                  <div className="mt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Input label={`Wall/Siding Sq Ft ($${getRate('ext-wall-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('wallSqft', { valueAsNumber: true })} />
+                      <Input label={`Trim/Fascia/Soffit LF ($${getRate('ext-trim-fascia-soffit-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimFasciaSoffitLF', { valueAsNumber: true })} />
+                    </div>
+                    <SectionSubtotal total={measurementsSubtotal} />
+                  </div>
+                )}
+              </Card>
+            );
+
+            if (section.id === 'ext-doors-shutters') return (
+              <Card key={section.id}>
+                {sectionHeader('ext-doors-shutters')}
+                {!collapsed['ext-doors-shutters'] && (
+                  <div className="mt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Input label={`Doors ($${getRate('ext-door').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doors', { valueAsNumber: true })} />
+                      <Input label={`Shutters ($${getRate('ext-shutter').toFixed(0)}/shutter)`} type="number" min="0" step="1" placeholder="0" {...register('shutters', { valueAsNumber: true })} />
+                      <Input label={`Doors to Refinish ($${getRate('ext-door-refinish').toFixed(0)}/door)`} type="number" min="0" step="1" placeholder="0" {...register('doorsToRefinish', { valueAsNumber: true })} />
+                    </div>
+                    <SectionSubtotal total={doorsSubtotal} />
+                  </div>
+                )}
+              </Card>
+            );
+
+            if (section.id === 'ext-prep-work') return (
+              <Card key={section.id}>
+                {sectionHeader('ext-prep-work')}
+                {!collapsed['ext-prep-work'] && (
+                  <div className="mt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Input label={`Priming Sq Ft ($${getRate('ext-priming-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingSqft', { valueAsNumber: true })} />
+                      <Input label={`Priming LF ($${getRate('ext-priming-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('primingLF', { valueAsNumber: true })} />
+                    </div>
+                    <SectionSubtotal total={prepSubtotal} />
+                  </div>
+                )}
+              </Card>
+            );
+
+            if (section.id === 'ext-replacements-repairs') return (
+              <Card key={section.id}>
+                {sectionHeader('ext-replacements-repairs')}
+                {!collapsed['ext-replacements-repairs'] && (
+                  <div className="mt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Input label={`Siding Replacement Sq Ft ($${getRate('ext-siding-replacement-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('sidingReplacementSqft', { valueAsNumber: true })} />
+                      <Input label={`Trim Replacement LF ($${getRate('ext-trim-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('trimReplacementLF', { valueAsNumber: true })} />
+                      <Input label={`Soffit/Fascia Replacement LF ($${getRate('ext-soffit-fascia-replacement-lf').toFixed(2)}/LF)`} type="number" min="0" step="0.1" placeholder="0" {...register('soffitFasciaReplacementLF', { valueAsNumber: true })} />
+                      <Input label={`Bondo Repairs ($${getRate('ext-bondo-repair').toFixed(0)}/repair)`} type="number" min="0" step="1" placeholder="0" {...register('bondoRepairs', { valueAsNumber: true })} />
+                    </div>
+                    <SectionSubtotal total={replacementsSubtotal} />
+                  </div>
+                )}
+              </Card>
+            );
+
+            if (section.id === 'ext-additional') return (
+              <Card key={section.id}>
+                {sectionHeader('ext-additional')}
+                {!collapsed['ext-additional'] && (
+                  <div className="mt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Input label={`Deck Staining Sq Ft ($${getRate('ext-deck-staining-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('deckStainingSqft', { valueAsNumber: true })} />
+                      <Input label={`Misc Pressure Washing Sq Ft ($${getRate('ext-misc-pressure-washing-sqft').toFixed(2)}/sqft)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscPressureWashingSqft', { valueAsNumber: true })} />
+                      <Input label={`Misc Work Hours ($${getRate('ext-misc-work-hour').toFixed(0)}/hour)`} type="number" min="0" step="0.1" placeholder="0" {...register('miscWorkHours', { valueAsNumber: true })} />
+                      <Input label="Miscellaneous $ (custom)" type="number" min="0" step="0.01" placeholder="0" {...register('miscellaneousDollars', { valueAsNumber: true })} />
+                    </div>
+                    <SectionSubtotal total={additionalSubtotal} />
+                  </div>
+                )}
+              </Card>
+            );
+
+            // Custom section
+            const sectionItems = pricing.lineItems
+              .filter((item) => item.category === section.id)
+              .sort((a, b) => a.order - b.order);
+            if (sectionItems.length === 0) return null;
+
+            const sectionSubtotal = sectionItems.reduce(
+              (sum, item) => sum + (customValues[item.id] || 0) * item.rate, 0
+            );
+
+            return (
+              <Card key={section.id}>
+                {sectionHeader(section.id)}
+                {!collapsed[section.id] && (
+                  <div className="mt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {sectionItems.map((item) => (
+                        <Input
+                          key={item.id}
+                          label={`${item.name} ($${item.rate.toFixed(item.unit === 'sqft' || item.unit === 'lf' ? 2 : 0)}${unitLabel[item.unit] || ''})`}
+                          type="number" min="0"
+                          step={item.unit === 'sqft' || item.unit === 'lf' ? '0.1' : '1'}
+                          placeholder="0"
+                          value={customValues[item.id] ?? 0}
+                          onChange={(e) => setCustomValues((prev) => ({ ...prev, [item.id]: parseFloat(e.target.value) || 0 }))}
+                        />
+                      ))}
+                    </div>
+                    <SectionSubtotal total={sectionSubtotal} />
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       <PaintTypeSelector register={register} isExterior={true} />
       <MarkupSelector register={register} />
