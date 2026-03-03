@@ -19,6 +19,34 @@ function ensureDefaultSections(settings: CompanySettings): CompanySettings {
   };
 }
 
+/** Fill in any pricing fields that were added after the user's data was first saved.
+ *  Uses defaults only when the field is completely missing (undefined). */
+function ensureNewPricingFields(settings: CompanySettings): CompanySettings {
+  const defaults = createDefaultPricingSettings();
+  const p = settings.pricing;
+  let changed = false;
+  const updates: Partial<PricingSettings> = {};
+
+  if (p.interiorSqftEmpty === undefined) {
+    updates.interiorSqftEmpty = defaults.interiorSqftEmpty;
+    changed = true;
+  }
+  if (p.interiorDetailedFurnishedRates === undefined) {
+    updates.interiorDetailedFurnishedRates = defaults.interiorDetailedFurnishedRates;
+    changed = true;
+  }
+  if (p.interiorDetailedEmptyRates === undefined) {
+    updates.interiorDetailedEmptyRates = defaults.interiorDetailedEmptyRates;
+    changed = true;
+  }
+
+  if (!changed) return settings;
+  return {
+    ...settings,
+    pricing: { ...p, ...updates },
+  };
+}
+
 interface SettingsState {
   settings: CompanySettings;
   updateSettings: (updates: Partial<CompanySettings>) => void;
@@ -169,9 +197,10 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: 'painting-company-settings',
       onRehydrateStorage: () => (state) => {
-        // Run migration after loading persisted state to add any missing default sections
+        // Run migrations after loading persisted state
         if (state) {
           state.settings = ensureDefaultSections(state.settings);
+          state.settings = ensureNewPricingFields(state.settings);
         }
       },
     }
