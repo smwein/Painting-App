@@ -33,31 +33,31 @@ export function applyInteriorModifiers(
   if (modifiers.heavilyFurnished) {
     if (heavilyFurnishedScope === 'labor' || heavilyFurnishedScope === 'both') modifiedLabor *= heavilyFurnished;
     if (heavilyFurnishedScope === 'materials' || heavilyFurnishedScope === 'both') modifiedMaterialCost *= heavilyFurnished;
-    appliedModifiers.push(`Heavily Furnished (×${heavilyFurnished})`);
+    appliedModifiers.push(`${vals?.heavilyFurnishedLabel ?? 'Heavily Furnished'} (×${heavilyFurnished})`);
   }
 
   if (modifiers.emptyHouse) {
     if (emptyHouseScope === 'labor' || emptyHouseScope === 'both') modifiedLabor *= emptyHouse;
     if (emptyHouseScope === 'materials' || emptyHouseScope === 'both') modifiedMaterialCost *= emptyHouse;
-    appliedModifiers.push(`Empty House (×${emptyHouse})`);
+    appliedModifiers.push(`${vals?.emptyHouseLabel ?? 'Empty House'} (×${emptyHouse})`);
   }
 
   if (modifiers.extensivePrep) {
     if (extensivePrepScope === 'labor' || extensivePrepScope === 'both') modifiedLabor *= extensivePrep;
     if (extensivePrepScope === 'materials' || extensivePrepScope === 'both') modifiedMaterialCost *= extensivePrep;
-    appliedModifiers.push(`Extensive Prep (×${extensivePrep})`);
+    appliedModifiers.push(`${vals?.extensivePrepLabel ?? 'Extensive Prep'} (×${extensivePrep})`);
   }
 
   if (modifiers.additionalCoat) {
     if (additionalCoatScope === 'labor' || additionalCoatScope === 'both') modifiedLabor *= additionalCoat;
     if (additionalCoatScope === 'materials' || additionalCoatScope === 'both') modifiedMaterialCost *= additionalCoat;
-    appliedModifiers.push(`Additional Coat (×${additionalCoat})`);
+    appliedModifiers.push(`${vals?.additionalCoatLabel ?? 'Additional Coat'} (×${additionalCoat})`);
   }
 
   if (modifiers.oneCoat) {
     if (oneCoatScope === 'labor' || oneCoatScope === 'both') modifiedLabor *= oneCoat;
     if (oneCoatScope === 'materials' || oneCoatScope === 'both') modifiedMaterialCost *= oneCoat;
-    appliedModifiers.push(`Reduce to 1 Coat (×${oneCoat})`);
+    appliedModifiers.push(`${vals?.oneCoatLabel ?? 'One Coat'} (×${oneCoat})`);
   }
 
   return { modifiedLabor, modifiedMaterialCost, appliedModifiers };
@@ -94,31 +94,31 @@ export function applyExteriorModifiers(
   if (modifiers.threeStory) {
     if (threeStoryScope === 'labor' || threeStoryScope === 'both') modifiedLabor *= threeStory;
     if (threeStoryScope === 'materials' || threeStoryScope === 'both') modifiedMaterialCost *= threeStory;
-    appliedModifiers.push(`3 Story (×${threeStory})`);
+    appliedModifiers.push(`${vals?.threeStoryLabel ?? '3 Story'} (×${threeStory})`);
   }
 
   if (modifiers.extensivePrep) {
     if (extensivePrepScope === 'labor' || extensivePrepScope === 'both') modifiedLabor *= extensivePrep;
     if (extensivePrepScope === 'materials' || extensivePrepScope === 'both') modifiedMaterialCost *= extensivePrep;
-    appliedModifiers.push(`Extensive Prep (×${extensivePrep})`);
+    appliedModifiers.push(`${vals?.extensivePrepLabel ?? 'Extensive Prep'} (×${extensivePrep})`);
   }
 
   if (modifiers.hardTerrain) {
     if (hardTerrainScope === 'labor' || hardTerrainScope === 'both') modifiedLabor *= hardTerrain;
     if (hardTerrainScope === 'materials' || hardTerrainScope === 'both') modifiedMaterialCost *= hardTerrain;
-    appliedModifiers.push(`Hard Terrain (×${hardTerrain})`);
+    appliedModifiers.push(`${vals?.hardTerrainLabel ?? 'Hard Terrain'} (×${hardTerrain})`);
   }
 
   if (modifiers.additionalCoat) {
     if (additionalCoatScope === 'labor' || additionalCoatScope === 'both') modifiedLabor *= additionalCoat;
     if (additionalCoatScope === 'materials' || additionalCoatScope === 'both') modifiedMaterialCost *= additionalCoat;
-    appliedModifiers.push(`Additional Coat (×${additionalCoat})`);
+    appliedModifiers.push(`${vals?.additionalCoatLabel ?? 'Additional Coat'} (×${additionalCoat})`);
   }
 
   if (modifiers.oneCoat) {
     if (oneCoatScope === 'labor' || oneCoatScope === 'both') modifiedLabor *= oneCoat;
     if (oneCoatScope === 'materials' || oneCoatScope === 'both') modifiedMaterialCost *= oneCoat;
-    appliedModifiers.push(`Reduce to 1 Coat (×${oneCoat})`);
+    appliedModifiers.push(`${vals?.oneCoatLabel ?? 'One Coat'} (×${oneCoat})`);
   }
 
   return { modifiedLabor, modifiedMaterialCost, appliedModifiers };

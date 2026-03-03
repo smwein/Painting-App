@@ -42,13 +42,16 @@ interface ExteriorDetailedFormData {
   'modifiers.oneCoat': boolean;
 }
 
-const exteriorModifiers = [
-  { name: 'modifiers.threeStory', label: '3 Story (×1.15)' },
-  { name: 'modifiers.extensivePrep', label: 'Extensive Prep (×1.2)' },
-  { name: 'modifiers.hardTerrain', label: 'Hard Terrain (×1.15)' },
-  { name: 'modifiers.additionalCoat', label: 'Additional Coat (×1.25)' },
-  { name: 'modifiers.oneCoat', label: 'Reduce to 1 Coat (×0.85)' },
-];
+function getExteriorModifiersList(pricing: import('../../types/settings.types').PricingSettings) {
+  const vals = pricing.exteriorModifierValues;
+  return [
+    { name: 'modifiers.threeStory', label: `${vals?.threeStoryLabel ?? '3 Story'} (×${vals?.threeStory ?? 1.15})` },
+    { name: 'modifiers.extensivePrep', label: `${vals?.extensivePrepLabel ?? 'Extensive Prep'} (×${vals?.extensivePrep ?? 1.2})` },
+    { name: 'modifiers.hardTerrain', label: `${vals?.hardTerrainLabel ?? 'Hard Terrain'} (×${vals?.hardTerrain ?? 1.15})` },
+    { name: 'modifiers.additionalCoat', label: `${vals?.additionalCoatLabel ?? 'Additional Coat'} (×${vals?.additionalCoat ?? 1.25})` },
+    { name: 'modifiers.oneCoat', label: `${vals?.oneCoatLabel ?? 'One Coat'} (×${vals?.oneCoat ?? 0.85})` },
+  ];
+}
 
 interface ExteriorDetailedProps {
   onResultChange?: (result: any) => void;
@@ -450,7 +453,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
 
       <PaintTypeSelector register={register} isExterior={true} />
       <MarkupSelector register={register} />
-      <ModifierSection register={register} modifiers={exteriorModifiers} />
+      <ModifierSection register={register} modifiers={getExteriorModifiersList(pricing)} />
 
       {result && result.total > 0 && (
         <>

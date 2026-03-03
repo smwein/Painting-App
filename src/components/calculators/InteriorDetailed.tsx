@@ -47,13 +47,16 @@ interface InteriorDetailedFormData {
   'modifiers.oneCoat': boolean;
 }
 
-const interiorModifiers = [
-  { name: 'modifiers.heavilyFurnished', label: 'Heavily Furnished (×1.25)' },
-  { name: 'modifiers.emptyHouse', label: 'Empty House (×0.85)' },
-  { name: 'modifiers.extensivePrep', label: 'Extensive Prep (×1.15)' },
-  { name: 'modifiers.additionalCoat', label: 'Additional Coat (×1.25)' },
-  { name: 'modifiers.oneCoat', label: 'Reduce to 1 Coat (×0.85)' },
-];
+function getInteriorModifiersList(pricing: import('../../types/settings.types').PricingSettings) {
+  const vals = pricing.interiorModifierValues;
+  return [
+    { name: 'modifiers.heavilyFurnished', label: `${vals?.heavilyFurnishedLabel ?? 'Heavily Furnished'} (×${vals?.heavilyFurnished ?? 1.25})` },
+    { name: 'modifiers.emptyHouse', label: `${vals?.emptyHouseLabel ?? 'Empty House'} (×${vals?.emptyHouse ?? 0.85})` },
+    { name: 'modifiers.extensivePrep', label: `${vals?.extensivePrepLabel ?? 'Extensive Prep'} (×${vals?.extensivePrep ?? 1.15})` },
+    { name: 'modifiers.additionalCoat', label: `${vals?.additionalCoatLabel ?? 'Additional Coat'} (×${vals?.additionalCoat ?? 1.25})` },
+    { name: 'modifiers.oneCoat', label: `${vals?.oneCoatLabel ?? 'One Coat'} (×${vals?.oneCoat ?? 0.85})` },
+  ];
+}
 
 interface InteriorDetailedProps {
   onResultChange?: (result: any) => void;
@@ -511,7 +514,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
 
       <PaintTypeSelector register={register} />
       <MarkupSelector register={register} />
-      <ModifierSection register={register} modifiers={interiorModifiers} />
+      <ModifierSection register={register} modifiers={getInteriorModifiersList(pricing)} />
 
       {result && result.total > 0 && (
         <>

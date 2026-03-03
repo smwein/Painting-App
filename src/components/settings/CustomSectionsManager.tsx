@@ -130,14 +130,12 @@ export function CustomSectionsManager() {
                 ) : (
                   <>
                     <Button onClick={() => startEdit(section)} variant="outline" size="sm">Edit</Button>
-                    {!section.isDefault && (
-                      <Button
-                        onClick={() => handleDeleteSection(section)}
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700 hover:border-red-300"
-                      >Delete</Button>
-                    )}
+                    <Button
+                      onClick={() => handleDeleteSection(section)}
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:border-red-300"
+                    >Delete</Button>
                   </>
                 )}
               </div>
@@ -202,13 +200,6 @@ export function CustomSectionsManager() {
         </Card>
       ))}
 
-      <Card className="bg-yellow-50 border-yellow-200">
-        <CardContent className="py-3">
-          <p className="text-sm text-yellow-800">
-            <strong>Note:</strong> Default sections cannot be deleted, but their names can be edited. Only custom sections can be deleted.
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 }

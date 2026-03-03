@@ -33,28 +33,38 @@ export type ModifierScope = 'labor' | 'materials' | 'both';
 export interface InteriorModifierValues {
   heavilyFurnished: number;
   heavilyFurnishedScope?: ModifierScope;
+  heavilyFurnishedLabel?: string;
   emptyHouse: number;
   emptyHouseScope?: ModifierScope;
+  emptyHouseLabel?: string;
   extensivePrep: number;
   extensivePrepScope?: ModifierScope;
+  extensivePrepLabel?: string;
   additionalCoat: number;
   additionalCoatScope?: ModifierScope;
+  additionalCoatLabel?: string;
   oneCoat: number;
   oneCoatScope?: ModifierScope;
+  oneCoatLabel?: string;
 }
 
 // Exterior labor modifier values (configurable)
 export interface ExteriorModifierValues {
   threeStory: number;
   threeStoryScope?: ModifierScope;
+  threeStoryLabel?: string;
   extensivePrep: number;
   extensivePrepScope?: ModifierScope;
+  extensivePrepLabel?: string;
   hardTerrain: number;
   hardTerrainScope?: ModifierScope;
+  hardTerrainLabel?: string;
   additionalCoat: number;
   additionalCoatScope?: ModifierScope;
+  additionalCoatLabel?: string;
   oneCoat: number;
   oneCoatScope?: ModifierScope;
+  oneCoatLabel?: string;
 }
 
 // All pricing configuration (formerly hardcoded)

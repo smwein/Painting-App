@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { CompanyInfoSettings } from '../components/settings/CompanyInfoSettings';
 import { SimplePricingSettings } from '../components/settings/SimplePricingSettings';
-import { DetailedPricingSettings } from '../components/settings/DetailedPricingSettings';
+import { InteriorDetailedPricing } from '../components/settings/InteriorDetailedPricing';
+import { ExteriorDetailedPricing } from '../components/settings/ExteriorDetailedPricing';
 import { CustomLineItemsManager } from '../components/settings/CustomLineItemsManager';
 import { CustomSectionsManager } from '../components/settings/CustomSectionsManager';
 import { JobEstimationSettings } from '../components/settings/JobEstimationSettings';
@@ -10,7 +11,8 @@ import { UsersSettings } from '../components/settings/UsersSettings';
 type SettingsTab =
   | 'company'
   | 'simple-pricing'
-  | 'detailed-pricing'
+  | 'interior-detailed-pricing'
+  | 'exterior-detailed-pricing'
   | 'line-items'
   | 'sections'
   | 'crew-rates'
@@ -39,10 +41,16 @@ export function Settings() {
             Simple Pricing
           </TabButton>
           <TabButton
-            active={activeTab === 'detailed-pricing'}
-            onClick={() => setActiveTab('detailed-pricing')}
+            active={activeTab === 'interior-detailed-pricing'}
+            onClick={() => setActiveTab('interior-detailed-pricing')}
           >
-            Detailed Pricing
+            Interior Detailed
+          </TabButton>
+          <TabButton
+            active={activeTab === 'exterior-detailed-pricing'}
+            onClick={() => setActiveTab('exterior-detailed-pricing')}
+          >
+            Exterior Detailed
           </TabButton>
           <TabButton
             active={activeTab === 'line-items'}
@@ -75,7 +83,8 @@ export function Settings() {
       <div>
         {activeTab === 'company' && <CompanyInfoSettings />}
         {activeTab === 'simple-pricing' && <SimplePricingSettings />}
-        {activeTab === 'detailed-pricing' && <DetailedPricingSettings />}
+        {activeTab === 'interior-detailed-pricing' && <InteriorDetailedPricing />}
+        {activeTab === 'exterior-detailed-pricing' && <ExteriorDetailedPricing />}
         {activeTab === 'line-items' && <CustomLineItemsManager />}
         {activeTab === 'sections' && <CustomSectionsManager />}
         {activeTab === 'crew-rates' && <JobEstimationSettings />}
