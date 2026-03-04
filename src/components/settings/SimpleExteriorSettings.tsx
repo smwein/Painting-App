@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -20,9 +20,53 @@ import { useSettingsStore } from '../../store/settingsStore';
 import { Input } from '../common/Input';
 import { Button } from '../common/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
-import type { SectionConfig, LineItemConfig } from '../../types/settings.types';
+import type { SectionConfig, LineItemConfig, ModifierScope } from '../../types/settings.types';
 
 const UNIT_OPTIONS = ['sqft', 'lf', 'each', 'hour', 'dollars'] as const;
+
+// Section IDs for drag-and-drop ordering
+const SECTION_IDS = [
+  'ext-sqft-pricing',
+  'ext-paint-prices',
+  'ext-coverage',
+  'ext-multipliers',
+  'ext-labor-split',
+  'ext-modifiers',
+  'ext-simple-sections',
+] as const;
+
+const DEFAULT_SECTION_ORDER = [...SECTION_IDS];
+
+interface SortableSettingsCardProps {
+  id: string;
+  children: React.ReactNode;
+}
+
+function SortableSettingsCard({ id, children }: SortableSettingsCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative',
+    zIndex: isDragging ? 10 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div className="relative">
+        <button
+          {...attributes}
+          {...listeners}
+          className="absolute top-3 left-3 touch-none cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 text-xl px-1 z-10"
+          title="Drag to reorder section"
+        >{'\u2807'}</button>
+        <div className="pl-8">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface SortableSectionRowProps {
   section: SectionConfig;
@@ -78,6 +122,27 @@ export function SimpleExteriorSettings() {
   const [newSectionName, setNewSectionName] = useState('');
   const [showAddSection, setShowAddSection] = useState(false);
 
+  // Exterior modifiers state
+  const [exteriorModifiers, setExteriorModifiers] = useState(
+    settings.pricing.exteriorModifiers ?? [
+      { id: 'ext-mod-three-story', name: '3 Story', multiplier: 1.15, scope: 'labor' as ModifierScope, order: 1 },
+      { id: 'ext-mod-extensive-prep', name: 'Extensive Prep', multiplier: 1.20, scope: 'labor' as ModifierScope, order: 2 },
+      { id: 'ext-mod-hard-terrain', name: 'Hard Terrain', multiplier: 1.15, scope: 'labor' as ModifierScope, order: 3 },
+      { id: 'ext-mod-additional-coat', name: 'Additional Coat', multiplier: 1.25, scope: 'labor' as ModifierScope, order: 4 },
+      { id: 'ext-mod-one-coat', name: 'One Coat', multiplier: 0.85, scope: 'labor' as ModifierScope, order: 5 },
+    ]
+  );
+  const [newModName, setNewModName] = useState('');
+  const [newModMultiplier, setNewModMultiplier] = useState('1.20');
+  const [newModScope, setNewModScope] = useState<ModifierScope>('labor');
+
+  // Section order state
+  const sectionOrder = useMemo(
+    () => settings.pricing.settingsPageSectionOrder?.simpleExterior ?? DEFAULT_SECTION_ORDER,
+    [settings.pricing.settingsPageSectionOrder?.simpleExterior]
+  );
+  const [localSectionOrder, setLocalSectionOrder] = useState<string[]>(sectionOrder);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -90,7 +155,7 @@ export function SimpleExteriorSettings() {
   const toggleCollapse = (id: string) =>
     setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleSectionsDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const oldIndex = simpleSections.findIndex((s) => s.id === active.id);
@@ -98,6 +163,21 @@ export function SimpleExteriorSettings() {
     const reordered = arrayMove(simpleSections, oldIndex, newIndex);
     reordered.forEach((section, index) => {
       updateSection(section.id, { order: index + 1 });
+    });
+  };
+
+  const handleCardDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = localSectionOrder.indexOf(active.id as string);
+    const newIndex = localSectionOrder.indexOf(over.id as string);
+    const newOrder = arrayMove(localSectionOrder, oldIndex, newIndex);
+    setLocalSectionOrder(newOrder);
+    updatePricing({
+      settingsPageSectionOrder: {
+        ...settings.pricing.settingsPageSectionOrder,
+        simpleExterior: newOrder,
+      },
     });
   };
 
@@ -172,14 +252,35 @@ export function SimpleExteriorSettings() {
     setShowAddSection(false);
   };
 
+  const handleAddExteriorModifier = () => {
+    const name = newModName.trim();
+    const multiplier = parseFloat(newModMultiplier);
+    if (!name || isNaN(multiplier) || multiplier <= 0) {
+      alert('Please enter a valid modifier name and multiplier.');
+      return;
+    }
+    const maxOrder = Math.max(...exteriorModifiers.map((m) => m.order), 0);
+    setExteriorModifiers((prev) => [
+      ...prev,
+      { id: `ext-mod-${Date.now()}`, name, multiplier, scope: newModScope, order: maxOrder + 1 },
+    ]);
+    setNewModName('');
+    setNewModMultiplier('1.20');
+    setNewModScope('labor');
+  };
+
+  const handleDeleteExteriorModifier = (id: string) => {
+    setExteriorModifiers((prev) => prev.filter((m) => m.id !== id));
+  };
+
   const handleSave = () => {
-    updatePricing(formData);
+    updatePricing({ ...formData, exteriorModifiers });
     alert('Simple Exterior settings saved successfully!');
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Exterior Square Footage Rates */}
+  // Build section content map
+  const sectionContent: Record<string, React.ReactNode> = {
+    'ext-sqft-pricing': (
       <Card>
         <CardHeader>
           <CardTitle>Exterior Square Footage Pricing (per sq ft)</CardTitle>
@@ -191,8 +292,8 @@ export function SimpleExteriorSettings() {
             onChange={(e) => handleNumberChange('exteriorSqft.trimOnly', parseFloat(e.target.value))} />
         </CardContent>
       </Card>
-
-      {/* Exterior Paint Prices */}
+    ),
+    'ext-paint-prices': (
       <Card>
         <CardHeader>
           <CardTitle>Exterior Paint Prices (per gallon)</CardTitle>
@@ -221,8 +322,8 @@ export function SimpleExteriorSettings() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Exterior Coverage Rates */}
+    ),
+    'ext-coverage': (
       <Card>
         <CardHeader>
           <CardTitle>Exterior Paint Coverage Rates</CardTitle>
@@ -236,8 +337,8 @@ export function SimpleExteriorSettings() {
             onChange={(e) => handleNumberChange('exteriorCoverage.doorGallonsPerDoor', parseFloat(e.target.value))} />
         </CardContent>
       </Card>
-
-      {/* Exterior Auto-Calc Multipliers */}
+    ),
+    'ext-multipliers': (
       <Card>
         <CardHeader>
           <CardTitle>Exterior Auto-Calculation Multipliers</CardTitle>
@@ -251,8 +352,8 @@ export function SimpleExteriorSettings() {
             helperText="House SF × this = Trim LF" />
         </CardContent>
       </Card>
-
-      {/* Sqft Labor vs Materials Split */}
+    ),
+    'ext-labor-split': (
       <Card>
         <CardHeader>
           <CardTitle>Sqft Calculator — Labor / Materials Split</CardTitle>
@@ -282,8 +383,86 @@ export function SimpleExteriorSettings() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Simple Pricing Sections — drag-and-drop, show line items, add section */}
+    ),
+    'ext-modifiers': (
+      <Card>
+        <CardHeader>
+          <CardTitle>Exterior Modifiers</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-gray-500">
+            Modifiers appear as checkboxes on the Exterior Quick Measure calculator. Choose whether each modifier applies to Labor, Materials, or Both.
+          </p>
+          {exteriorModifiers.sort((a, b) => a.order - b.order).map((mod) => (
+            <div key={mod.id} className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg bg-gray-50">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={mod.name}
+                  onChange={(e) => setExteriorModifiers((prev) =>
+                    prev.map((m) => m.id === mod.id ? { ...m, name: e.target.value } : m)
+                  )}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+              <div className="w-24">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={mod.multiplier}
+                  onChange={(e) => setExteriorModifiers((prev) =>
+                    prev.map((m) => m.id === mod.id ? { ...m, multiplier: parseFloat(e.target.value) || 1 } : m)
+                  )}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+              <span className="text-xs text-gray-500 w-6">{'\u00d7'}</span>
+              <select
+                value={mod.scope ?? 'labor'}
+                onChange={(e) => setExteriorModifiers((prev) =>
+                  prev.map((m) => m.id === mod.id ? { ...m, scope: e.target.value as ModifierScope } : m)
+                )}
+                className="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="labor">Labor</option>
+                <option value="materials">Materials</option>
+                <option value="both">Both</option>
+              </select>
+              <button
+                onClick={() => handleDeleteExteriorModifier(mod.id)}
+                className="text-red-400 hover:text-red-600 text-sm font-bold px-1"
+                title="Delete modifier"
+              >{'\u2715'}</button>
+            </div>
+          ))}
+          <div className="flex items-end gap-2 pt-2 border-t border-gray-100">
+            <div className="flex-1">
+              <Input label="New Modifier Name" type="text" value={newModName}
+                onChange={(e) => setNewModName(e.target.value)} placeholder="e.g., Scaffolding" />
+            </div>
+            <div className="w-24">
+              <Input label="Multiplier" type="number" min="0" step="0.01" value={newModMultiplier}
+                onChange={(e) => setNewModMultiplier(e.target.value)} placeholder="1.20" />
+            </div>
+            <div className="w-28">
+              <label className="block text-xs font-medium text-gray-500 mb-1">Scope</label>
+              <select
+                value={newModScope}
+                onChange={(e) => setNewModScope(e.target.value as ModifierScope)}
+                className="w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="labor">Labor</option>
+                <option value="materials">Materials</option>
+                <option value="both">Both</option>
+              </select>
+            </div>
+            <Button onClick={handleAddExteriorModifier} variant="outline" size="sm" className="mb-0.5">+ Add</Button>
+          </div>
+        </CardContent>
+      </Card>
+    ),
+    'ext-simple-sections': (
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -317,7 +496,7 @@ export function SimpleExteriorSettings() {
             <p className="text-sm text-gray-500 text-center py-4">No custom sections yet. Click "+ Add Section" to create one.</p>
           )}
 
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSectionsDragEnd}>
             <SortableContext items={simpleSections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
               <div className="space-y-2">
                 {simpleSections.map((section) => {
@@ -463,6 +642,20 @@ export function SimpleExteriorSettings() {
           </DndContext>
         </CardContent>
       </Card>
+    ),
+  };
+
+  return (
+    <div className="space-y-6">
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCardDragEnd}>
+        <SortableContext items={localSectionOrder} strategy={verticalListSortingStrategy}>
+          {localSectionOrder.map((sectionId) => (
+            <SortableSettingsCard key={sectionId} id={sectionId}>
+              {sectionContent[sectionId]}
+            </SortableSettingsCard>
+          ))}
+        </SortableContext>
+      </DndContext>
 
       <div className="flex justify-end">
         <Button onClick={handleSave} variant="primary">

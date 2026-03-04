@@ -157,6 +157,12 @@ export interface PricingSettings {
   // Custom room types for Per Room calculator
   customRoomTypes?: Array<{ id: string; name: string; defaultSqft: number }>;
 
+  // Settings page section order (persisted drag-and-drop order)
+  settingsPageSectionOrder?: {
+    simpleInterior?: string[];
+    simpleExterior?: string[];
+  };
+
   // Dynamic configuration
   lineItems: LineItemConfig[];
   sections: SectionConfig[];

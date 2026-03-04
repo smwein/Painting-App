@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -23,6 +23,51 @@ import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
 import type { SectionConfig, LineItemConfig, ModifierScope } from '../../types/settings.types';
 
 const UNIT_OPTIONS = ['sqft', 'lf', 'each', 'hour', 'dollars'] as const;
+
+// Section IDs for drag-and-drop ordering
+const SECTION_IDS = [
+  'int-sqft-pricing',
+  'int-sqft-empty',
+  'int-paint-prices',
+  'int-coverage',
+  'int-multipliers',
+  'int-labor-split',
+  'int-modifiers',
+  'int-simple-sections',
+] as const;
+
+const DEFAULT_SECTION_ORDER = [...SECTION_IDS];
+
+interface SortableSettingsCardProps {
+  id: string;
+  children: React.ReactNode;
+}
+
+function SortableSettingsCard({ id, children }: SortableSettingsCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative',
+    zIndex: isDragging ? 10 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div className="relative">
+        <button
+          {...attributes}
+          {...listeners}
+          className="absolute top-3 left-3 touch-none cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 text-xl px-1 z-10"
+          title="Drag to reorder section"
+        >{'\u2807'}</button>
+        <div className="pl-8">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface SortableSectionRowProps {
   section: SectionConfig;
@@ -88,6 +133,13 @@ export function SimpleInteriorSettings() {
   const [newModMultiplier, setNewModMultiplier] = useState('1.20');
   const [newModScope, setNewModScope] = useState<ModifierScope>('both');
 
+  // Section order state
+  const sectionOrder = useMemo(
+    () => settings.pricing.settingsPageSectionOrder?.simpleInterior ?? DEFAULT_SECTION_ORDER,
+    [settings.pricing.settingsPageSectionOrder?.simpleInterior]
+  );
+  const [localSectionOrder, setLocalSectionOrder] = useState<string[]>(sectionOrder);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -100,7 +152,7 @@ export function SimpleInteriorSettings() {
   const toggleCollapse = (id: string) =>
     setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleSectionsDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const oldIndex = simpleSections.findIndex((s) => s.id === active.id);
@@ -108,6 +160,21 @@ export function SimpleInteriorSettings() {
     const reordered = arrayMove(simpleSections, oldIndex, newIndex);
     reordered.forEach((section, index) => {
       updateSection(section.id, { order: index + 1 });
+    });
+  };
+
+  const handleCardDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = localSectionOrder.indexOf(active.id as string);
+    const newIndex = localSectionOrder.indexOf(over.id as string);
+    const newOrder = arrayMove(localSectionOrder, oldIndex, newIndex);
+    setLocalSectionOrder(newOrder);
+    updatePricing({
+      settingsPageSectionOrder: {
+        ...settings.pricing.settingsPageSectionOrder,
+        simpleInterior: newOrder,
+      },
     });
   };
 
@@ -208,9 +275,9 @@ export function SimpleInteriorSettings() {
     alert('Simple Interior settings saved successfully!');
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Furnished Interior Square Footage Rates */}
+  // Build section content map
+  const sectionContent: Record<string, React.ReactNode> = {
+    'int-sqft-pricing': (
       <Card>
         <CardHeader>
           <CardTitle>Furnished Interior Square Footage Pricing (per sq ft)</CardTitle>
@@ -226,8 +293,8 @@ export function SimpleInteriorSettings() {
             onChange={(e) => handleNumberChange('interiorSqft.complete', parseFloat(e.target.value))} />
         </CardContent>
       </Card>
-
-      {/* Empty Interior Square Footage Rates */}
+    ),
+    'int-sqft-empty': (
       <Card>
         <CardHeader>
           <CardTitle>Empty Interior Square Footage Pricing (per sq ft)</CardTitle>
@@ -243,8 +310,8 @@ export function SimpleInteriorSettings() {
             onChange={(e) => handleNumberChange('interiorSqftEmpty.complete', parseFloat(e.target.value))} />
         </CardContent>
       </Card>
-
-      {/* Interior Paint Prices */}
+    ),
+    'int-paint-prices': (
       <Card>
         <CardHeader>
           <CardTitle>Interior Paint Prices (per gallon)</CardTitle>
@@ -273,8 +340,8 @@ export function SimpleInteriorSettings() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Interior Coverage Rates */}
+    ),
+    'int-coverage': (
       <Card>
         <CardHeader>
           <CardTitle>Interior Paint Coverage Rates</CardTitle>
@@ -290,8 +357,8 @@ export function SimpleInteriorSettings() {
             onChange={(e) => handleNumberChange('interiorCoverage.cabinetGallonsPerDoor', parseFloat(e.target.value))} />
         </CardContent>
       </Card>
-
-      {/* Interior Auto-Calc Multipliers */}
+    ),
+    'int-multipliers': (
       <Card>
         <CardHeader>
           <CardTitle>Interior Auto-Calculation Multipliers</CardTitle>
@@ -308,8 +375,8 @@ export function SimpleInteriorSettings() {
             helperText="House SF × this = Trim LF" />
         </CardContent>
       </Card>
-
-      {/* Sqft Labor vs Materials Split */}
+    ),
+    'int-labor-split': (
       <Card>
         <CardHeader>
           <CardTitle>Sqft Calculator — Labor / Materials Split</CardTitle>
@@ -339,8 +406,8 @@ export function SimpleInteriorSettings() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Interior Modifiers */}
+    ),
+    'int-modifiers': (
       <Card>
         <CardHeader>
           <CardTitle>Interior Modifiers</CardTitle>
@@ -417,8 +484,8 @@ export function SimpleInteriorSettings() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Simple Pricing Sections — drag-and-drop, show line items, add section */}
+    ),
+    'int-simple-sections': (
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -452,7 +519,7 @@ export function SimpleInteriorSettings() {
             <p className="text-sm text-gray-500 text-center py-4">No custom sections yet. Click "+ Add Section" to create one.</p>
           )}
 
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSectionsDragEnd}>
             <SortableContext items={simpleSections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
               <div className="space-y-2">
                 {simpleSections.map((section) => {
@@ -598,6 +665,20 @@ export function SimpleInteriorSettings() {
           </DndContext>
         </CardContent>
       </Card>
+    ),
+  };
+
+  return (
+    <div className="space-y-6">
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCardDragEnd}>
+        <SortableContext items={localSectionOrder} strategy={verticalListSortingStrategy}>
+          {localSectionOrder.map((sectionId) => (
+            <SortableSettingsCard key={sectionId} id={sectionId}>
+              {sectionContent[sectionId]}
+            </SortableSettingsCard>
+          ))}
+        </SortableContext>
+      </DndContext>
 
       <div className="flex justify-end">
         <Button onClick={handleSave} variant="primary">
