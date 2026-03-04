@@ -88,7 +88,9 @@ export function generateBidPDF(bid: Bid, companySettings: CompanySettings): jsPD
   doc.setFont('helvetica', 'normal');
   addText(`Name: ${bid.customer.name}`, 15);
   addText(`Address: ${bid.customer.address}`, 15);
-  addText(`Phone: ${bid.customer.phone}`, 15);
+  if (bid.customer.phone) {
+    addText(`Phone: ${bid.customer.phone}`, 15);
+  }
   if (bid.customer.email) {
     addText(`Email: ${bid.customer.email}`, 15);
   }
@@ -265,8 +267,10 @@ export function generateCustomerPDF(bid: Bid, companySettings: CompanySettings):
   yPos += 6;
   doc.text(bid.customer.address, 15, yPos);
   yPos += 6;
-  doc.text(bid.customer.phone, 15, yPos);
-  yPos += 6;
+  if (bid.customer.phone) {
+    doc.text(bid.customer.phone, 15, yPos);
+    yPos += 6;
+  }
   if (bid.customer.email) {
     doc.text(bid.customer.email, 15, yPos);
     yPos += 6;
@@ -311,7 +315,7 @@ export function generateCustomerPDF(bid: Bid, companySettings: CompanySettings):
   if (bid.result.materials.items.length > 0) {
     workItems.push('All materials and supplies included');
     bid.result.materials.items.forEach(item => {
-      workItems.push(`  • ${item.name} (${item.quantity} gallons)`);
+      workItems.push(`  • ${item.name}`);
     });
   }
 

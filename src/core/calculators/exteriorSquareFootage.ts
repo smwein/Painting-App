@@ -24,7 +24,7 @@ export function calculateExteriorSqftAutoMeasurements(
  * Simple calculator with house SF, pricing option, and markup
  */
 export function calculateExteriorSquareFootage(
-  inputs: ExteriorSqftInputs,
+  inputs: ExteriorSqftInputs & { exteriorModifiers?: Record<string, boolean> },
   pricing: PricingSettings
 ): BidResult {
   // Sum rates for all selected pricing options
@@ -40,8 +40,19 @@ export function calculateExteriorSquareFootage(
   // Split base cost into labor and materials using configured ratio
   const laborPct = pricing.sqftLaborPct ?? 85;
   const matPct = 100 - laborPct;
-  const laborCost = baseCost * (laborPct / 100);
-  const baseMatCost = baseCost * (matPct / 100);
+  let laborCost = baseCost * (laborPct / 100);
+  let baseMatCost = baseCost * (matPct / 100);
+
+  // Apply exterior modifiers (respecting scope: labor, materials, or both)
+  if (inputs.exteriorModifiers && pricing.exteriorModifiers) {
+    for (const mod of pricing.exteriorModifiers) {
+      if (inputs.exteriorModifiers[mod.id]) {
+        const scope = mod.scope ?? 'labor';
+        if (scope === 'labor' || scope === 'both') laborCost *= mod.multiplier;
+        if (scope === 'materials' || scope === 'both') baseMatCost *= mod.multiplier;
+      }
+    }
+  }
 
   // Calculate auto-measurements
   const autoCalcs = calculateExteriorSqftAutoMeasurements(inputs.houseSquareFootage, pricing);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CompanyInfoSettings } from '../components/settings/CompanyInfoSettings';
-import { SimplePricingSettings } from '../components/settings/SimplePricingSettings';
+import { SimpleInteriorSettings } from '../components/settings/SimpleInteriorSettings';
+import { SimpleExteriorSettings } from '../components/settings/SimpleExteriorSettings';
 import { InteriorDetailedPricing } from '../components/settings/InteriorDetailedPricing';
 import { ExteriorDetailedPricing } from '../components/settings/ExteriorDetailedPricing';
 import { CustomLineItemsManager } from '../components/settings/CustomLineItemsManager';
@@ -11,7 +12,8 @@ import { UsersSettings } from '../components/settings/UsersSettings';
 
 type SettingsTab =
   | 'company'
-  | 'simple-pricing'
+  | 'simple-interior'
+  | 'simple-exterior'
   | 'interior-detailed-pricing'
   | 'exterior-detailed-pricing'
   | 'line-items'
@@ -37,10 +39,16 @@ export function Settings() {
             Company Info
           </TabButton>
           <TabButton
-            active={activeTab === 'simple-pricing'}
-            onClick={() => setActiveTab('simple-pricing')}
+            active={activeTab === 'simple-interior'}
+            onClick={() => setActiveTab('simple-interior')}
           >
-            Simple Pricing
+            Simple Interior
+          </TabButton>
+          <TabButton
+            active={activeTab === 'simple-exterior'}
+            onClick={() => setActiveTab('simple-exterior')}
+          >
+            Simple Exterior
           </TabButton>
           <TabButton
             active={activeTab === 'interior-detailed-pricing'}
@@ -90,7 +98,8 @@ export function Settings() {
       {/* Tab Content */}
       <div>
         {activeTab === 'company' && <CompanyInfoSettings />}
-        {activeTab === 'simple-pricing' && <SimplePricingSettings />}
+        {activeTab === 'simple-interior' && <SimpleInteriorSettings />}
+        {activeTab === 'simple-exterior' && <SimpleExteriorSettings />}
         {activeTab === 'interior-detailed-pricing' && <InteriorDetailedPricing />}
         {activeTab === 'exterior-detailed-pricing' && <ExteriorDetailedPricing />}
         {activeTab === 'line-items' && <CustomLineItemsManager />}

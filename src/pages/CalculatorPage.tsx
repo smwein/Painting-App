@@ -50,8 +50,8 @@ export function CalculatorPage() {
       return;
     }
 
-    if (!currentBidData.customer.name || !currentBidData.customer.address || !currentBidData.customer.phone) {
-      alert('Please fill in required customer information (name, address, phone).');
+    if (!currentBidData.customer.name || !currentBidData.customer.address) {
+      alert('Please fill in required customer information (name and address).');
       return;
     }
 
@@ -72,8 +72,8 @@ export function CalculatorPage() {
       return;
     }
 
-    if (!currentBidData.customer.name || !currentBidData.customer.address || !currentBidData.customer.phone) {
-      alert('Please fill in required customer information (name, address, phone).');
+    if (!currentBidData.customer.name || !currentBidData.customer.address) {
+      alert('Please fill in required customer information (name and address).');
       return;
     }
 
@@ -96,8 +96,8 @@ export function CalculatorPage() {
       return;
     }
 
-    if (!currentBidData.customer.name || !currentBidData.customer.address || !currentBidData.customer.phone) {
-      alert('Please fill in required customer information (name, address, phone).');
+    if (!currentBidData.customer.name || !currentBidData.customer.address) {
+      alert('Please fill in required customer information (name and address).');
       return;
     }
 

@@ -27,10 +27,10 @@ export function CustomerInfoSection({ register }: CustomerInfoSectionProps) {
         />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
-            label="Phone"
+            label="Phone (optional)"
             type="tel"
             placeholder="(555) 123-4567"
-            {...register('customer.phone', { required: true })}
+            {...register('customer.phone')}
           />
           <Input
             label="Email (optional)"

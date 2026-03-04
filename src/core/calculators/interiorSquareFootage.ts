@@ -25,7 +25,7 @@ export function calculateInteriorSqftAutoMeasurements(
  * Simple calculator with house SF, pricing option, house condition, and markup
  */
 export function calculateInteriorSquareFootage(
-  inputs: InteriorSqftInputs & { simpleModifiers?: Record<string, boolean> },
+  inputs: InteriorSqftInputs & { simpleModifiers?: Record<string, boolean>; interiorModifiers?: Record<string, boolean> },
   pricing: PricingSettings
 ): BidResult {
   // Use empty or furnished rates based on houseCondition
@@ -56,6 +56,17 @@ export function calculateInteriorSquareFootage(
     for (const mod of pricing.simpleInteriorModifiers) {
       if (inputs.simpleModifiers[mod.id]) {
         const scope = mod.scope ?? 'both';
+        if (scope === 'labor' || scope === 'both') laborCost *= mod.multiplier;
+        if (scope === 'materials' || scope === 'both') baseMatCost *= mod.multiplier;
+      }
+    }
+  }
+
+  // Apply interior detailed modifiers (respecting scope: labor, materials, or both)
+  if (inputs.interiorModifiers && pricing.interiorModifiers) {
+    for (const mod of pricing.interiorModifiers) {
+      if (inputs.interiorModifiers[mod.id]) {
+        const scope = mod.scope ?? 'labor';
         if (scope === 'labor' || scope === 'both') laborCost *= mod.multiplier;
         if (scope === 'materials' || scope === 'both') baseMatCost *= mod.multiplier;
       }
