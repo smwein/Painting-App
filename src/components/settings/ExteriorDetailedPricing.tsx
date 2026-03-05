@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -70,6 +70,41 @@ function SortableLineItemRow({ itemId, children }: { itemId: string; children: (
   );
 }
 
+function SortableSettingsCard({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative',
+    zIndex: isDragging ? 10 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div className="relative">
+        <button
+          {...attributes}
+          {...listeners}
+          className="absolute top-3 left-3 touch-none cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 text-xl px-1 z-10"
+          title="Drag to reorder section"
+        >{'\u2807'}</button>
+        <div className="pl-8">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const EXT_DETAILED_SECTION_IDS = [
+  'extd-multipliers',
+  'extd-line-item-sections',
+  'extd-modifiers',
+  'extd-paint-prices',
+] as const;
+
+const DEFAULT_EXT_DETAILED_ORDER = [...EXT_DETAILED_SECTION_IDS];
+
 const UNIT_OPTIONS = ['sqft', 'lf', 'each', 'hour', 'dollars'] as const;
 
 interface AddForm {
@@ -108,6 +143,13 @@ export function ExteriorDetailedPricing() {
 
   // Add line item forms per section
   const [addForms, setAddForms] = useState<Record<string, AddForm>>({});
+
+  // Section order for top-level card drag-and-drop
+  const sectionOrder = useMemo(
+    () => settings.pricing.settingsPageSectionOrder?.exteriorDetailed ?? DEFAULT_EXT_DETAILED_ORDER,
+    [settings.pricing.settingsPageSectionOrder?.exteriorDetailed]
+  );
+  const [localSectionOrder, setLocalSectionOrder] = useState<string[]>(sectionOrder);
 
   const handleAddModifier = () => {
     const name = newModName.trim();
@@ -152,6 +194,21 @@ export function ExteriorDetailedPricing() {
       exteriorMultipliers: extMultipliers,
     });
     alert('Exterior detailed pricing settings saved successfully!');
+  };
+
+  const handleCardDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = localSectionOrder.indexOf(active.id as string);
+    const newIndex = localSectionOrder.indexOf(over.id as string);
+    const newOrder = arrayMove(localSectionOrder, oldIndex, newIndex);
+    setLocalSectionOrder(newOrder);
+    updatePricing({
+      settingsPageSectionOrder: {
+        ...settings.pricing.settingsPageSectionOrder,
+        exteriorDetailed: newOrder,
+      },
+    });
   };
 
   const startEditSection = (id: string, name: string) => {
@@ -383,13 +440,8 @@ export function ExteriorDetailedPricing() {
     );
   };
 
-  return (
-    <div className="space-y-6">
-      <p className="text-sm text-gray-600">
-        Edit section names (click to edit), adjust rates and names for each line item, reorder sections, and configure modifier scopes. Line item name/rate changes save on blur; use Save button for modifiers, multipliers, and paint prices.
-      </p>
-
-      {/* Auto-Calculate Multipliers */}
+  const sectionContent: Record<string, React.ReactNode> = {
+    'extd-multipliers': (
       <Card>
         <CardHeader>
           <CardTitle>Auto-Calculate Multipliers</CardTitle>
@@ -416,7 +468,8 @@ export function ExteriorDetailedPricing() {
           </div>
         </CardContent>
       </Card>
-
+    ),
+    'extd-line-item-sections': (
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSectionDragEnd}>
         <SortableContext items={exteriorSections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-4">
@@ -428,8 +481,8 @@ export function ExteriorDetailedPricing() {
           </div>
         </SortableContext>
       </DndContext>
-
-      {/* Exterior Modifiers */}
+    ),
+    'extd-modifiers': (
       <Card>
         <CardHeader>
           <CardTitle>Exterior Modifiers</CardTitle>
@@ -516,8 +569,8 @@ export function ExteriorDetailedPricing() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Exterior Paint Prices */}
+    ),
+    'extd-paint-prices': (
       <Card>
         <CardHeader>
           <CardTitle>Exterior Paint Prices (per gallon)</CardTitle>
@@ -553,6 +606,24 @@ export function ExteriorDetailedPricing() {
           </div>
         </CardContent>
       </Card>
+    ),
+  };
+
+  return (
+    <div className="space-y-6">
+      <p className="text-sm text-gray-600">
+        Edit section names (click to edit), adjust rates and names for each line item, reorder sections, and configure modifier scopes. Line item name/rate changes save on blur; use Save button for modifiers, multipliers, and paint prices.
+      </p>
+
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCardDragEnd}>
+        <SortableContext items={localSectionOrder} strategy={verticalListSortingStrategy}>
+          {localSectionOrder.map((sectionId) => (
+            <SortableSettingsCard key={sectionId} id={sectionId}>
+              {sectionContent[sectionId]}
+            </SortableSettingsCard>
+          ))}
+        </SortableContext>
+      </DndContext>
 
       <div className="flex justify-end">
         <Button onClick={handleSave} variant="primary">
