@@ -379,25 +379,80 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
       {/* Results */}
       {result && result.total > 0 && (
         <>
-          {/* Per-room breakdown */}
+          {/* Bid Total (Margin Calculator) - moved above Room Breakdown */}
+          <Card className="bg-primary-50 border-primary-200">
+            <CardHeader>
+              <CardTitle>Bid Total</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Labor Cost</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">
+                    ({result.total > 0 ? ((result.labor / result.total) * 100).toFixed(0) : 0}%)
+                  </span>
+                  <span className="text-lg font-semibold text-gray-800">${result.labor.toFixed(2)}</span>
+                </div>
+              </div>
+              {result.materials.totalCost > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Material Cost</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">
+                      ({result.total > 0 ? ((result.materials.totalCost / result.total) * 100).toFixed(0) : 0}%)
+                    </span>
+                    <span className="text-lg font-semibold text-gray-800">${result.materials.totalCost.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Gross Profit</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-green-600 font-medium">
+                    ({result.total > 0 ? ((result.profit / result.total) * 100).toFixed(0) : 0}%)
+                  </span>
+                  <span className="text-lg font-semibold text-green-700">${result.profit.toFixed(2)}</span>
+                </div>
+              </div>
+              <div className="border-t border-primary-200 pt-3 flex justify-between items-center">
+                <span className="text-base font-semibold text-gray-700">Retail Total</span>
+                <span className="text-3xl font-bold text-primary-700">${result.total.toFixed(2)}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Per-room breakdown with paint gallons */}
           <Card>
             <CardHeader>
               <CardTitle>Room Breakdown</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {result.roomResults.map((rr) => (
-                  <div key={rr.roomId} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
-                    <span className="text-sm font-medium text-gray-700">{rr.roomLabel}</span>
-                    <div className="text-right">
-                      <div className="text-sm font-semibold text-gray-800">${rr.subtotal.toFixed(2)} cost</div>
-                      <div className="text-xs text-gray-500">
-                        ${rr.labor.toFixed(2)} labor
-                        {rr.materials.totalCost > 0 && ` + $${rr.materials.totalCost.toFixed(2)} paint`}
+                {result.roomResults.map((rr) => {
+                  const room = rooms.find((r) => r.id === rr.roomId);
+                  const roomGallons = room ? (
+                    room.wallSqft / perRoomCoverage.wallSqftPerGallon +
+                    room.ceilingSqft / perRoomCoverage.ceilingSqftPerGallon +
+                    room.trimLF / perRoomCoverage.trimLfPerGallon
+                  ) : 0;
+                  return (
+                    <div key={rr.roomId} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                      <span className="text-sm font-medium text-gray-700">{rr.roomLabel}</span>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-gray-800">${rr.subtotal.toFixed(2)} cost</div>
+                        <div className="text-xs text-gray-500">
+                          ${rr.labor.toFixed(2)} labor
+                          {rr.materials.totalCost > 0 && ` + $${rr.materials.totalCost.toFixed(2)} paint`}
+                        </div>
+                        {roomGallons > 0 && (
+                          <div className="text-xs text-yellow-700 font-medium">
+                            {roomGallons.toFixed(1)} gal estimated
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -455,48 +510,6 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
           )}
 
           <JobDurationEstimate laborCost={result.labor} pricing={pricing} />
-
-          {/* Grand Total */}
-          <Card className="bg-primary-50 border-primary-200">
-            <CardHeader>
-              <CardTitle>Bid Total</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Labor Cost</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">
-                    ({result.total > 0 ? ((result.labor / result.total) * 100).toFixed(0) : 0}%)
-                  </span>
-                  <span className="text-lg font-semibold text-gray-800">${result.labor.toFixed(2)}</span>
-                </div>
-              </div>
-              {result.materials.totalCost > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Material Cost</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400">
-                      ({result.total > 0 ? ((result.materials.totalCost / result.total) * 100).toFixed(0) : 0}%)
-                    </span>
-                    <span className="text-lg font-semibold text-gray-800">${result.materials.totalCost.toFixed(2)}</span>
-                  </div>
-                </div>
-              )}
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Gross Profit</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-green-600 font-medium">
-                    ({result.total > 0 ? ((result.profit / result.total) * 100).toFixed(0) : 0}%)
-                  </span>
-                  <span className="text-lg font-semibold text-green-700">${result.profit.toFixed(2)}</span>
-                </div>
-              </div>
-              <div className="border-t border-primary-200 pt-3 flex justify-between items-center">
-                <span className="text-base font-semibold text-gray-700">Retail Total</span>
-                <span className="text-3xl font-bold text-primary-700">${result.total.toFixed(2)}</span>
-              </div>
-            </CardContent>
-          </Card>
         </>
       )}
 

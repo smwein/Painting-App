@@ -111,7 +111,7 @@ function SectionSubtotal({ total }: { total: number }) {
 }
 
 export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailedProps) {
-  const { settings, updateSection, toggleHiddenLineItem } = useSettingsStore();
+  const { settings, updateSection } = useSettingsStore();
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'admin';
   const pricing = settings.pricing;
@@ -120,18 +120,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
 
   const HideableField = ({ lineItemId, children }: { lineItemId: string; children: React.ReactNode }) => {
     if (isHidden(lineItemId)) return null;
-    return (
-      <div className="relative">
-        {isAdmin && (
-          <button
-            onClick={() => toggleHiddenLineItem(lineItemId)}
-            className="absolute -top-1 -right-1 z-10 text-red-400 hover:text-red-600 text-xs bg-white rounded-full w-4 h-4 flex items-center justify-center border border-red-200 shadow-sm"
-            title="Hide this field"
-          >&#10005;</button>
-        )}
-        {children}
-      </div>
-    );
+    return <>{children}</>;
   };
 
   const getRate = (lineItemId: string): number => {
