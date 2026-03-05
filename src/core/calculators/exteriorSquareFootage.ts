@@ -33,6 +33,12 @@ export function calculateExteriorSquareFootage(
     switch (option) {
       case 'full-exterior': totalRate += pricing.exteriorSqft.fullExterior; break;
       case 'trim-only': totalRate += pricing.exteriorSqft.trimOnly; break;
+      default: {
+        // Custom sqft line item — look up rate from pricing.lineItems
+        const customItem = pricing.lineItems.find((li) => li.id === option && li.category === 'ext-sqft-pricing');
+        if (customItem) totalRate += customItem.rate;
+        break;
+      }
     }
   }
   const baseCost = inputs.houseSquareFootage * totalRate;

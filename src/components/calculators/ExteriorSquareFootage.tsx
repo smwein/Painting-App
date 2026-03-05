@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
 import { CustomerInfoSection } from './shared/CustomerInfoSection';
 import { MarkupSelector } from './shared/MarkupSelector';
 import { useSettingsStore } from '../../store/settingsStore';
-import type { ExteriorSqftInputs, ExteriorSqftOption, MarkupPercentage } from '../../types/calculator.types';
+import type { ExteriorSqftInputs, MarkupPercentage } from '../../types/calculator.types';
 import type { CustomerInfo, Bid } from '../../types/bid.types';
 import { JobDurationEstimate } from '../results/JobDurationEstimate';
 import {
@@ -24,7 +24,7 @@ interface ExteriorSquareFootageProps {
   loadedBid?: Bid;
 }
 
-const ALL_OPTIONS: { value: ExteriorSqftOption; label: string }[] = [
+const BUILT_IN_OPTIONS: { value: string; label: string }[] = [
   { value: 'full-exterior', label: 'Full Exterior' },
   { value: 'trim-only', label: 'Trim Only' },
 ];
@@ -33,9 +33,36 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
   const { settings } = useSettingsStore();
   const pricing = settings.pricing;
 
-  const [selectedOptions, setSelectedOptions] = useState<ExteriorSqftOption[]>(['full-exterior']);
+  const [selectedOptions, setSelectedOptions] = useState<string[]>(['full-exterior']);
   const [customItemValues, setCustomItemValues] = useState<Record<string, number>>({});
   const [exteriorModifiers, setExteriorModifiers] = useState<Record<string, boolean>>({});
+
+  const rateMap: Record<string, number> = {
+    'full-exterior': pricing.exteriorSqft.fullExterior,
+    'trim-only': pricing.exteriorSqft.trimOnly,
+  };
+
+  // Custom sqft line items for pricing options
+  const customSqftItems = useMemo(() =>
+    pricing.lineItems
+      .filter((li) => li.category === 'ext-sqft-pricing')
+      .sort((a, b) => a.order - b.order),
+    [pricing.lineItems]
+  );
+
+  const allOptions = useMemo(() => {
+    const builtIn = BUILT_IN_OPTIONS.map(({ value, label }) => ({
+      value,
+      label,
+      rate: rateMap[value] ?? 0,
+    }));
+    const custom = customSqftItems.map((item) => ({
+      value: item.id,
+      label: item.name,
+      rate: item.rate,
+    }));
+    return [...builtIn, ...custom];
+  }, [customSqftItems, pricing.exteriorSqft.fullExterior, pricing.exteriorSqft.trimOnly]);
 
   // Custom simple-pricing sections with their line items
   const customSections = useMemo(() => {
@@ -59,7 +86,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
   // Pre-fill form when loading a saved bid
   useEffect(() => {
     if (loadedBid && loadedBid.calculatorType === 'exterior-sqft') {
-      const inputs = loadedBid.inputs as ExteriorSqftInputs & { pricingOption?: ExteriorSqftOption };
+      const inputs = loadedBid.inputs as ExteriorSqftInputs & { pricingOption?: string };
       reset({
         customer: loadedBid.customer,
         houseSquareFootage: inputs.houseSquareFootage,
@@ -71,9 +98,15 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
     }
   }, [loadedBid, reset]);
 
-  const handleOptionToggle = (option: ExteriorSqftOption, checked: boolean) => {
+  const handleOptionToggle = (option: string, checked: boolean) => {
     if (checked) {
-      setSelectedOptions((prev) => [...prev.filter((o) => o !== option), option]);
+      if (option === 'full-exterior') {
+        // Full Exterior selected: uncheck everything else
+        setSelectedOptions(['full-exterior']);
+      } else {
+        // Non-full-exterior selected: remove full-exterior, add this one
+        setSelectedOptions((prev) => [...prev.filter((o) => o !== option && o !== 'full-exterior'), option]);
+      }
     } else {
       setSelectedOptions((prev) => prev.filter((o) => o !== option));
     }
@@ -82,11 +115,6 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
   const houseSquareFootage = watch('houseSquareFootage');
   const markup = watch('markup');
   const customer = watch('customer');
-
-  const rateMap: Record<ExteriorSqftOption, number> = {
-    'full-exterior': pricing.exteriorSqft.fullExterior,
-    'trim-only': pricing.exteriorSqft.trimOnly,
-  };
 
   const result = useMemo(() => {
     if (!houseSquareFootage || houseSquareFootage <= 0 || selectedOptions.length === 0) return null;
@@ -141,24 +169,29 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
           <CardTitle>Pricing Options</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <p className="text-xs text-gray-500 mb-2">Select one or more options.</p>
-          {ALL_OPTIONS.map(({ value, label }) => {
+          <p className="text-xs text-gray-500 mb-2">Select one or more options. Full Exterior is exclusive.</p>
+          {allOptions.map(({ value, label, rate }) => {
             const checked = selectedOptions.includes(value);
+            const isFullExterior = value === 'full-exterior';
+            const fullExteriorSelected = selectedOptions.includes('full-exterior');
+            const disabled = !isFullExterior && fullExteriorSelected;
             return (
               <label
                 key={value}
-                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                  checked ? 'bg-primary-50 border border-primary-200' : 'hover:bg-gray-50 border border-transparent'
+                className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                  disabled ? 'opacity-50 cursor-not-allowed' :
+                  checked ? 'bg-primary-50 border border-primary-200 cursor-pointer' : 'hover:bg-gray-50 border border-transparent cursor-pointer'
                 }`}
               >
                 <input
                   type="checkbox"
                   checked={checked}
+                  disabled={disabled}
                   onChange={(e) => handleOptionToggle(value, e.target.checked)}
                   className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
                 />
                 <span className="text-sm font-medium text-gray-700 flex-1">{label}</span>
-                <span className="text-sm text-gray-500">${rateMap[value].toFixed(2)}/sqft</span>
+                <span className="text-sm text-gray-500">${rate.toFixed(2)}/sqft</span>
               </label>
             );
           })}

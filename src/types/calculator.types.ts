@@ -17,8 +17,8 @@ export type CalculatorType =
 // Interior Square Footage pricing options
 export type InteriorSqftOption = 'walls-only' | 'trim-only' | 'ceilings-only' | 'complete';
 
-// Exterior Square Footage pricing options
-export type ExteriorSqftOption = 'full-exterior' | 'trim-only';
+// Exterior Square Footage pricing options (string to support custom sqft line items)
+export type ExteriorSqftOption = string;
 
 // Material breakdown for a single item
 export interface MaterialItem {

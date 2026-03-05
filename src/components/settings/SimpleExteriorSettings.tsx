@@ -227,7 +227,7 @@ export function SimpleExteriorSettings() {
     addLineItem({
       name: form.name.trim(),
       rate,
-      unit: form.unit || 'each',
+      unit: sectionId === 'ext-sqft-pricing' ? 'sqft' : (form.unit || 'each'),
       category: sectionId,
       isDefault: false,
     });
@@ -285,11 +285,72 @@ export function SimpleExteriorSettings() {
         <CardHeader>
           <CardTitle>Exterior Square Footage Pricing (per sq ft)</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input label="Full Exterior" type="number" min="0" step="0.01" value={formData.exteriorSqft.fullExterior}
-            onChange={(e) => handleNumberChange('exteriorSqft.fullExterior', parseFloat(e.target.value))} />
-          <Input label="Trim Only" type="number" min="0" step="0.01" value={formData.exteriorSqft.trimOnly}
-            onChange={(e) => handleNumberChange('exteriorSqft.trimOnly', parseFloat(e.target.value))} />
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input label="Full Exterior" type="number" min="0" step="0.01" value={formData.exteriorSqft.fullExterior}
+              onChange={(e) => handleNumberChange('exteriorSqft.fullExterior', parseFloat(e.target.value))} />
+            <Input label="Trim Only" type="number" min="0" step="0.01" value={formData.exteriorSqft.trimOnly}
+              onChange={(e) => handleNumberChange('exteriorSqft.trimOnly', parseFloat(e.target.value))} />
+          </div>
+
+          {/* Custom sqft line items */}
+          {settings.pricing.lineItems
+            .filter((i) => i.category === 'ext-sqft-pricing')
+            .sort((a, b) => a.order - b.order)
+            .map((item) => (
+              <div key={item.id} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  defaultValue={item.name}
+                  onBlur={(e) => {
+                    const val = e.target.value.trim();
+                    if (val && val !== item.name) updateLineItem(item.id, { name: val });
+                  }}
+                  className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  defaultValue={item.rate}
+                  onBlur={(e) => {
+                    const val = parseFloat(e.target.value);
+                    if (!isNaN(val) && val !== item.rate) updateLineItem(item.id, { rate: val });
+                  }}
+                  className="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <span className="text-xs text-gray-500">$/sqft</span>
+                <button
+                  onClick={() => deleteLineItem(item.id)}
+                  className="text-red-400 hover:text-red-600 text-sm font-bold px-1"
+                  title="Delete item"
+                >{'\u2715'}</button>
+              </div>
+            ))}
+
+          {/* Add new sqft line item */}
+          <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+            <input
+              type="text"
+              placeholder="e.g., Walls Only"
+              value={(addItemForms['ext-sqft-pricing'] ?? { name: '' }).name}
+              onChange={(e) => updateAddItemForm('ext-sqft-pricing', { name: e.target.value })}
+              className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="Rate"
+              value={(addItemForms['ext-sqft-pricing'] ?? { rate: '' }).rate}
+              onChange={(e) => updateAddItemForm('ext-sqft-pricing', { rate: e.target.value })}
+              className="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+            <button
+              onClick={() => handleAddItem('ext-sqft-pricing')}
+              className="px-2 py-1 text-sm text-primary-700 border border-primary-300 rounded hover:bg-primary-50 font-medium"
+            >+ Add</button>
+          </div>
         </CardContent>
       </Card>
     ),
