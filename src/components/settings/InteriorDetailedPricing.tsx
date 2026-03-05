@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -21,6 +21,32 @@ import { Input } from '../common/Input';
 import { Button } from '../common/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
 import type { ModifierScope, LineItemConfig, SectionConfig } from '../../types/settings.types';
+
+function SortableSettingsCard({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative',
+    zIndex: isDragging ? 10 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div className="relative">
+        <button
+          {...attributes}
+          {...listeners}
+          className="absolute top-3 left-3 touch-none cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 text-xl px-1 z-10"
+          title="Drag to reorder section"
+        >{'\u2807'}</button>
+        <div className="pl-8">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function SortableSectionRow({ section, children }: { section: SectionConfig; children: (props: { dragHandleProps: React.HTMLAttributes<HTMLElement> }) => React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
@@ -78,6 +104,17 @@ interface AddForm {
   unit: LineItemConfig['unit'];
 }
 
+const INT_DETAILED_SECTION_IDS = [
+  'intd-multipliers',
+  'intd-furnished-rates',
+  'intd-empty-rates',
+  'intd-line-item-sections',
+  'intd-modifiers',
+  'intd-paint-prices',
+] as const;
+
+const DEFAULT_INT_DETAILED_ORDER = [...INT_DETAILED_SECTION_IDS];
+
 export function InteriorDetailedPricing() {
   const { settings, updatePricing, updateSection, updateLineItem, deleteLineItem, addLineItem, deleteSection } = useSettingsStore();
   const pricing = settings.pricing;
@@ -117,6 +154,13 @@ export function InteriorDetailedPricing() {
   // Add line item forms per section
   const [addForms, setAddForms] = useState<Record<string, AddForm>>({});
 
+  // Top-level card section order
+  const sectionOrder = useMemo(
+    () => settings.pricing.settingsPageSectionOrder?.interiorDetailed ?? [...DEFAULT_INT_DETAILED_ORDER],
+    [settings.pricing.settingsPageSectionOrder?.interiorDetailed]
+  );
+  const [localSectionOrder, setLocalSectionOrder] = useState<string[]>(sectionOrder);
+
   const handleAddModifier = () => {
     const name = newModName.trim();
     const multiplier = parseFloat(newModMultiplier);
@@ -142,6 +186,21 @@ export function InteriorDetailedPricing() {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  const handleCardDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = localSectionOrder.indexOf(active.id as string);
+    const newIndex = localSectionOrder.indexOf(over.id as string);
+    const newOrder = arrayMove(localSectionOrder, oldIndex, newIndex);
+    setLocalSectionOrder(newOrder);
+    updatePricing({
+      settingsPageSectionOrder: {
+        ...settings.pricing.settingsPageSectionOrder,
+        interiorDetailed: newOrder,
+      },
+    });
+  };
 
   const handleSectionDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -393,13 +452,8 @@ export function InteriorDetailedPricing() {
     );
   };
 
-  return (
-    <div className="space-y-6">
-      <p className="text-sm text-gray-600">
-        Edit section names (click to edit), adjust rates and names for each line item, reorder sections, and configure modifier scopes. Line item name/rate changes save on blur; use Save button for modifiers, multipliers, and paint prices.
-      </p>
-
-      {/* Auto-Calculate Multipliers */}
+  const sectionContent: Record<string, React.ReactNode> = {
+    'intd-multipliers': (
       <Card>
         <CardHeader>
           <CardTitle>Auto-Calculate Multipliers</CardTitle>
@@ -433,64 +487,64 @@ export function InteriorDetailedPricing() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Interior Detailed — Furnished vs Empty Rates */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Interior Furnished Rates</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-xs text-gray-500">Rates used when house is set to "Furnished".</p>
-            <Input
-              label="Wall Sq Ft ($/sqft)"
-              type="number" min="0" step="0.01"
-              value={furnishedRates.wallSqft}
-              onChange={(e) => setFurnishedRates((p) => ({ ...p, wallSqft: parseFloat(e.target.value) || 0 }))}
-            />
-            <Input
-              label="Ceiling Sq Ft ($/sqft)"
-              type="number" min="0" step="0.01"
-              value={furnishedRates.ceilingSqft}
-              onChange={(e) => setFurnishedRates((p) => ({ ...p, ceilingSqft: parseFloat(e.target.value) || 0 }))}
-            />
-            <Input
-              label="Trim LF ($/LF)"
-              type="number" min="0" step="0.01"
-              value={furnishedRates.trimLF}
-              onChange={(e) => setFurnishedRates((p) => ({ ...p, trimLF: parseFloat(e.target.value) || 0 }))}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Interior Empty Rates</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-xs text-gray-500">Rates used when house is set to "Empty".</p>
-            <Input
-              label="Wall Sq Ft ($/sqft)"
-              type="number" min="0" step="0.01"
-              value={emptyRates.wallSqft}
-              onChange={(e) => setEmptyRates((p) => ({ ...p, wallSqft: parseFloat(e.target.value) || 0 }))}
-            />
-            <Input
-              label="Ceiling Sq Ft ($/sqft)"
-              type="number" min="0" step="0.01"
-              value={emptyRates.ceilingSqft}
-              onChange={(e) => setEmptyRates((p) => ({ ...p, ceilingSqft: parseFloat(e.target.value) || 0 }))}
-            />
-            <Input
-              label="Trim LF ($/LF)"
-              type="number" min="0" step="0.01"
-              value={emptyRates.trimLF}
-              onChange={(e) => setEmptyRates((p) => ({ ...p, trimLF: parseFloat(e.target.value) || 0 }))}
-            />
-          </CardContent>
-        </Card>
-      </div>
-
+    ),
+    'intd-furnished-rates': (
+      <Card>
+        <CardHeader>
+          <CardTitle>Interior Furnished Rates</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-gray-500">Rates used when house is set to "Furnished".</p>
+          <Input
+            label="Wall Sq Ft ($/sqft)"
+            type="number" min="0" step="0.01"
+            value={furnishedRates.wallSqft}
+            onChange={(e) => setFurnishedRates((p) => ({ ...p, wallSqft: parseFloat(e.target.value) || 0 }))}
+          />
+          <Input
+            label="Ceiling Sq Ft ($/sqft)"
+            type="number" min="0" step="0.01"
+            value={furnishedRates.ceilingSqft}
+            onChange={(e) => setFurnishedRates((p) => ({ ...p, ceilingSqft: parseFloat(e.target.value) || 0 }))}
+          />
+          <Input
+            label="Trim LF ($/LF)"
+            type="number" min="0" step="0.01"
+            value={furnishedRates.trimLF}
+            onChange={(e) => setFurnishedRates((p) => ({ ...p, trimLF: parseFloat(e.target.value) || 0 }))}
+          />
+        </CardContent>
+      </Card>
+    ),
+    'intd-empty-rates': (
+      <Card>
+        <CardHeader>
+          <CardTitle>Interior Empty Rates</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-gray-500">Rates used when house is set to "Empty".</p>
+          <Input
+            label="Wall Sq Ft ($/sqft)"
+            type="number" min="0" step="0.01"
+            value={emptyRates.wallSqft}
+            onChange={(e) => setEmptyRates((p) => ({ ...p, wallSqft: parseFloat(e.target.value) || 0 }))}
+          />
+          <Input
+            label="Ceiling Sq Ft ($/sqft)"
+            type="number" min="0" step="0.01"
+            value={emptyRates.ceilingSqft}
+            onChange={(e) => setEmptyRates((p) => ({ ...p, ceilingSqft: parseFloat(e.target.value) || 0 }))}
+          />
+          <Input
+            label="Trim LF ($/LF)"
+            type="number" min="0" step="0.01"
+            value={emptyRates.trimLF}
+            onChange={(e) => setEmptyRates((p) => ({ ...p, trimLF: parseFloat(e.target.value) || 0 }))}
+          />
+        </CardContent>
+      </Card>
+    ),
+    'intd-line-item-sections': (
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSectionDragEnd}>
         <SortableContext items={interiorSections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-4">
@@ -502,8 +556,8 @@ export function InteriorDetailedPricing() {
           </div>
         </SortableContext>
       </DndContext>
-
-      {/* Interior Modifiers */}
+    ),
+    'intd-modifiers': (
       <Card>
         <CardHeader>
           <CardTitle>Interior Modifiers</CardTitle>
@@ -590,8 +644,8 @@ export function InteriorDetailedPricing() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Interior Paint Prices */}
+    ),
+    'intd-paint-prices': (
       <Card>
         <CardHeader>
           <CardTitle>Interior Paint Prices (per gallon)</CardTitle>
@@ -627,6 +681,24 @@ export function InteriorDetailedPricing() {
           </div>
         </CardContent>
       </Card>
+    ),
+  };
+
+  return (
+    <div className="space-y-6">
+      <p className="text-sm text-gray-600">
+        Edit section names (click to edit), adjust rates and names for each line item, reorder sections, and configure modifier scopes. Line item name/rate changes save on blur; use Save button for modifiers, multipliers, and paint prices.
+      </p>
+
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCardDragEnd}>
+        <SortableContext items={localSectionOrder} strategy={verticalListSortingStrategy}>
+          {localSectionOrder.map((sectionId) => (
+            <SortableSettingsCard key={sectionId} id={sectionId}>
+              {sectionContent[sectionId]}
+            </SortableSettingsCard>
+          ))}
+        </SortableContext>
+      </DndContext>
 
       <div className="flex justify-end">
         <Button onClick={handleSave} variant="primary">

@@ -162,6 +162,8 @@ export interface PricingSettings {
     simpleInterior?: string[];
     simpleExterior?: string[];
     perRoom?: string[];
+    interiorDetailed?: string[];
+    exteriorDetailed?: string[];
   };
 
   // Dynamic configuration
