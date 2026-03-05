@@ -151,6 +151,13 @@ export interface PricingSettings {
     trim: number;
   };
 
+  // Per Room paint coverage rates (sqft/LF per gallon)
+  perRoomCoverage?: {
+    wallSqftPerGallon: number;
+    ceilingSqftPerGallon: number;
+    trimLfPerGallon: number;
+  };
+
   // Hidden line items (admins can remove individual fields from default sections)
   hiddenLineItems?: string[];
 

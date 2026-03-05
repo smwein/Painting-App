@@ -31,6 +31,7 @@ const SECTION_IDS = [
   'pr-furnished',
   'pr-empty',
   'pr-multipliers',
+  'pr-coverage',
   'pr-builtin-rooms',
   'pr-custom-rooms',
 ] as const;
@@ -90,6 +91,10 @@ export function PerRoomSettings() {
   // Local state for per-room multipliers
   const [multipliers, setMultipliers] = useState(
     pricing.perRoomMultipliers ?? { wall: 1.0, ceiling: 0.31, trim: 0.11 }
+  );
+
+  const [coverage, setCoverage] = useState(
+    pricing.perRoomCoverage ?? { wallSqftPerGallon: 400, ceilingSqftPerGallon: 400, trimLfPerGallon: 200 }
   );
 
   // Add line item forms per section
@@ -240,6 +245,7 @@ export function PerRoomSettings() {
       interiorDetailedFurnishedRates: furnishedRates,
       interiorDetailedEmptyRates: emptyRates,
       perRoomMultipliers: multipliers,
+      perRoomCoverage: coverage,
     });
     alert('Per Room settings saved successfully!');
   };
@@ -336,6 +342,38 @@ export function PerRoomSettings() {
               value={multipliers.trim}
               onChange={(e) => setMultipliers((prev) => ({ ...prev, trim: parseFloat(e.target.value) || 0 }))}
               helperText="Room SF × this = Trim LF"
+            />
+          </div>
+        </CardContent>
+      </Card>
+    ),
+    'pr-coverage': (
+      <Card>
+        <CardHeader>
+          <CardTitle>Per Room Paint Coverage Rates</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-gray-500">
+            How many square feet or linear feet one gallon of paint covers. Used to estimate total paint needed.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Input
+              label="Wall Sq Ft per Gallon"
+              type="number" min="1" step="1"
+              value={coverage.wallSqftPerGallon}
+              onChange={(e) => setCoverage((prev) => ({ ...prev, wallSqftPerGallon: parseFloat(e.target.value) || 400 }))}
+            />
+            <Input
+              label="Ceiling Sq Ft per Gallon"
+              type="number" min="1" step="1"
+              value={coverage.ceilingSqftPerGallon}
+              onChange={(e) => setCoverage((prev) => ({ ...prev, ceilingSqftPerGallon: parseFloat(e.target.value) || 400 }))}
+            />
+            <Input
+              label="Trim LF per Gallon"
+              type="number" min="1" step="1"
+              value={coverage.trimLfPerGallon}
+              onChange={(e) => setCoverage((prev) => ({ ...prev, trimLfPerGallon: parseFloat(e.target.value) || 200 }))}
             />
           </div>
         </CardContent>

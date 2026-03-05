@@ -132,6 +132,27 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
     return calc;
   }, [rooms, markup, customer, pricing, onResultChange, customItemValues]);
 
+  const totals = useMemo(() => {
+    let wallSqft = 0, ceilingSqft = 0, trimLF = 0, doors = 0;
+    for (const room of rooms) {
+      wallSqft += room.wallSqft;
+      ceilingSqft += room.ceilingSqft;
+      trimLF += room.trimLF;
+      doors += room.doors;
+    }
+    return { wallSqft, ceilingSqft, trimLF, doors };
+  }, [rooms]);
+
+  const perRoomCoverage = pricing.perRoomCoverage ?? { wallSqftPerGallon: 400, ceilingSqftPerGallon: 400, trimLfPerGallon: 200 };
+
+  const gallonEstimate = useMemo(() => {
+    if (rooms.length === 0) return null;
+    const wallGallons = totals.wallSqft / perRoomCoverage.wallSqftPerGallon;
+    const ceilingGallons = totals.ceilingSqft / perRoomCoverage.ceilingSqftPerGallon;
+    const trimGallons = totals.trimLF / perRoomCoverage.trimLfPerGallon;
+    return { wallGallons, ceilingGallons, trimGallons, total: wallGallons + ceilingGallons + trimGallons };
+  }, [totals, perRoomCoverage, rooms.length]);
+
   return (
     <div className="space-y-6">
       <MarkupSelector register={register} />
@@ -380,6 +401,58 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
               </div>
             </CardContent>
           </Card>
+
+          {rooms.length > 0 && (
+            <Card className="bg-blue-50 border-blue-200">
+              <CardHeader>
+                <CardTitle>Total Measurements From All Rooms</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-xs text-gray-600 mb-1">Wall Sq Ft</div>
+                  <div className="text-xl font-bold text-blue-700">{totals.wallSqft.toLocaleString()}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-gray-600 mb-1">Ceiling Sq Ft</div>
+                  <div className="text-xl font-bold text-blue-700">{totals.ceilingSqft.toLocaleString()}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-gray-600 mb-1">Trim LF</div>
+                  <div className="text-xl font-bold text-blue-700">{totals.trimLF.toLocaleString()}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-gray-600 mb-1">Doors</div>
+                  <div className="text-xl font-bold text-blue-700">{totals.doors}</div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {gallonEstimate && gallonEstimate.total > 0 && (
+            <Card className="bg-yellow-50 border-yellow-200">
+              <CardHeader>
+                <CardTitle>Estimated Paint</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-xs text-gray-600 mb-1">Wall Paint</div>
+                  <div className="text-xl font-bold text-yellow-700">{gallonEstimate.wallGallons.toFixed(1)} gal</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-gray-600 mb-1">Ceiling Paint</div>
+                  <div className="text-xl font-bold text-yellow-700">{gallonEstimate.ceilingGallons.toFixed(1)} gal</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-gray-600 mb-1">Trim Paint</div>
+                  <div className="text-xl font-bold text-yellow-700">{gallonEstimate.trimGallons.toFixed(1)} gal</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-gray-600 mb-1">Total</div>
+                  <div className="text-xl font-bold text-yellow-800">{gallonEstimate.total.toFixed(1)} gal</div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <JobDurationEstimate laborCost={result.labor} pricing={pricing} />
 
