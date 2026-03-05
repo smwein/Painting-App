@@ -79,7 +79,7 @@ interface AddForm {
 }
 
 export function InteriorDetailedPricing() {
-  const { settings, updatePricing, updateSection, updateLineItem, deleteLineItem, addLineItem } = useSettingsStore();
+  const { settings, updatePricing, updateSection, updateLineItem, deleteLineItem, addLineItem, deleteSection } = useSettingsStore();
   const pricing = settings.pricing;
 
   const [interiorMods, setInteriorMods] = useState(
@@ -290,6 +290,13 @@ export function InteriorDetailedPricing() {
               />
               Start collapsed
             </label>
+            <button
+              onClick={() => {
+                if (confirm(`Delete section "${section.name}" and all its items?`)) deleteSection(section.id);
+              }}
+              className="text-xs text-red-400 hover:text-red-600 px-2 py-1 rounded border border-red-200 bg-white flex-shrink-0"
+              title="Delete section"
+            >{'\u2715'}</button>
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
