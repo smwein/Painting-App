@@ -38,6 +38,22 @@ function SortableSectionRow({ section, children }: { section: SectionConfig; chi
   );
 }
 
+function SortableModifierRow({ modId, children }: { modId: string; children: (props: { dragHandleProps: React.HTMLAttributes<HTMLElement> }) => React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: modId });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative',
+    zIndex: isDragging ? 10 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ dragHandleProps: { ...attributes, ...listeners } })}
+    </div>
+  );
+}
+
 function SortableLineItemRow({ itemId, children }: { itemId: string; children: (props: { dragHandleProps: React.HTMLAttributes<HTMLElement> }) => React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: itemId });
   const style: React.CSSProperties = {
@@ -118,6 +134,16 @@ export function ExteriorDetailedPricing() {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  const handleModifierDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const sorted = [...exteriorMods].sort((a, b) => a.order - b.order);
+    const oldIndex = sorted.findIndex((m) => m.id === active.id);
+    const newIndex = sorted.findIndex((m) => m.id === over.id);
+    const reordered = arrayMove(sorted, oldIndex, newIndex);
+    setExteriorMods(reordered.map((m, i) => ({ ...m, order: i + 1 })));
+  };
 
   const handleSave = () => {
     updatePricing({
@@ -402,49 +428,62 @@ export function ExteriorDetailedPricing() {
           <CardTitle>Exterior Modifiers</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {exteriorMods.sort((a, b) => a.order - b.order).map((mod) => (
-            <div key={mod.id} className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg bg-gray-50">
-              <div className="flex-1">
-                <input
-                  type="text"
-                  value={mod.name}
-                  onChange={(e) => setExteriorMods((prev) =>
-                    prev.map((m) => m.id === mod.id ? { ...m, name: e.target.value } : m)
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleModifierDragEnd}>
+            <SortableContext items={[...exteriorMods].sort((a, b) => a.order - b.order).map((m) => m.id)} strategy={verticalListSortingStrategy}>
+              {[...exteriorMods].sort((a, b) => a.order - b.order).map((mod) => (
+                <SortableModifierRow key={mod.id} modId={mod.id}>
+                  {({ dragHandleProps }) => (
+                    <div className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg bg-gray-50">
+                      <button
+                        {...dragHandleProps}
+                        className="touch-none cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 text-lg px-1 flex-shrink-0"
+                        title="Drag to reorder"
+                      >⠿</button>
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={mod.name}
+                          onChange={(e) => setExteriorMods((prev) =>
+                            prev.map((m) => m.id === mod.id ? { ...m, name: e.target.value } : m)
+                          )}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          placeholder="Modifier name"
+                        />
+                      </div>
+                      <div className="w-24">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={mod.multiplier}
+                          onChange={(e) => setExteriorMods((prev) =>
+                            prev.map((m) => m.id === mod.id ? { ...m, multiplier: parseFloat(e.target.value) || 1 } : m)
+                          )}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        />
+                      </div>
+                      <select
+                        className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        value={mod.scope}
+                        onChange={(e) => setExteriorMods((prev) =>
+                          prev.map((m) => m.id === mod.id ? { ...m, scope: e.target.value as ModifierScope } : m)
+                        )}
+                      >
+                        <option value="labor">Labor</option>
+                        <option value="materials">Materials</option>
+                        <option value="both">Both</option>
+                      </select>
+                      <button
+                        onClick={() => handleDeleteModifier(mod.id)}
+                        className="text-red-400 hover:text-red-600 text-sm font-bold px-1"
+                        title="Delete modifier"
+                      >✕</button>
+                    </div>
                   )}
-                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="Modifier name"
-                />
-              </div>
-              <div className="w-24">
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={mod.multiplier}
-                  onChange={(e) => setExteriorMods((prev) =>
-                    prev.map((m) => m.id === mod.id ? { ...m, multiplier: parseFloat(e.target.value) || 1 } : m)
-                  )}
-                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <select
-                className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                value={mod.scope}
-                onChange={(e) => setExteriorMods((prev) =>
-                  prev.map((m) => m.id === mod.id ? { ...m, scope: e.target.value as ModifierScope } : m)
-                )}
-              >
-                <option value="labor">Labor</option>
-                <option value="materials">Materials</option>
-                <option value="both">Both</option>
-              </select>
-              <button
-                onClick={() => handleDeleteModifier(mod.id)}
-                className="text-red-400 hover:text-red-600 text-sm font-bold px-1"
-                title="Delete modifier"
-              >✕</button>
-            </div>
-          ))}
+                </SortableModifierRow>
+              ))}
+            </SortableContext>
+          </DndContext>
           <div className="flex items-end gap-2 pt-2 border-t border-gray-100">
             <div className="flex-1">
               <Input label="New Modifier Name" type="text" value={newModName}

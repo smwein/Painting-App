@@ -161,6 +161,7 @@ export interface PricingSettings {
   settingsPageSectionOrder?: {
     simpleInterior?: string[];
     simpleExterior?: string[];
+    perRoom?: string[];
   };
 
   // Dynamic configuration
