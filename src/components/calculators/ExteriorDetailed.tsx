@@ -111,7 +111,7 @@ function SectionSubtotal({ total }: { total: number }) {
 }
 
 export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailedProps) {
-  const { settings, updateSection, deleteSection, toggleHiddenLineItem } = useSettingsStore();
+  const { settings, updateSection, toggleHiddenLineItem } = useSettingsStore();
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'admin';
   const pricing = settings.pricing;
@@ -166,16 +166,6 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
     reordered.forEach((section, index) => {
       updateSection(section.id, { order: index + 1 });
     });
-  };
-
-  const handleDeleteSection = (sectionId: string) => {
-    const section = pricing.sections.find((s) => s.id === sectionId);
-    if (!section) return;
-    const itemCount = pricing.lineItems.filter((i) => i.category === sectionId).length;
-    const msg = itemCount > 0
-      ? `Delete "${section.name}"? This section has ${itemCount} line item(s) that will also be removed.`
-      : `Delete "${section.name}"?`;
-    if (confirm(msg)) deleteSection(sectionId);
   };
 
   // State for custom section line item quantities
@@ -417,15 +407,9 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
               )}
               <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => toggleSection(sectionId)} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
-                {collapsed[sectionId] ? '+ Show' : '− Hide'}
-              </button>
-              <button
-                onClick={() => handleDeleteSection(sectionId)}
-                className="text-sm text-red-400 hover:text-red-600 font-bold px-1"
-              >&#10005;</button>
-            </div>
+            <button onClick={() => toggleSection(sectionId)} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+              {collapsed[sectionId] ? '+ Show' : '− Hide'}
+            </button>
           </div>
         );
 
