@@ -8,7 +8,9 @@ import { CustomLineItemsManager } from '../components/settings/CustomLineItemsMa
 import { CustomSectionsManager } from '../components/settings/CustomSectionsManager';
 import { JobEstimationSettings } from '../components/settings/JobEstimationSettings';
 import { PerRoomSettings } from '../components/settings/PerRoomSettings';
-import { UsersSettings } from '../components/settings/UsersSettings';
+import { TeamSettings } from '../components/settings/TeamSettings';
+import { BillingSettings } from '../components/settings/BillingSettings';
+import { useOrganization } from '../context/OrganizationContext';
 
 type SettingsTab =
   | 'company'
@@ -20,10 +22,13 @@ type SettingsTab =
   | 'sections'
   | 'per-room'
   | 'crew-rates'
-  | 'users';
+  | 'team'
+  | 'billing';
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('company');
+  const { role } = useOrganization();
+  const isOwner = role === 'owner';
 
   return (
     <div className="space-y-6">
@@ -87,11 +92,19 @@ export function Settings() {
             Job Estimation
           </TabButton>
           <TabButton
-            active={activeTab === 'users'}
-            onClick={() => setActiveTab('users')}
+            active={activeTab === 'team'}
+            onClick={() => setActiveTab('team')}
           >
-            Users
+            Team
           </TabButton>
+          {isOwner && (
+            <TabButton
+              active={activeTab === 'billing'}
+              onClick={() => setActiveTab('billing')}
+            >
+              Billing
+            </TabButton>
+          )}
         </nav>
       </div>
 
@@ -106,7 +119,8 @@ export function Settings() {
         {activeTab === 'sections' && <CustomSectionsManager />}
         {activeTab === 'per-room' && <PerRoomSettings />}
         {activeTab === 'crew-rates' && <JobEstimationSettings />}
-        {activeTab === 'users' && <UsersSettings />}
+        {activeTab === 'team' && <TeamSettings />}
+        {activeTab === 'billing' && <BillingSettings />}
       </div>
     </div>
   );

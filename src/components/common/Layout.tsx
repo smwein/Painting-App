@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
 import { useAuthStore } from '../../store/authStore';
+import { useOrganization } from '../../context/OrganizationContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,7 +11,9 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const { user, signOut } = useAuthStore();
-  const isAdmin = user?.role === 'admin';
+  const { org } = useOrganization();
+  const isAdmin = user?.role === 'owner' || user?.role === 'admin';
+  const isPastDue = org?.planStatus === 'past_due';
 
   const navItems = [
     { path: '/app', label: 'Home', icon: '🏠' },
@@ -51,6 +54,19 @@ export function Layout({ children }: LayoutProps) {
           )}
         </div>
       </header>
+
+      {/* Past-due warning banner */}
+      {isPastDue && (
+        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 text-center">
+          <p className="text-sm text-yellow-800">
+            Your payment is past due. Please{' '}
+            <Link to="/app/settings" className="font-semibold underline hover:text-yellow-900">
+              update your billing info
+            </Link>{' '}
+            to avoid losing access.
+          </p>
+        </div>
+      )}
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto scrollbar-thin pb-20">

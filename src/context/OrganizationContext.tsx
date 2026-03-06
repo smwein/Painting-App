@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '../config/supabase';
 import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { useBidStore } from '../store/bidStore';
 import type { MembershipRole, PlanStatus } from '../types/supabase.types';
 
 interface Organization {
@@ -62,6 +64,11 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
           trialEndsAt: o.trial_ends_at,
         });
         setRole(membership.role as MembershipRole);
+
+        // Load org data into stores
+        useSettingsStore.getState().loadFromSupabase(o.id).catch(console.error);
+        useBidStore.getState().setOrg(o.id, user!.uid);
+        useBidStore.getState().loadFromSupabase(o.id).catch(console.error);
       }
       setLoading(false);
     }
