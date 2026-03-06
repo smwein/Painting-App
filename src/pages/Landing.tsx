@@ -1,56 +1,30 @@
 import { Link } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
 
+/* ── Data ── */
 const features = [
   {
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" className="text-primary-600">
-        <rect x="2" y="2" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="2" />
-        <rect x="16" y="2" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="2" />
-        <rect x="2" y="16" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="2" />
-        <rect x="16" y="16" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="2" />
-      </svg>
-    ),
-    title: '5 Calculator Types',
-    desc: 'Interior & exterior, square footage & detailed, plus per-room. Pick the right tool for every job.',
+    label: '5 Calculators',
+    desc: 'Interior & exterior, square footage & detailed, plus per-room. The right tool for every job.',
   },
   {
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" className="text-primary-600">
-        <path d="M14 4v20M4 14h20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        <circle cx="14" cy="14" r="11" stroke="currentColor" strokeWidth="2" />
-      </svg>
-    ),
-    title: 'Custom Pricing',
+    label: 'Your Rates',
     desc: 'Set your own labor rates, material costs, and modifiers. Your numbers, your margins.',
   },
   {
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" className="text-primary-600">
-        <path d="M6 4h12l4 4v16a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-        <path d="M14 8v4M8 18h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    ),
-    title: 'PDF Export',
+    label: 'PDF Bids',
     desc: 'Generate clean, professional bid documents you can email or print on the spot.',
   },
   {
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" className="text-primary-600">
-        <circle cx="10" cy="10" r="4" stroke="currentColor" strokeWidth="2" />
-        <circle cx="20" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
-        <path d="M2 24c0-4 4-6 8-6s8 2 8 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        <path d="M20 15c3 0 6 1.5 6 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    ),
-    title: 'Team Accounts',
-    desc: 'Invite estimators and admins. Everyone shares pricing and settings, bids stay organized.',
+    label: 'Team Access',
+    desc: 'Invite estimators and admins. Shared pricing, organized bids, everyone on the same page.',
   },
 ];
 
 const steps = [
-  { num: '01', title: 'Enter the Job Details', desc: 'Square footage, rooms, trim, doors — whatever the job needs.' },
-  { num: '02', title: 'Review the Bid', desc: 'See labor, materials, and profit broken down instantly.' },
-  { num: '03', title: 'Send to the Customer', desc: 'Export a professional PDF and close the deal.' },
+  { num: '01', title: 'Measure the Job', desc: 'Square footage, rooms, trim, doors — enter whatever the job needs.' },
+  { num: '02', title: 'See the Numbers', desc: 'Labor, materials, and profit calculated instantly with your rates.' },
+  { num: '03', title: 'Close the Deal', desc: 'Export a professional PDF and hand it over before you leave.' },
 ];
 
 const pricingFeatures = [
@@ -62,161 +36,254 @@ const pricingFeatures = [
   'Saved bid history',
 ];
 
+/* ── Scroll reveal hook ── */
+function useReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            observer.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+    );
+    el.querySelectorAll('.reveal').forEach((child) => observer.observe(child));
+    return () => observer.disconnect();
+  }, []);
+  return ref;
+}
+
+/* ── Component ── */
 export function Landing() {
+  const revealRef = useReveal();
+
   return (
-    <div className="min-h-screen bg-white">
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2.5">
-            <img src="/coatcalc-logo.png" alt="CoatCalc" className="h-8" />
-          </div>
-          <div className="flex items-center gap-3">
-            <Link to="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-2">
+    <div ref={revealRef} className="font-body min-h-screen bg-[#f5f2ed] text-[#1a2332] overflow-x-hidden">
+
+      {/* ──────── Nav ──────── */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0f1f2e]/95 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-3">
+          <Link to="/" className="flex items-center gap-3">
+            <img src="/coatcalc-logo.png" alt="CoatCalc" className="h-9 brightness-0 invert" />
+          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/login"
+              className="font-display text-sm font-700 tracking-wide uppercase text-white/70 hover:text-white transition-colors px-4 py-2"
+            >
               Sign In
             </Link>
-            <Link to="/signup" className="text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 px-4 py-2 rounded-lg transition-colors">
-              Start Free Trial
+            <Link
+              to="/signup"
+              className="font-display text-sm font-700 tracking-wide uppercase bg-[#d4a24e] text-[#0f1f2e] px-5 py-2.5 hover:bg-[#e0b565] transition-colors"
+            >
+              Free Trial
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-blue-50" />
-        <div className="absolute top-20 -right-20 w-72 h-72 bg-primary-100 rounded-full opacity-40 blur-3xl" />
-        <div className="absolute -bottom-10 -left-10 w-56 h-56 bg-blue-100 rounded-full opacity-30 blur-3xl" />
+      {/* ──────── Hero ──────── */}
+      <section className="relative clip-diagonal bg-[#0f1f2e] grain pt-28 pb-32 sm:pb-40">
+        <div className="absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage: `repeating-linear-gradient(
+              90deg,
+              transparent,
+              transparent 59px,
+              rgba(255,255,255,0.3) 59px,
+              rgba(255,255,255,0.3) 60px
+            )`,
+          }}
+        />
 
-        <div className="relative max-w-5xl mx-auto px-6 pt-20 pb-24 text-center">
-          <div className="inline-flex items-center gap-2 bg-primary-50 border border-primary-200 rounded-full px-4 py-1.5 mb-8">
-            <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
-            <span className="text-xs font-semibold text-primary-700 tracking-wide uppercase">14-Day Free Trial</span>
-          </div>
+        <div className="relative max-w-6xl mx-auto px-6">
+          <div className="max-w-3xl">
+            <div className="reveal">
+              <img src="/coatcalc-logo.png" alt="CoatCalc" className="h-14 sm:h-16 brightness-0 invert mb-8" />
+            </div>
 
-          <img src="/coatcalc-logo.png" alt="CoatCalc" className="h-20 mx-auto mb-6" />
+            <h1 className="reveal reveal-delay-1 font-display text-6xl sm:text-7xl md:text-8xl font-900 uppercase leading-[0.9] tracking-tight text-white">
+              Bid.<br />
+              Paint.<br />
+              <span className="text-[#0ea5a0]">Profit.</span>
+            </h1>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight leading-[1.1] max-w-3xl mx-auto">
-            Bid. Paint.
-            <span className="block text-primary-600">Profit.</span>
-          </h1>
+            <p className="reveal reveal-delay-2 mt-8 text-lg sm:text-xl text-white/60 max-w-lg leading-relaxed">
+              Stop guessing on estimates. Calculate labor, materials, and profit with
+              your own rates — then hand over a professional bid before you leave.
+            </p>
 
-          <p className="mt-6 text-lg text-gray-500 max-w-xl mx-auto leading-relaxed">
-            Stop guessing on estimates. Calculate labor, materials, and profit with your own rates — then send a professional bid before you leave the walkthrough.
-          </p>
+            <div className="reveal reveal-delay-3 mt-10 flex flex-wrap gap-4">
+              <Link
+                to="/signup"
+                className="font-display text-base font-700 uppercase tracking-wide bg-[#d4a24e] text-[#0f1f2e] px-8 py-4 hover:bg-[#e0b565] transition-all hover:translate-y-[-1px]"
+              >
+                Start 14-Day Free Trial
+              </Link>
+              <a
+                href="#pricing"
+                className="font-display text-base font-700 uppercase tracking-wide text-white/70 border border-white/20 px-8 py-4 hover:text-white hover:border-white/40 transition-all"
+              >
+                See Pricing
+              </a>
+            </div>
 
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              to="/signup"
-              className="w-full sm:w-auto bg-primary-600 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-primary-700 shadow-lg shadow-primary-600/20 transition-all hover:shadow-xl hover:shadow-primary-600/25 text-sm"
-            >
-              Start Free Trial
-            </Link>
-            <a
-              href="#pricing"
-              className="w-full sm:w-auto text-gray-600 font-medium px-8 py-3.5 rounded-xl border border-gray-200 hover:border-gray-300 hover:text-gray-900 transition-all text-sm"
-            >
-              See Pricing
-            </a>
+            <p className="reveal reveal-delay-4 mt-6 font-display text-xs font-600 uppercase tracking-[0.2em] text-white/30">
+              No credit card required
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="max-w-5xl mx-auto px-6 py-24">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Everything You Need to Bid</h2>
-          <p className="mt-3 text-gray-500 max-w-lg mx-auto">Made by painters for painters. No bloat, no learning curve.</p>
+      {/* ──────── Social proof strip ──────── */}
+      <section className="relative -mt-8 z-10">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="reveal bg-white border-l-4 border-[#0ea5a0] px-6 py-5 shadow-lg shadow-black/5 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
+            <p className="font-display text-lg font-800 uppercase tracking-wide text-[#0f1f2e]">
+              Made by painters for painters
+            </p>
+            <div className="h-px sm:h-8 sm:w-px bg-gray-200 flex-shrink-0" />
+            <p className="text-sm text-gray-500 leading-relaxed">
+              We've been in the field. We know what it takes to walk a job, price it right,
+              and win the bid. CoatCalc is the tool we wished we had.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ──────── Features ──────── */}
+      <section className="max-w-6xl mx-auto px-6 pt-24 pb-20">
+        <div className="reveal mb-14">
+          <p className="font-display text-sm font-700 uppercase tracking-[0.2em] text-[#0ea5a0] mb-3">What's Included</p>
+          <h2 className="font-display text-4xl sm:text-5xl font-900 uppercase leading-[0.95] text-[#0f1f2e]">
+            Everything You Need<br />to Bid Right
+          </h2>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-6">
-          {features.map((f) => (
+        <div className="grid sm:grid-cols-2 gap-x-8 gap-y-6">
+          {features.map((f, i) => (
             <div
-              key={f.title}
-              className="group bg-gray-50 hover:bg-white border border-gray-100 hover:border-primary-200 rounded-2xl p-6 transition-all hover:shadow-lg hover:shadow-primary-100/50"
+              key={f.label}
+              className={`reveal reveal-delay-${i + 1} swatch-border pl-5 py-4 bg-white hover:bg-white/80 transition-colors`}
             >
-              <div className="w-12 h-12 rounded-xl bg-white group-hover:bg-primary-50 border border-gray-200 group-hover:border-primary-200 flex items-center justify-center transition-colors mb-4">
-                {f.icon}
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-1.5">{f.title}</h3>
+              <h3 className="font-display text-xl font-800 uppercase tracking-wide text-[#0f1f2e] mb-1">{f.label}</h3>
               <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="bg-gray-50 border-y border-gray-100">
-        <div className="max-w-5xl mx-auto px-6 py-24">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">How It Works</h2>
-            <p className="mt-3 text-gray-500">Three steps. That's it.</p>
+      {/* ──────── How It Works ──────── */}
+      <section className="relative clip-diagonal-reverse bg-[#0f1f2e] grain pt-24 pb-28">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="reveal mb-16">
+            <p className="font-display text-sm font-700 uppercase tracking-[0.2em] text-[#0ea5a0] mb-3">How It Works</p>
+            <h2 className="font-display text-4xl sm:text-5xl font-900 uppercase leading-[0.95] text-white">
+              Three Steps.<br />That's It.
+            </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {steps.map((s) => (
-              <div key={s.num} className="relative">
-                <div className="text-5xl font-black text-primary-100 mb-3 leading-none">{s.num}</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{s.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
+          <div className="grid md:grid-cols-3 gap-10">
+            {steps.map((s, i) => (
+              <div key={s.num} className={`reveal reveal-delay-${i + 1} relative`}>
+                <div className="font-display text-[5rem] font-900 leading-none text-[#0ea5a0]/15 select-none">
+                  {s.num}
+                </div>
+                <h3 className="font-display text-xl font-800 uppercase tracking-wide text-white -mt-4 mb-2">{s.title}</h3>
+                <p className="text-sm text-white/50 leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="max-w-5xl mx-auto px-6 py-24">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Simple Pricing</h2>
-          <p className="mt-3 text-gray-500">One plan. Everything included.</p>
-        </div>
-
-        <div className="max-w-sm mx-auto">
-          <div className="bg-white border-2 border-primary-200 rounded-2xl p-8 shadow-xl shadow-primary-100/30">
-            <div className="text-center mb-6">
-              <div className="text-5xl font-extrabold text-gray-900">
-                $29<span className="text-lg font-medium text-gray-400">/mo</span>
-              </div>
-              <p className="text-sm text-gray-500 mt-1">per company</p>
-            </div>
-
-            <ul className="space-y-3 mb-8">
+      {/* ──────── Pricing ──────── */}
+      <section id="pricing" className="max-w-6xl mx-auto px-6 py-24">
+        <div className="reveal grid md:grid-cols-2 gap-12 items-center">
+          {/* Left: copy */}
+          <div>
+            <p className="font-display text-sm font-700 uppercase tracking-[0.2em] text-[#0ea5a0] mb-3">Pricing</p>
+            <h2 className="font-display text-4xl sm:text-5xl font-900 uppercase leading-[0.95] text-[#0f1f2e] mb-6">
+              One Plan.<br />No Surprises.
+            </h2>
+            <p className="text-gray-500 leading-relaxed mb-8">
+              Everything included from day one. No feature gates, no per-user charges.
+              Your whole crew gets access for one flat price.
+            </p>
+            <ul className="space-y-3">
               {pricingFeatures.map((f) => (
-                <li key={f} className="flex items-center gap-3 text-sm text-gray-700">
-                  <svg width="16" height="16" viewBox="0 0 16 16" className="text-primary-500 flex-shrink-0">
-                    <path d="M3 8.5l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                  </svg>
+                <li key={f} className="flex items-center gap-3 text-sm text-[#1a2332]">
+                  <span className="w-5 h-5 rounded-sm bg-[#0ea5a0]/10 flex items-center justify-center flex-shrink-0">
+                    <svg width="12" height="12" viewBox="0 0 16 16" className="text-[#0ea5a0]">
+                      <path d="M3 8.5l3 3 7-7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                    </svg>
+                  </span>
                   {f}
                 </li>
               ))}
             </ul>
+          </div>
 
-            <Link
-              to="/signup"
-              className="block w-full text-center bg-primary-600 text-white font-semibold py-3.5 rounded-xl hover:bg-primary-700 shadow-lg shadow-primary-600/20 transition-all hover:shadow-xl text-sm"
-            >
-              Start 14-Day Free Trial
-            </Link>
-            <p className="text-xs text-gray-400 text-center mt-3">No credit card required</p>
+          {/* Right: pricing card */}
+          <div className="relative">
+            <div className="absolute -inset-3 bg-[#0ea5a0]/5 -rotate-2" />
+            <div className="relative bg-[#0f1f2e] p-8 sm:p-10">
+              <p className="font-display text-sm font-700 uppercase tracking-[0.2em] text-[#0ea5a0] mb-1">Pro Plan</p>
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="font-display text-6xl font-900 text-white">$29</span>
+                <span className="font-display text-xl font-600 text-white/40">/mo</span>
+              </div>
+              <p className="text-sm text-white/40 mb-8">per company &middot; billed monthly</p>
+
+              <Link
+                to="/signup"
+                className="block w-full text-center font-display text-base font-700 uppercase tracking-wide bg-[#d4a24e] text-[#0f1f2e] py-4 hover:bg-[#e0b565] transition-all"
+              >
+                Start 14-Day Free Trial
+              </Link>
+              <p className="text-center text-xs text-white/30 mt-3">No credit card required</p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-100 bg-gray-50">
-        <div className="max-w-5xl mx-auto px-6 py-10">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2.5">
-              <img src="/coatcalc-logo.png" alt="CoatCalc" className="h-7" />
-            </div>
-            <div className="flex items-center gap-6 text-sm text-gray-400">
-              <Link to="/login" className="hover:text-gray-600 transition-colors">Sign In</Link>
-              <Link to="/signup" className="hover:text-gray-600 transition-colors">Sign Up</Link>
-              <a href="#pricing" className="hover:text-gray-600 transition-colors">Pricing</a>
-            </div>
-            <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} CoatCalc</p>
+      {/* ──────── Bottom CTA ──────── */}
+      <section className="bg-[#0f1f2e] grain relative">
+        <div className="max-w-6xl mx-auto px-6 py-20 text-center">
+          <div className="reveal">
+            <h2 className="font-display text-4xl sm:text-5xl font-900 uppercase leading-[0.95] text-white mb-4">
+              Ready to Bid Smarter?
+            </h2>
+            <p className="text-white/50 mb-8 max-w-md mx-auto">
+              Join painting contractors who stopped guessing and started profiting.
+            </p>
+            <Link
+              to="/signup"
+              className="inline-block font-display text-base font-700 uppercase tracking-wide bg-[#d4a24e] text-[#0f1f2e] px-10 py-4 hover:bg-[#e0b565] transition-all hover:translate-y-[-1px]"
+            >
+              Start Free Trial
+            </Link>
           </div>
+        </div>
+      </section>
+
+      {/* ──────── Footer ──────── */}
+      <footer className="bg-[#0a1520] text-white/30 py-8">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <img src="/coatcalc-logo.png" alt="CoatCalc" className="h-7 brightness-0 invert opacity-40" />
+          <div className="flex items-center gap-6 font-display text-xs font-600 uppercase tracking-[0.15em]">
+            <Link to="/login" className="hover:text-white/60 transition-colors">Sign In</Link>
+            <Link to="/signup" className="hover:text-white/60 transition-colors">Sign Up</Link>
+            <a href="#pricing" className="hover:text-white/60 transition-colors">Pricing</a>
+          </div>
+          <p className="text-xs">&copy; {new Date().getFullYear()} CoatCalc</p>
         </div>
       </footer>
     </div>
