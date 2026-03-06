@@ -8,5 +8,10 @@ export const supabaseConfigured = !!(supabaseUrl && supabaseAnonKey);
 
 export const supabase = createClient<Database>(
   supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key'
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      lock: { enabled: false },
+    },
+  }
 );
