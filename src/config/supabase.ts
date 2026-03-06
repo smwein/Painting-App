@@ -11,7 +11,8 @@ export const supabase = createClient<Database>(
   supabaseAnonKey || 'placeholder-key',
   {
     auth: {
-      lock: { enabled: false },
+      storageKey: 'sb-hbranokmkritcdzozjli-auth-token',
+      flowType: 'pkce',
     },
   }
 );
