@@ -31,7 +31,7 @@ export function Onboarding() {
       const { data: org, error: orgError } = await supabase
         .from('organizations')
         .insert({ name: companyName.trim(), slug: generateSlug(companyName) })
-        .select()
+        .select('*')
         .single();
 
       if (orgError || !org) throw orgError || new Error('Failed to create organization');

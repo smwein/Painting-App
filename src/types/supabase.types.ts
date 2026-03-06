@@ -27,7 +27,17 @@ export interface Database {
           trial_ends_at?: string;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['organizations']['Insert']>;
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          plan_status?: PlanStatus;
+          trial_ends_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
       };
       memberships: {
         Row: {
@@ -46,7 +56,23 @@ export interface Database {
           invited_by?: string | null;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['memberships']['Insert']>;
+        Update: {
+          id?: string;
+          organization_id?: string;
+          user_id?: string;
+          role?: MembershipRole;
+          invited_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'memberships_organization_id_fkey';
+            columns: ['organization_id'];
+            isOneToOne: false;
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       pricing_settings: {
         Row: {
@@ -61,7 +87,21 @@ export interface Database {
           settings_json: Record<string, unknown>;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['pricing_settings']['Insert']>;
+        Update: {
+          id?: string;
+          organization_id?: string;
+          settings_json?: Record<string, unknown>;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'pricing_settings_organization_id_fkey';
+            columns: ['organization_id'];
+            isOneToOne: true;
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       bids: {
         Row: {
@@ -86,7 +126,26 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['bids']['Insert']>;
+        Update: {
+          id?: string;
+          organization_id?: string;
+          created_by?: string;
+          calculator_type?: string;
+          customer_name?: string;
+          bid_data?: Record<string, unknown>;
+          status?: BidStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'bids_organization_id_fkey';
+            columns: ['organization_id'];
+            isOneToOne: false;
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       invitations: {
         Row: {
@@ -109,8 +168,35 @@ export interface Database {
           accepted_at?: string | null;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['invitations']['Insert']>;
+        Update: {
+          id?: string;
+          organization_id?: string;
+          email?: string;
+          role?: InvitationRole;
+          token?: string;
+          expires_at?: string;
+          accepted_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'invitations_organization_id_fkey';
+            columns: ['organization_id'];
+            isOneToOne: false;
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
       };
     };
+    Views: {};
+    Functions: {};
+    Enums: {
+      plan_status: PlanStatus;
+      membership_role: MembershipRole;
+      bid_status: BidStatus;
+      invitation_role: InvitationRole;
+    };
+    CompositeTypes: {};
   };
 }
