@@ -8,7 +8,7 @@ export function Login() {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate('/', { replace: true });
+      navigate('/app', { replace: true });
     }
   }, [user, loading, navigate]);
 

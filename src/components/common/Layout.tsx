@@ -13,9 +13,9 @@ export function Layout({ children }: LayoutProps) {
   const isAdmin = user?.role === 'admin';
 
   const navItems = [
-    { path: '/', label: 'Home', icon: '🏠' },
-    { path: '/saved-bids', label: 'Bids', icon: '📋' },
-    ...(isAdmin ? [{ path: '/settings', label: 'Settings', icon: '⚙️' }] : []),
+    { path: '/app', label: 'Home', icon: '🏠' },
+    { path: '/app/saved-bids', label: 'Bids', icon: '📋' },
+    ...(isAdmin ? [{ path: '/app/settings', label: 'Settings', icon: '⚙️' }] : []),
   ];
 
   return (

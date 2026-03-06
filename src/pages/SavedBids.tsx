@@ -58,7 +58,7 @@ export function SavedBids() {
             <p className="text-gray-600 mb-6">
               You haven't saved any bids yet.
             </p>
-            <Button onClick={() => navigate('/')} variant="primary">
+            <Button onClick={() => navigate('/app')} variant="primary">
               Create Your First Bid
             </Button>
           </CardContent>

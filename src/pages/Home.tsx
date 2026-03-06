@@ -55,7 +55,7 @@ export function Home() {
         {calculatorOptions.map((option) => (
           <Link
             key={option.type}
-            to={`/calculator/${option.type}`}
+            to={`/app/calculator/${option.type}`}
             className="block transform transition hover:scale-105 active:scale-95"
           >
             <Card className="h-full hover:shadow-lg transition-shadow">

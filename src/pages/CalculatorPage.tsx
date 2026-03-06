@@ -131,7 +131,7 @@ export function CalculatorPage() {
           <div className="text-center py-8">
             <p className="text-gray-600 mb-4">Calculator type not found.</p>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/app')}
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
               Return to Home
@@ -147,7 +147,7 @@ export function CalculatorPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/app')}
           className="text-2xl hover:text-primary-600 transition-colors"
         >
           ←
