@@ -101,7 +101,8 @@ export function Landing() {
             <span className="block text-primary-600">in Minutes</span>
           </h1>
 
-          <p className="mt-4 text-lg font-semibold text-primary-600">Made by painters for painters</p>
+          <p className="mt-4 text-xl font-bold text-primary-600 tracking-wide">Bid. Paint. Profit.</p>
+          <p className="mt-1 text-base text-gray-500">Made by painters for painters</p>
 
           <p className="mt-4 text-lg text-gray-500 max-w-xl mx-auto leading-relaxed">
             Stop guessing on estimates. Calculate labor, materials, and profit with your own rates — then send a professional bid before you leave the walkthrough.
