@@ -69,12 +69,7 @@ export function Landing() {
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M3 15V5l4-2v12M7 3l4 2v12M11 5l4-2v12" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <span className="text-lg font-bold text-gray-900 tracking-tight">BidCalc</span>
+            <img src="/coatcalc-logo.png" alt="CoatCalc" className="h-8" />
           </div>
           <div className="flex items-center gap-3">
             <Link to="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-2">
@@ -99,12 +94,16 @@ export function Landing() {
             <span className="text-xs font-semibold text-primary-700 tracking-wide uppercase">14-Day Free Trial</span>
           </div>
 
+          <img src="/coatcalc-logo.png" alt="CoatCalc" className="h-20 mx-auto mb-6" />
+
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight leading-[1.1] max-w-3xl mx-auto">
             Accurate Painting Bids
             <span className="block text-primary-600">in Minutes</span>
           </h1>
 
-          <p className="mt-6 text-lg text-gray-500 max-w-xl mx-auto leading-relaxed">
+          <p className="mt-4 text-lg font-semibold text-primary-600">Made by painters for painters</p>
+
+          <p className="mt-4 text-lg text-gray-500 max-w-xl mx-auto leading-relaxed">
             Stop guessing on estimates. Calculate labor, materials, and profit with your own rates — then send a professional bid before you leave the walkthrough.
           </p>
 
@@ -129,7 +128,7 @@ export function Landing() {
       <section className="max-w-5xl mx-auto px-6 py-24">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Everything You Need to Bid</h2>
-          <p className="mt-3 text-gray-500 max-w-lg mx-auto">Built by painters, for painters. No bloat, no learning curve.</p>
+          <p className="mt-3 text-gray-500 max-w-lg mx-auto">Made by painters for painters. No bloat, no learning curve.</p>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-6">
@@ -211,19 +210,14 @@ export function Landing() {
         <div className="max-w-5xl mx-auto px-6 py-10">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-md bg-primary-600 flex items-center justify-center">
-                <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
-                  <path d="M3 15V5l4-2v12M7 3l4 2v12M11 5l4-2v12" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <span className="text-sm font-bold text-gray-700">BidCalc</span>
+              <img src="/coatcalc-logo.png" alt="CoatCalc" className="h-7" />
             </div>
             <div className="flex items-center gap-6 text-sm text-gray-400">
               <Link to="/login" className="hover:text-gray-600 transition-colors">Sign In</Link>
               <Link to="/signup" className="hover:text-gray-600 transition-colors">Sign Up</Link>
               <a href="#pricing" className="hover:text-gray-600 transition-colors">Pricing</a>
             </div>
-            <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} BidCalc</p>
+            <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} CoatCalc</p>
           </div>
         </div>
       </footer>

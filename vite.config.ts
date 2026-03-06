@@ -11,9 +11,9 @@ export default defineConfig({
       devOptions: { enabled: false }, // never register SW in dev mode
       includeAssets: ['favicon.ico', 'icons/*.png'],
       manifest: {
-        name: 'Painting Bid Calculator',
-        short_name: 'BidCalc',
-        description: 'Mobile painting contractor bidding tool',
+        name: 'CoatCalc',
+        short_name: 'CoatCalc',
+        description: 'Made by painters for painters. Calculate accurate painting bids in minutes.',
         theme_color: '#1e40af',
         background_color: '#ffffff',
         display: 'standalone',

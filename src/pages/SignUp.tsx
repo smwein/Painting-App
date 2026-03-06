@@ -48,7 +48,7 @@ export function SignUp() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm">
         <div className="text-center mb-6">
-          <div className="text-5xl mb-3">🎨</div>
+          <img src="/coatcalc-logo.png" alt="CoatCalc" className="h-16 mx-auto mb-2" />
           <h1 className="text-2xl font-bold text-gray-900">Start Your Free Trial</h1>
           <p className="text-sm text-gray-500 mt-1">14 days free, no credit card required</p>
         </div>
