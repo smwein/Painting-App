@@ -31,7 +31,7 @@ async function resolveUserProfile(supabaseUser: User): Promise<AuthUser | null> 
     .select('role, organization_id')
     .eq('user_id', supabaseUser.id)
     .limit(1)
-    .single();
+    .maybeSingle();
 
   return {
     uid: supabaseUser.id,

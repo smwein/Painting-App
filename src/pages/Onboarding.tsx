@@ -27,19 +27,18 @@ export function Onboarding() {
     setError(null);
 
     try {
-      // 1. Create organization
-      const { data: org, error: orgError } = await supabase
+      // 1. Create organization (generate ID client-side to avoid RLS select issue)
+      const orgId = crypto.randomUUID();
+      const { error: orgError } = await supabase
         .from('organizations')
-        .insert({ name: companyName.trim(), slug: generateSlug(companyName) })
-        .select('*')
-        .single();
+        .insert({ id: orgId, name: companyName.trim(), slug: generateSlug(companyName) });
 
-      if (orgError || !org) throw orgError || new Error('Failed to create organization');
+      if (orgError) throw orgError;
 
       // 2. Create owner membership
       const { error: memberError } = await supabase
         .from('memberships')
-        .insert({ organization_id: org.id, user_id: user.uid, role: 'owner' });
+        .insert({ organization_id: orgId, user_id: user.uid, role: 'owner' });
 
       if (memberError) throw memberError;
 
@@ -48,7 +47,7 @@ export function Onboarding() {
       const { error: pricingError } = await supabase
         .from('pricing_settings')
         .insert({
-          organization_id: org.id,
+          organization_id: orgId,
           settings_json: defaultPricing as unknown as Record<string, unknown>,
         });
 

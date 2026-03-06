@@ -49,7 +49,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         .select('role, organization_id, organizations(*)')
         .eq('user_id', user!.uid)
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (membership?.organizations) {
         const o = membership.organizations as unknown as {
