@@ -70,7 +70,7 @@ export function Landing() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0f1f2e]/95 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-3">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/coatcalc-logo.svg" alt="CoatCalc" className="h-9 drop-shadow-[0_0_1px_rgba(255,255,255,0.3)]" />
+            <img src="/coatcalc-logo.svg" alt="CoatCalc" className="h-14 drop-shadow-[0_0_1px_rgba(255,255,255,0.3)]" />
           </Link>
           <div className="flex items-center gap-2">
             <Link
@@ -106,7 +106,7 @@ export function Landing() {
         <div className="relative max-w-6xl mx-auto px-6">
           <div className="max-w-3xl">
             <div className="reveal">
-              <img src="/coatcalc-logo.svg" alt="CoatCalc" className="h-14 sm:h-16 mb-8" />
+              <img src="/coatcalc-logo.svg" alt="CoatCalc" className="h-24 sm:h-32 mb-8" />
             </div>
 
             <h1 className="reveal reveal-delay-1 font-display text-6xl sm:text-7xl md:text-8xl font-900 uppercase leading-[0.9] tracking-tight text-white">
@@ -277,7 +277,7 @@ export function Landing() {
       {/* ──────── Footer ──────── */}
       <footer className="bg-[#0a1520] text-white/30 py-8">
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <img src="/coatcalc-logo.svg" alt="CoatCalc" className="h-7 opacity-60" />
+          <img src="/coatcalc-logo.svg" alt="CoatCalc" className="h-10 opacity-60" />
           <div className="flex items-center gap-6 font-display text-xs font-600 uppercase tracking-[0.15em]">
             <Link to="/login" className="hover:text-white/60 transition-colors">Sign In</Link>
             <Link to="/signup" className="hover:text-white/60 transition-colors">Sign Up</Link>
