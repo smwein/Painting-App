@@ -148,11 +148,11 @@ export function CalculatorPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate('/app')}
-          className="text-2xl hover:text-primary-600 transition-colors"
+          className="text-2xl hover:text-teal-500 transition-colors"
         >
           ←
         </button>
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="font-display text-2xl font-800 uppercase tracking-wide text-navy">
           {getCalculatorTitle()}
         </h2>
       </div>
