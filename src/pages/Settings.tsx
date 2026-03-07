@@ -32,7 +32,7 @@ export function Settings() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
+      <h2 className="font-display text-3xl font-800 uppercase tracking-wide text-navy">Settings</h2>
 
       {/* Tab Navigation */}
       <div className="border-b border-gray-200">
@@ -138,11 +138,11 @@ function TabButton({ active, onClick, children }: TabButtonProps) {
     <button
       onClick={onClick}
       className={`
-        whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm
+        whitespace-nowrap py-2 px-4 border-b-2 font-display font-600 text-sm uppercase tracking-wide
         ${
           active
-            ? 'border-indigo-500 text-indigo-600'
-            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            ? 'border-teal-500 text-teal-600'
+            : 'border-transparent text-gray-500 hover:text-navy hover:border-gray-300'
         }
       `}
     >
