@@ -13,7 +13,9 @@ export function Subscribe() {
     try {
       const url = await createCheckoutSession();
       window.location.href = url;
-    } catch {
+    } catch (err) {
+      console.error('Checkout error:', err);
+      alert(`Checkout failed: ${err instanceof Error ? err.message : JSON.stringify(err)}`);
       setLoading(false);
     }
   };
