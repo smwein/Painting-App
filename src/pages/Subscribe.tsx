@@ -19,19 +19,19 @@ export function Subscribe() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center">
-        <div className="text-5xl mb-3">🎨</div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Subscribe to Continue</h1>
+    <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4">
+      <div className="bg-white shadow-lg p-8 w-full max-w-md text-center">
+        <img src="/coatcalc-logo.svg" alt="CoatCalc" className="h-12 mx-auto mb-2" />
+        <h1 className="font-display text-2xl font-800 uppercase tracking-wide text-navy mb-2">Subscribe to Continue</h1>
         <p className="text-sm text-gray-600 mb-6">
           {org?.planStatus === 'canceled'
             ? 'Your subscription has ended. Resubscribe to access your bids and calculators.'
             : 'Your free trial has ended. Subscribe to keep using the Bid Calculator.'}
         </p>
 
-        <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-6">
-          <p className="text-2xl font-bold text-primary-700">$29<span className="text-sm font-normal">/month</span></p>
-          <ul className="mt-3 text-sm text-primary-800 space-y-1 text-left">
+        <div className="bg-navy p-4 mb-6">
+          <p className="text-2xl font-display font-900 text-gold">$29<span className="text-sm font-normal text-white/40">/month</span></p>
+          <ul className="mt-3 text-sm text-white/70 space-y-1 text-left">
             <li>- 5 calculator types</li>
             <li>- Custom pricing & settings</li>
             <li>- PDF export</li>
@@ -43,7 +43,7 @@ export function Subscribe() {
         <button
           onClick={handleSubscribe}
           disabled={loading}
-          className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50"
+          className="w-full font-display font-700 uppercase tracking-wide bg-gold text-navy py-3 px-4 hover:bg-gold-light transition-colors disabled:opacity-50"
         >
           {loading ? 'Loading...' : 'Subscribe Now'}
         </button>
