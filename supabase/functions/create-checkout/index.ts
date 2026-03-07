@@ -31,7 +31,8 @@ serve(async (req) => {
       .from('memberships')
       .select('organization_id, role, organizations(name, stripe_customer_id)')
       .eq('user_id', user.id)
-      .single();
+      .limit(1)
+      .maybeSingle();
 
     if (!membership || membership.role !== 'owner') {
       return new Response('Only owners can manage billing', { status: 403 });
