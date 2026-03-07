@@ -11,7 +11,7 @@ export function Card({ children, className, padding = 'md' }: CardProps) {
   return (
     <div
       className={clsx(
-        'bg-white rounded-lg shadow-md border border-gray-200',
+        'bg-white shadow-md border border-gray-200',
         {
           'p-0': padding === 'none',
           'p-3': padding === 'sm',
@@ -46,7 +46,7 @@ interface CardTitleProps {
 
 export function CardTitle({ children, className }: CardTitleProps) {
   return (
-    <h3 className={clsx('text-lg font-semibold text-gray-900', className)}>
+    <h3 className={clsx('font-display text-lg font-700 uppercase tracking-wide text-navy', className)}>
       {children}
     </h3>
   );

@@ -2,7 +2,7 @@ import React from 'react';
 import clsx from 'clsx';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger';
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'cta';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
 }
@@ -18,25 +18,24 @@ export function Button({
   return (
     <button
       className={clsx(
-        'font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+        'font-display font-700 uppercase tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
         'focus:outline-none focus:ring-2 focus:ring-offset-2',
         {
-          // Variants
-          'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500':
+          'bg-teal-500 text-white hover:bg-teal-600 focus:ring-teal-400':
             variant === 'primary',
-          'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500':
+          'bg-navy text-white hover:bg-navy-light focus:ring-navy':
             variant === 'secondary',
-          'border-2 border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-primary-500':
+          'border-2 border-teal-500 text-teal-500 hover:bg-teal-50 focus:ring-teal-400':
             variant === 'outline',
           'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500':
             variant === 'danger',
+          'bg-gold text-navy hover:bg-gold-light focus:ring-gold':
+            variant === 'cta',
 
-          // Sizes (ensuring min-height 44px for touch targets)
           'px-3 py-2 text-sm': size === 'sm',
-          'px-4 py-2.5 text-base': size === 'md',
-          'px-6 py-3 text-lg': size === 'lg',
+          'px-5 py-2.5 text-sm': size === 'md',
+          'px-8 py-3 text-base': size === 'lg',
 
-          // Full width
           'w-full': fullWidth,
         },
         className
