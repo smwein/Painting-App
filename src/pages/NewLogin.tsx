@@ -21,16 +21,16 @@ export function NewLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm">
+    <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4">
+      <div className="bg-white shadow-lg p-8 w-full max-w-sm">
         <div className="text-center mb-6">
           <img src="/coatcalc-logo.svg" alt="CoatCalc" className="h-16 mx-auto mb-2" />
-          <h1 className="text-2xl font-bold text-gray-900">Sign In</h1>
+          <h1 className="font-display text-2xl font-800 uppercase tracking-wide text-navy">Sign In</h1>
           <p className="text-sm text-gray-500 mt-1">Made by painters for painters</p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-sm text-red-700">
             <div className="flex justify-between items-start gap-2">
               <span>{error}</span>
               <button onClick={clearError} className="text-red-400 hover:text-red-600 flex-shrink-0 text-lg leading-none">x</button>
@@ -47,7 +47,7 @@ export function NewLogin() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             />
           </div>
           <div>
@@ -58,13 +58,13 @@ export function NewLogin() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-50"
+            className="w-full font-display font-700 uppercase tracking-wide bg-gold text-navy py-2.5 px-4 text-sm hover:bg-gold-light transition-colors disabled:opacity-50"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
@@ -79,7 +79,7 @@ export function NewLogin() {
         <button
           onClick={signInWithGoogle}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 hover:shadow-md transition-all disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 hover:shadow-md transition-all disabled:opacity-50"
         >
           <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -91,7 +91,7 @@ export function NewLogin() {
         </button>
 
         <p className="mt-4 text-center text-sm text-gray-500">
-          Don't have an account? <Link to="/signup" className="text-primary-600 hover:underline">Start free trial</Link>
+          Don't have an account? <Link to="/signup" className="text-teal-500 hover:text-teal-600 font-medium">Start free trial</Link>
         </p>
       </div>
     </div>

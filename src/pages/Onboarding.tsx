@@ -50,16 +50,16 @@ export function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm">
+    <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4">
+      <div className="bg-white shadow-lg p-8 w-full max-w-sm">
         <div className="text-center mb-6">
-          <div className="text-5xl mb-3">🏗️</div>
-          <h1 className="text-2xl font-bold text-gray-900">Set Up Your Company</h1>
+          <img src="/coatcalc-logo.svg" alt="CoatCalc" className="h-12 mx-auto mb-2" />
+          <h1 className="font-display text-2xl font-800 uppercase tracking-wide text-navy">Set Up Your Company</h1>
           <p className="text-sm text-gray-500 mt-1">Just one more step to get started</p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-sm text-red-700">
             {error}
           </div>
         )}
@@ -75,14 +75,14 @@ export function Onboarding() {
               required
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               placeholder="Your Painting Company"
             />
           </div>
           <button
             type="submit"
             disabled={submitting || !companyName.trim()}
-            className="w-full bg-primary-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-50"
+            className="w-full font-display font-700 uppercase tracking-wide bg-gold text-navy py-2.5 px-4 text-sm hover:bg-gold-light transition-colors disabled:opacity-50"
           >
             {submitting ? 'Creating...' : 'Get Started'}
           </button>
