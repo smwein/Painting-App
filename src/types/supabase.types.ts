@@ -190,7 +190,30 @@ export interface Database {
       };
     };
     Views: {};
-    Functions: {};
+    Functions: {
+      create_organization_for_user: {
+        Args: {
+          org_id: string;
+          org_name: string;
+          org_slug: string;
+          default_pricing: Record<string, unknown>;
+        };
+        Returns: void;
+      };
+      get_team_members: {
+        Args: {
+          org_id: string;
+        };
+        Returns: {
+          id: string;
+          user_id: string;
+          role: Database['public']['Enums']['membership_role'];
+          created_at: string;
+          email: string;
+          display_name: string;
+        }[];
+      };
+    };
     Enums: {
       plan_status: PlanStatus;
       membership_role: MembershipRole;

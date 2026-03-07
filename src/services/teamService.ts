@@ -39,7 +39,7 @@ export async function fetchTeamMembers(orgId: string): Promise<TeamMember[]> {
     }));
   }
 
-  return (data ?? []).map((m: { id: string; user_id: string; role: MembershipRole; created_at: string; email: string; display_name: string }) => ({
+  return (data ?? []).map((m) => ({
     id: m.id,
     userId: m.user_id,
     email: m.email ?? '',
