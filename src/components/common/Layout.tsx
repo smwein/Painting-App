@@ -56,7 +56,7 @@ export function Layout({ children }: LayoutProps) {
       <header className="bg-navy text-white shadow-md sticky top-0 z-10">
         <div className="px-4 py-3 flex items-center justify-between">
           <Link to="/app" className="flex items-center">
-            <img src="/coatcalc-logo-cropped.png" alt="CoatCalc" className="h-8 drop-shadow-[0_0_1px_rgba(255,255,255,0.3)]" />
+            <img src="/coatcalc-logo-final.png" alt="CoatCalc" className="h-8 drop-shadow-[0_0_1px_rgba(255,255,255,0.3)]" />
           </Link>
 
           {user && (

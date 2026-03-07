@@ -21,7 +21,7 @@ export function Subscribe() {
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4">
       <div className="bg-white shadow-lg p-8 w-full max-w-md text-center">
-        <img src="/coatcalc-logo-cropped.png" alt="CoatCalc" className="h-14 mx-auto mb-2" />
+        <img src="/coatcalc-logo-final.png" alt="CoatCalc" className="h-14 mx-auto mb-2" />
         <h1 className="font-display text-2xl font-800 uppercase tracking-wide text-navy mb-2">Subscribe to Continue</h1>
         <p className="text-sm text-gray-600 mb-6">
           {org?.planStatus === 'canceled'
