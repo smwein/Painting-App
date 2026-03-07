@@ -64,7 +64,6 @@ serve(async (req) => {
       success_url: `${req.headers.get('origin')}/app?billing=success`,
       cancel_url: `${req.headers.get('origin')}/app?billing=canceled`,
       subscription_data: {
-        trial_period_days: 0, // They already had a trial
         metadata: { organization_id: membership.organization_id },
       },
     });
