@@ -144,7 +144,7 @@ export function Onboarding() {
     <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4 py-8">
       <div className="bg-white shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-6">
-          <img src="/coatcalc-logo.svg" alt="CoatCalc" className="h-12 mx-auto mb-2" />
+          <img src="/coatcalc-logo-cropped.png" alt="CoatCalc" className="h-14 mx-auto mb-2" />
           {step === 'company' ? (
             <>
               <h1 className="font-display text-2xl font-800 uppercase tracking-wide text-navy">Set Up Your Company</h1>
