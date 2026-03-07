@@ -63,7 +63,7 @@ export function TeamSettings() {
         {members.map((m) => (
           <div key={m.id} className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-3">
             <div>
-              <p className="text-sm font-medium text-gray-900">{m.email || m.userId}</p>
+              <p className="text-sm font-medium text-gray-900">{m.displayName || m.email || 'Unknown'}</p>
               <p className="text-xs text-gray-500 capitalize">{m.role}</p>
             </div>
             {role === 'owner' && m.role !== 'owner' && (

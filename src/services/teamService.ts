@@ -18,18 +18,32 @@ export interface PendingInvite {
 }
 
 export async function fetchTeamMembers(orgId: string): Promise<TeamMember[]> {
-  const { data, error } = await supabase
-    .from('memberships')
-    .select('id, user_id, role, created_at')
-    .eq('organization_id', orgId);
+  // Try RPC first (returns email/name from auth.users via security definer)
+  const { data, error } = await supabase.rpc('get_team_members', { org_id: orgId });
 
-  if (error) throw error;
+  if (error) {
+    // Fallback to plain memberships query if RPC doesn't exist yet
+    // Fallback if RPC not deployed yet
+    const { data: fallback, error: fbError } = await supabase
+      .from('memberships')
+      .select('id, user_id, role, created_at')
+      .eq('organization_id', orgId);
+    if (fbError) throw fbError;
+    return (fallback ?? []).map((m) => ({
+      id: m.id,
+      userId: m.user_id,
+      email: m.user_id,
+      displayName: '',
+      role: m.role,
+      joinedAt: m.created_at,
+    }));
+  }
 
-  return (data ?? []).map((m) => ({
+  return (data ?? []).map((m: { id: string; user_id: string; role: MembershipRole; created_at: string; email: string; display_name: string }) => ({
     id: m.id,
     userId: m.user_id,
-    email: '',
-    displayName: '',
+    email: m.email ?? '',
+    displayName: m.display_name ?? '',
     role: m.role,
     joinedAt: m.created_at,
   }));

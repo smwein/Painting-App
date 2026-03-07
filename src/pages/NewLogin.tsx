@@ -6,6 +6,7 @@ export function NewLogin() {
   const { user, loading, error, signInWithEmail, signInWithGoogle, clearError } = useSupabaseAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,7 +18,9 @@ export function NewLogin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
+    setSubmitting(true);
     await signInWithEmail(email, password);
+    setSubmitting(false);
   };
 
   return (
@@ -63,10 +66,10 @@ export function NewLogin() {
           </div>
           <button
             type="submit"
-            disabled={loading}
+            disabled={submitting}
             className="w-full font-display font-700 uppercase tracking-wide bg-gold text-navy py-2.5 px-4 text-sm hover:bg-gold-light transition-colors disabled:opacity-50"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {submitting ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
@@ -78,7 +81,7 @@ export function NewLogin() {
 
         <button
           onClick={signInWithGoogle}
-          disabled={loading}
+          disabled={submitting}
           className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 hover:shadow-md transition-all disabled:opacity-50"
         >
           <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
