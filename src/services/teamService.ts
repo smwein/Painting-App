@@ -67,12 +67,16 @@ export async function fetchPendingInvites(orgId: string): Promise<PendingInvite[
 }
 
 export async function sendInvite(orgId: string, email: string, role: InvitationRole, orgName: string): Promise<void> {
+  console.log('[sendInvite] called with:', { orgId, email, role, orgName });
+
   // Insert invitation and get the auto-generated token back
   const { data, error } = await supabase
     .from('invitations')
     .insert({ organization_id: orgId, email, role })
     .select('token')
     .single();
+
+  console.log('[sendInvite] insert result:', { data, error });
 
   if (error) throw error;
 
@@ -82,13 +86,12 @@ export async function sendInvite(orgId: string, email: string, role: InvitationR
   }
 
   // Send invite email
-  const { error: fnError } = await supabase.functions.invoke('send-invite', {
+  console.log('[sendInvite] calling edge function with token:', data.token);
+  const { data: fnData, error: fnError } = await supabase.functions.invoke('send-invite', {
     body: { email, token: data.token, orgName, role },
   });
 
-  if (fnError) {
-    console.error('[sendInvite] Edge function error:', fnError);
-  }
+  console.log('[sendInvite] edge function result:', { fnData, fnError });
 }
 
 export async function cancelInvite(inviteId: string): Promise<void> {

@@ -36,6 +36,8 @@ export function TeamSettings() {
       setEmail('');
       const updated = await fetchPendingInvites(org.id);
       setInvites(updated);
+    } catch (err) {
+      console.error('[TeamSettings] invite error:', err);
     } finally {
       setSending(false);
     }
