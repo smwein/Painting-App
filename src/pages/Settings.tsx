@@ -8,7 +8,9 @@ import { CustomLineItemsManager } from '../components/settings/CustomLineItemsMa
 import { CustomSectionsManager } from '../components/settings/CustomSectionsManager';
 import { JobEstimationSettings } from '../components/settings/JobEstimationSettings';
 import { PerRoomSettings } from '../components/settings/PerRoomSettings';
-import { UsersSettings } from '../components/settings/UsersSettings';
+import { TeamSettings } from '../components/settings/TeamSettings';
+import { BillingSettings } from '../components/settings/BillingSettings';
+import { useOrganization } from '../context/OrganizationContext';
 
 type SettingsTab =
   | 'company'
@@ -20,14 +22,17 @@ type SettingsTab =
   | 'sections'
   | 'per-room'
   | 'crew-rates'
-  | 'users';
+  | 'team'
+  | 'billing';
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('company');
+  const { role } = useOrganization();
+  const isOwner = role === 'owner';
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
+      <h2 className="font-display text-3xl font-800 uppercase tracking-wide text-navy">Settings</h2>
 
       {/* Tab Navigation */}
       <div className="border-b border-gray-200">
@@ -87,11 +92,19 @@ export function Settings() {
             Job Estimation
           </TabButton>
           <TabButton
-            active={activeTab === 'users'}
-            onClick={() => setActiveTab('users')}
+            active={activeTab === 'team'}
+            onClick={() => setActiveTab('team')}
           >
-            Users
+            Team
           </TabButton>
+          {isOwner && (
+            <TabButton
+              active={activeTab === 'billing'}
+              onClick={() => setActiveTab('billing')}
+            >
+              Billing
+            </TabButton>
+          )}
         </nav>
       </div>
 
@@ -106,7 +119,8 @@ export function Settings() {
         {activeTab === 'sections' && <CustomSectionsManager />}
         {activeTab === 'per-room' && <PerRoomSettings />}
         {activeTab === 'crew-rates' && <JobEstimationSettings />}
-        {activeTab === 'users' && <UsersSettings />}
+        {activeTab === 'team' && <TeamSettings />}
+        {activeTab === 'billing' && <BillingSettings />}
       </div>
     </div>
   );
@@ -124,11 +138,11 @@ function TabButton({ active, onClick, children }: TabButtonProps) {
     <button
       onClick={onClick}
       className={`
-        whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm
+        whitespace-nowrap py-2 px-4 border-b-2 font-display font-600 text-sm uppercase tracking-wide
         ${
           active
-            ? 'border-indigo-500 text-indigo-600'
-            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            ? 'border-teal-500 text-teal-600'
+            : 'border-transparent text-gray-500 hover:text-navy hover:border-gray-300'
         }
       `}
     >

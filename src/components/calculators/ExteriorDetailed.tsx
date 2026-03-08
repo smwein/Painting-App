@@ -113,7 +113,7 @@ function SectionSubtotal({ total }: { total: number }) {
 export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailedProps) {
   const { settings, updateSection } = useSettingsStore();
   const { user } = useAuthStore();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === 'owner' || user?.role === 'admin';
   const pricing = settings.pricing;
   const hiddenItems = pricing.hiddenLineItems ?? [];
   const isHidden = (id: string) => hiddenItems.includes(id);

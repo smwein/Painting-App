@@ -43,7 +43,7 @@ export function SavedBids() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Saved Bids</h2>
+        <h2 className="font-display text-3xl font-800 uppercase tracking-wide text-navy mb-2">Saved Bids</h2>
         <p className="text-gray-600">
           {bids.length === 0
             ? 'No saved bids yet. Create a bid to get started.'
@@ -54,11 +54,13 @@ export function SavedBids() {
       {bids.length === 0 ? (
         <Card className="text-center py-12">
           <CardContent>
-            <div className="text-6xl mb-4">📋</div>
+            <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
             <p className="text-gray-600 mb-6">
               You haven't saved any bids yet.
             </p>
-            <Button onClick={() => navigate('/')} variant="primary">
+            <Button onClick={() => navigate('/app')} variant="primary">
               Create Your First Bid
             </Button>
           </CardContent>
@@ -79,7 +81,7 @@ export function SavedBids() {
                       {bid.customerName}
                     </h3>
                     <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-600">
-                      <span className="px-2 py-1 bg-primary-100 text-primary-700 rounded">
+                      <span className="px-2 py-1 bg-teal-50 text-teal-700">
                         {getCalculatorLabel(bid.calculatorType)}
                       </span>
                       <span>
@@ -88,7 +90,7 @@ export function SavedBids() {
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <div className="text-2xl font-bold text-primary-700">
+                    <div className="text-2xl font-display font-800 text-navy">
                       ${bid.total.toFixed(2)}
                     </div>
                     <button

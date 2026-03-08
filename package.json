@@ -1,5 +1,5 @@
 {
-  "name": "painting-app",
+  "name": "coatcalc",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -16,9 +16,9 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.2.2",
+    "@supabase/supabase-js": "^2.98.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "firebase": "^12.10.0",
     "jspdf": "^4.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

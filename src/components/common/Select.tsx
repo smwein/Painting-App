@@ -26,8 +26,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           id={selectId}
           ref={ref}
           className={clsx(
-            'w-full px-3 py-2.5 border rounded-lg shadow-sm',
-            'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
+            'w-full px-3 py-2.5 border shadow-sm font-body',
+            'focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500',
             'disabled:bg-gray-100 disabled:cursor-not-allowed',
             'text-base', // Prevents zoom on iOS
             'bg-white',

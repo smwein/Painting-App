@@ -12,7 +12,7 @@ export function AdminRoute() {
     );
   }
 
-  if (!user || user.role !== 'admin') {
+  if (!user || (user.role !== 'owner' && user.role !== 'admin')) {
     return <Navigate to="/" replace />;
   }
 
