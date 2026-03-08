@@ -32,7 +32,7 @@ export function TeamSettings() {
     if (!org || !email.trim()) return;
     setSending(true);
     try {
-      await sendInvite(org.id, email.trim(), inviteRole);
+      await sendInvite(org.id, email.trim(), inviteRole, org.name);
       setEmail('');
       const updated = await fetchPendingInvites(org.id);
       setInvites(updated);

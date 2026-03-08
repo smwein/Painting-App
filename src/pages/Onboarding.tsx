@@ -124,12 +124,14 @@ export function Onboarding() {
     setError(null);
 
     try {
-      // Send all invites
+      // Send all invites with email notifications
+      const { sendInvite } = await import('../services/teamService');
       for (const invite of invites) {
-        const { error: invError } = await supabase
-          .from('invitations')
-          .insert({ organization_id: orgId, email: invite.email, role: invite.role });
-        if (invError) console.error('[onboarding] invite error:', invError.message);
+        try {
+          await sendInvite(orgId, invite.email, invite.role, form.companyName.trim());
+        } catch (err) {
+          console.error('[onboarding] invite error:', (err as Error).message);
+        }
       }
 
       navigate('/app', { replace: true });

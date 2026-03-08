@@ -66,12 +66,19 @@ export async function fetchPendingInvites(orgId: string): Promise<PendingInvite[
   }));
 }
 
-export async function sendInvite(orgId: string, email: string, role: InvitationRole): Promise<void> {
-  const { error } = await supabase
+export async function sendInvite(orgId: string, email: string, role: InvitationRole, orgName: string): Promise<void> {
+  const { data, error } = await supabase
     .from('invitations')
-    .insert({ organization_id: orgId, email, role });
+    .insert({ organization_id: orgId, email, role })
+    .select('token')
+    .single();
 
   if (error) throw error;
+
+  // Send invite email (fire-and-forget, don't block on email failure)
+  supabase.functions.invoke('send-invite', {
+    body: { email, token: data.token, orgName, role },
+  }).catch(console.error);
 }
 
 export async function cancelInvite(inviteId: string): Promise<void> {
