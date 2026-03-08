@@ -30,7 +30,7 @@ export function brandedEmail({
         <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border:1px solid #e5e7eb;">
           <!-- Header -->
           <tr>
-            <td style="background-color:#0F2B3C;padding:24px 32px;text-align:center;">
+            <td style="background-color:#FDF8F0;padding:24px 32px;text-align:center;border-bottom:2px solid #0F2B3C;">
               <img src="https://www.coatcalc.com/coatcalc-logo-final.png" alt="CoatCalc" height="40" style="height:40px;" />
             </td>
           </tr>
