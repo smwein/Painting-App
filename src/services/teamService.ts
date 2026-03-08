@@ -67,6 +67,7 @@ export async function fetchPendingInvites(orgId: string): Promise<PendingInvite[
 }
 
 export async function sendInvite(orgId: string, email: string, role: InvitationRole, orgName: string): Promise<void> {
+  // Insert invitation and get the auto-generated token back
   const { data, error } = await supabase
     .from('invitations')
     .insert({ organization_id: orgId, email, role })
@@ -75,10 +76,19 @@ export async function sendInvite(orgId: string, email: string, role: InvitationR
 
   if (error) throw error;
 
-  // Send invite email (fire-and-forget, don't block on email failure)
-  supabase.functions.invoke('send-invite', {
+  if (!data?.token) {
+    console.error('[sendInvite] No token returned from insert');
+    return;
+  }
+
+  // Send invite email
+  const { error: fnError } = await supabase.functions.invoke('send-invite', {
     body: { email, token: data.token, orgName, role },
-  }).catch(console.error);
+  });
+
+  if (fnError) {
+    console.error('[sendInvite] Edge function error:', fnError);
+  }
 }
 
 export async function cancelInvite(inviteId: string): Promise<void> {
