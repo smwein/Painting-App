@@ -213,6 +213,17 @@ export interface Database {
           display_name: string;
         }[];
       };
+      lookup_invite: {
+        Args: {
+          invite_token: string;
+        };
+        Returns: {
+          email: string;
+          org_name: string;
+          role: Database['public']['Enums']['invitation_role'];
+          expired: boolean;
+        }[];
+      };
     };
     Enums: {
       plan_status: PlanStatus;
