@@ -33,6 +33,7 @@ export interface Bid {
   result: BidResult;
   createdAt: Date;
   updatedAt: Date;
+  created_by?: string;
 }
 
 // Bid list item for display
@@ -42,4 +43,6 @@ export interface BidListItem {
   total: number;
   createdAt: Date;
   calculatorType: CalculatorType;
+  notes?: string;
+  created_by?: string;
 }

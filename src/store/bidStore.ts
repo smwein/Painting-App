@@ -22,7 +22,7 @@ interface BidState {
   deleteBid: (id: string) => void;
 
   // List operations
-  getAllBids: () => BidListItem[];
+  getAllBids: (role?: string) => BidListItem[];
   setCurrentBid: (bid: Bid | null) => void;
   clearCurrentBid: () => void;
 }
@@ -45,11 +45,13 @@ export const useBidStore = create<BidState>()(
       },
 
       saveBid: (bidData) => {
+        const { _userId } = get();
         const newBid: Bid = {
           ...bidData,
           id: crypto.randomUUID(),
           createdAt: new Date(),
           updatedAt: new Date(),
+          created_by: _userId || undefined,
         };
 
         set((state) => ({
@@ -115,16 +117,23 @@ export const useBidStore = create<BidState>()(
         bidService.deleteBid(id).catch(console.error);
       },
 
-      getAllBids: () => {
-        const bids = get().bids;
+      getAllBids: (role?: string) => {
+        const { bids, _userId } = get();
 
-        return bids
+        // Estimators only see their own bids
+        const filteredBids = (role === 'estimator' && _userId)
+          ? bids.filter((bid) => bid.created_by === _userId)
+          : bids;
+
+        return filteredBids
           .map((bid): BidListItem => ({
             id: bid.id,
             customerName: bid.customer.name,
             total: bid.result.total,
             createdAt: bid.createdAt,
             calculatorType: bid.calculatorType,
+            notes: bid.customer.notes,
+            created_by: bid.created_by,
           }))
           .sort((a, b) => {
             const dateA = new Date(a.createdAt).getTime();
