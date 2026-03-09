@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
@@ -27,6 +27,9 @@ export function Onboarding() {
   const [error, setError] = useState<string | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [logo, setLogo] = useState<string | undefined>(undefined);
 
   const [form, setForm] = useState({
     companyName: '',
@@ -61,6 +64,23 @@ export function Onboarding() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        setError('Logo file size must be less than 2MB');
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        setError('Please upload an image file');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => setLogo(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleCompanySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !form.companyName.trim()) return;
@@ -80,6 +100,7 @@ export function Onboarding() {
         email: form.email.trim(),
         website: form.website.trim(),
         licenseNumber: form.licenseNumber.trim(),
+        logo,
       };
 
       const { error: rpcError } = await supabase.rpc('create_organization_for_user', {
@@ -188,6 +209,39 @@ export function Onboarding() {
                 className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 placeholder="Your Painting Company"
               />
+            </div>
+
+            {/* Logo upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Company Logo
+              </label>
+              {logo ? (
+                <div className="space-y-2">
+                  <div className="p-3 bg-gray-50 flex items-center justify-center">
+                    <img src={logo} alt="Logo" className="max-h-20 max-w-full object-contain" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLogo(undefined)}
+                    className="text-sm text-red-500 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full px-3 py-2 border border-dashed border-gray-300 text-sm text-gray-500 hover:border-teal-500 hover:text-teal-600 transition-colors"
+                  >
+                    + Upload Logo
+                  </button>
+                </div>
+              )}
+              <p className="text-xs text-gray-400 mt-1">Optional — appears on PDF bid exports. Max 2MB.</p>
             </div>
 
             <div>
