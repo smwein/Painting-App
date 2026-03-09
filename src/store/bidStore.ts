@@ -45,7 +45,7 @@ export const useBidStore = create<BidState>()(
       },
 
       saveBid: (bidData) => {
-        const { _userId } = get();
+        const { _orgId, _userId } = get();
         const newBid: Bid = {
           ...bidData,
           id: crypto.randomUUID(),
@@ -60,7 +60,6 @@ export const useBidStore = create<BidState>()(
         }));
 
         // Sync to Supabase
-        const { _orgId, _userId } = get();
         if (_orgId && _userId) {
           bidService.saveBid(_orgId, _userId, bidData).then((remoteId) => {
             // Update local bid with the Supabase-generated ID
