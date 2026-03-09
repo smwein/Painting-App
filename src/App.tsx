@@ -16,6 +16,7 @@ import { Subscribe } from './pages/Subscribe';
 import { AcceptInvite } from './pages/AcceptInvite';
 import { Terms } from './pages/Terms';
 import { Privacy } from './pages/Privacy';
+import { Support } from './pages/Support';
 import { useSupabaseAuthStore } from './store/supabaseAuthStore';
 
 function AppShell() {
@@ -48,6 +49,7 @@ function App() {
         <Route path="/invite/:token" element={<AcceptInvite />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/support" element={<Support />} />
 
         {/* Auth required but no org needed */}
         <Route element={<ProtectedRoute />}>

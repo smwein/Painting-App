@@ -73,6 +73,12 @@ export function Layout({ children }: LayoutProps) {
                   {user.displayName.charAt(0).toUpperCase()}
                 </div>
               )}
+              <Link
+                to="/support"
+                className="font-display text-xs font-600 uppercase tracking-wide text-white/50 hover:text-gold transition-colors"
+              >
+                Support
+              </Link>
               <button
                 onClick={signOut}
                 className="font-display text-xs font-600 uppercase tracking-wide text-white/50 hover:text-gold transition-colors"

@@ -282,6 +282,9 @@ export function Landing() {
             <Link to="/login" className="hover:text-white/60 transition-colors">Sign In</Link>
             <Link to="/signup" className="hover:text-white/60 transition-colors">Sign Up</Link>
             <a href="#pricing" className="hover:text-white/60 transition-colors">Pricing</a>
+            <Link to="/support" className="hover:text-white/60 transition-colors">Support</Link>
+            <Link to="/terms" className="hover:text-white/60 transition-colors">Terms</Link>
+            <Link to="/privacy" className="hover:text-white/60 transition-colors">Privacy</Link>
           </div>
           <p className="text-xs">&copy; {new Date().getFullYear()} CoatCalc</p>
         </div>
