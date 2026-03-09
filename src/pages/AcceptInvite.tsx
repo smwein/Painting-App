@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
 
-type Status = 'loading' | 'signup' | 'accepting' | 'error' | 'check-email';
+type Status = 'loading' | 'signup' | 'accepting' | 'error' | 'success';
 
 interface InviteInfo {
   email: string;
@@ -42,7 +42,7 @@ export function AcceptInvite() {
     });
   }, [token]);
 
-  // Once user is authenticated, accept the invite
+  // If user is already authenticated, accept the invite directly
   useEffect(() => {
     if (authLoading || !user || !token || !invite) return;
 
@@ -57,8 +57,8 @@ export function AcceptInvite() {
         .single();
 
       if (invError || !inv) {
-        setError('Invitation not found or already used.');
-        setStatus('error');
+        // Might already be accepted — check if user has membership
+        navigate('/app', { replace: true });
         return;
       }
 
@@ -72,7 +72,6 @@ export function AcceptInvite() {
 
       if (memberError) {
         if (memberError.code === '23505') {
-          // Already a member — just redirect
           navigate('/app', { replace: true });
           return;
         }
@@ -103,27 +102,48 @@ export function AcceptInvite() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!invite || !password) return;
+    if (!invite || !password || !token) return;
 
     setSubmitting(true);
     setError(null);
 
-    const { error: signupError } = await supabase.auth.signUp({
-      email: invite.email,
-      password,
-      options: {
-        data: { full_name: name.trim() },
-        emailRedirectTo: `${window.location.origin}/invite/${token}`,
+    // Call edge function that creates user (auto-confirmed), membership, and accepts invite
+    const { data, error: fnError } = await supabase.functions.invoke('accept-invite', {
+      body: {
+        email: invite.email,
+        password,
+        fullName: name.trim(),
+        inviteToken: token,
       },
     });
 
-    if (signupError) {
-      setError(signupError.message);
+    if (fnError) {
+      setError(fnError.message || 'Failed to create account');
       setSubmitting(false);
       return;
     }
 
-    setStatus('check-email');
+    // Check if the edge function returned an error in the response body
+    if (data?.error) {
+      setError(data.error);
+      setSubmitting(false);
+      return;
+    }
+
+    // Now sign in with the new credentials
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: invite.email,
+      password,
+    });
+
+    if (signInError) {
+      setError(signInError.message);
+      setSubmitting(false);
+      return;
+    }
+
+    // Auth state change will redirect to /app via the accept flow above
+    setStatus('success');
     setSubmitting(false);
   };
 
@@ -148,23 +168,6 @@ export function AcceptInvite() {
     setSubmitting(false);
     // Auth state change will trigger the accept flow
   };
-
-  if (status === 'check-email') {
-    return (
-      <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4">
-        <div className="bg-white shadow-lg p-8 w-full max-w-sm text-center">
-          <img src="/coatcalc-logo-final.png" alt="CoatCalc" className="h-12 mx-auto mb-4" />
-          <h1 className="font-display text-xl font-800 uppercase tracking-wide text-navy mb-2">Check Your Email</h1>
-          <p className="text-sm text-gray-600 mb-2">
-            We sent a confirmation link to <strong>{invite?.email}</strong>.
-          </p>
-          <p className="text-sm text-gray-500">
-            Click the link in the email to confirm your account and join <strong>{invite?.orgName}</strong>.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   if (status === 'signup' && invite) {
     return (
@@ -239,7 +242,7 @@ export function AcceptInvite() {
           <div className="mt-4 pt-4 border-t border-gray-200 text-center">
             <p className="text-xs text-gray-500 mb-2">Already have an account?</p>
             <button
-              onClick={(e) => handleSignIn(e as unknown as React.FormEvent)}
+              onClick={handleSignIn}
               disabled={submitting || !password}
               className="text-sm text-teal-600 hover:text-teal-700 font-medium"
             >
@@ -268,7 +271,7 @@ export function AcceptInvite() {
       <div className="text-center">
         <div className="text-4xl mb-3 animate-pulse">🎨</div>
         <p className="text-gray-500 text-sm">
-          {status === 'accepting' ? 'Joining team...' : 'Loading invitation...'}
+          {status === 'accepting' || status === 'success' ? 'Joining team...' : 'Loading invitation...'}
         </p>
       </div>
     </div>
