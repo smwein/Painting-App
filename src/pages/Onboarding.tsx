@@ -112,6 +112,11 @@ export function Onboarding() {
 
       if (rpcError) throw rpcError;
 
+      // Notify admin of new signup (fire-and-forget)
+      supabase.functions.invoke('signup-notify', {
+        body: { userEmail: user.email, companyName: form.companyName.trim() },
+      }).catch(() => {});
+
       setOrgId(newOrgId);
       setStep('team');
     } catch (err) {
