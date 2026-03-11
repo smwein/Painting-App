@@ -1,12 +1,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+import { corsHeaders } from '../_shared/cors.ts';
+import { sendEmail } from '../_shared/resend.ts';
 import { brandedEmail } from '../_shared/emailTemplate.ts';
-
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!;
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://www.coatcalc.com',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -30,30 +25,21 @@ serve(async (req) => {
       ctaUrl: 'https://supabase.com/dashboard/project/hbranokmkritcdzozjli',
     });
 
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: 'CoatCalc <noreply@coatcalc.com>',
-        to: ['admincoatcalc@gmail.com'],
+    // Send email + push notification in parallel
+    const [emailResult] = await Promise.all([
+      sendEmail({
+        to: 'admincoatcalc@gmail.com',
         subject: `New signup: ${companyName}`,
         html,
       }),
-    });
+      fetch('https://ntfy.sh/Coatcalc-signup', {
+        method: 'POST',
+        body: `New signup: ${companyName} (${userEmail})`,
+        headers: { Title: 'New CoatCalc Signup' },
+      }).catch(() => {}),
+    ]);
 
-    if (!res.ok) {
-      const err = await res.text();
-      return new Response(JSON.stringify({ error: err }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const data = await res.json();
-    return new Response(JSON.stringify({ success: true, id: data.id }), {
+    return new Response(JSON.stringify({ success: true, id: emailResult.id }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {

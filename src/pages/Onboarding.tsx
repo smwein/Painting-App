@@ -116,11 +116,6 @@ export function Onboarding() {
       supabase.functions.invoke('signup-notify', {
         body: { userEmail: user.email, companyName: form.companyName.trim() },
       }).catch(() => {});
-      fetch('https://ntfy.sh/Coatcalc-signup', {
-        method: 'POST',
-        body: `New signup: ${form.companyName.trim()} (${user.email})`,
-        headers: { Title: 'New CoatCalc Signup' },
-      }).catch(() => {});
 
       setOrgId(newOrgId);
       setStep('team');

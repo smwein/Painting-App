@@ -1,12 +1,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+import { corsHeaders } from '../_shared/cors.ts';
+import { sendEmail } from '../_shared/resend.ts';
 import { brandedEmail } from '../_shared/emailTemplate.ts';
-
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!;
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://www.coatcalc.com',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -30,30 +25,14 @@ serve(async (req) => {
       ctaUrl: `mailto:${email}`,
     });
 
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: 'CoatCalc Support <noreply@coatcalc.com>',
-        to: ['admincoatcalc@gmail.com'],
-        reply_to: email,
-        subject: `[CoatCalc Support] ${subject} — from ${name}`,
-        html,
-      }),
+    const data = await sendEmail({
+      to: 'admincoatcalc@gmail.com',
+      subject: `[CoatCalc Support] ${subject} — from ${name}`,
+      html,
+      from: 'CoatCalc Support <noreply@coatcalc.com>',
+      reply_to: email,
     });
 
-    if (!res.ok) {
-      const err = await res.text();
-      return new Response(JSON.stringify({ error: `Resend error: ${err}` }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const data = await res.json();
     return new Response(JSON.stringify({ success: true, id: data.id }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
