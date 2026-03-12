@@ -1,12 +1,17 @@
 import { supabase } from '../config/supabase';
 import type { Bid } from '../types/bid.types';
 
-export async function fetchBids(orgId: string): Promise<Bid[]> {
-  const { data, error } = await supabase
+export async function fetchBids(orgId: string, userId?: string): Promise<Bid[]> {
+  let query = supabase
     .from('bids')
     .select('*')
-    .eq('organization_id', orgId)
-    .order('created_at', { ascending: false });
+    .eq('organization_id', orgId);
+
+  if (userId) {
+    query = query.eq('created_by', userId);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) throw error;
 

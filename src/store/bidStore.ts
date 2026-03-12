@@ -13,7 +13,7 @@ interface BidState {
 
   // Init
   setOrg: (orgId: string, userId: string) => void;
-  loadFromSupabase: (orgId: string) => Promise<void>;
+  loadFromSupabase: (orgId: string, role?: string, userId?: string) => Promise<void>;
 
   // CRUD operations
   saveBid: (bid: Omit<Bid, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -37,8 +37,9 @@ export const useBidStore = create<BidState>()(
 
       setOrg: (orgId, userId) => set({ _orgId: orgId, _userId: userId }),
 
-      loadFromSupabase: async (orgId: string) => {
-        const remoteBids = await bidService.fetchBids(orgId);
+      loadFromSupabase: async (orgId: string, role?: string, userId?: string) => {
+        const filterUserId = role === 'estimator' ? userId : undefined;
+        const remoteBids = await bidService.fetchBids(orgId, filterUserId);
         if (remoteBids.length > 0) {
           set({ bids: remoteBids });
         }

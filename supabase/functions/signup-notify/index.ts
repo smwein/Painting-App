@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { sendEmail } from '../_shared/resend.ts';
 import { brandedEmail } from '../_shared/emailTemplate.ts';
@@ -9,6 +10,21 @@ serve(async (req) => {
   }
 
   try {
+    // Verify caller is authenticated
+    const authHeader = req.headers.get('Authorization')!;
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { userEmail, companyName } = await req.json();
     if (!userEmail || !companyName) {
       return new Response(JSON.stringify({ error: 'Missing fields' }), {

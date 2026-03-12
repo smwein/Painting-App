@@ -68,7 +68,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         // Load org data into stores
         useSettingsStore.getState().loadFromSupabase(o.id).catch(console.error);
         useBidStore.getState().setOrg(o.id, user!.uid);
-        useBidStore.getState().loadFromSupabase(o.id).catch(console.error);
+        useBidStore.getState().loadFromSupabase(o.id, membership.role as MembershipRole, user!.uid).catch(console.error);
       }
       setLoading(false);
     }

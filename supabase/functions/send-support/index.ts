@@ -3,6 +3,10 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { sendEmail } from '../_shared/resend.ts';
 import { brandedEmail } from '../_shared/emailTemplate.ts';
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -17,17 +21,22 @@ serve(async (req) => {
       });
     }
 
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    const safeSubject = escapeHtml(subject);
+    const safeMessage = escapeHtml(message).replace(/\n/g, '<br/>');
+
     const html = brandedEmail({
-      preheader: `Support request from ${name}: ${subject}`,
-      heading: `Support: ${subject}`,
-      body: `<strong>From:</strong> ${name} (${email})<br/><br/><strong>Category:</strong> ${subject}<br/><br/><strong>Message:</strong><br/>${message.replace(/\n/g, '<br/>')}`,
-      ctaText: `Reply to ${name}`,
+      preheader: `Support request from ${safeName}: ${safeSubject}`,
+      heading: `Support: ${safeSubject}`,
+      body: `<strong>From:</strong> ${safeName} (${safeEmail})<br/><br/><strong>Category:</strong> ${safeSubject}<br/><br/><strong>Message:</strong><br/>${safeMessage}`,
+      ctaText: `Reply to ${safeName}`,
       ctaUrl: `mailto:${email}`,
     });
 
     const data = await sendEmail({
       to: 'admincoatcalc@gmail.com',
-      subject: `[CoatCalc Support] ${subject} — from ${name}`,
+      subject: `[CoatCalc Support] ${safeSubject} — from ${safeName}`,
       html,
       from: 'CoatCalc Support <noreply@coatcalc.com>',
       reply_to: email,
