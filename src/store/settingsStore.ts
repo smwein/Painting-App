@@ -90,11 +90,41 @@ function ensureNewPricingFields(settings: CompanySettings): CompanySettings {
 
 // Debounce helper for Supabase sync
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingSync: { orgId: string; pricing: PricingSettings } | null = null;
+
+function flushPendingSync() {
+  if (syncTimer) {
+    clearTimeout(syncTimer);
+    syncTimer = null;
+  }
+  if (pendingSync) {
+    const { orgId, pricing } = pendingSync;
+    pendingSync = null;
+    savePricingSettings(orgId, pricing).catch(console.error);
+  }
+}
+
 function debouncedSyncToSupabase(orgId: string, pricing: PricingSettings) {
   if (syncTimer) clearTimeout(syncTimer);
+  pendingSync = { orgId, pricing };
   syncTimer = setTimeout(() => {
-    savePricingSettings(orgId, pricing).catch(console.error);
+    flushPendingSync();
   }, 1000);
+}
+
+function immediateSyncToSupabase(orgId: string, pricing: PricingSettings) {
+  if (syncTimer) clearTimeout(syncTimer);
+  pendingSync = null;
+  syncTimer = null;
+  savePricingSettings(orgId, pricing).catch(console.error);
+}
+
+// Flush pending saves on page close/navigation
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', flushPendingSync);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushPendingSync();
+  });
 }
 
 interface SettingsState {
@@ -117,6 +147,13 @@ interface SettingsState {
 function syncAfterSet(state: SettingsState) {
   if (state._orgId) {
     debouncedSyncToSupabase(state._orgId, state.settings.pricing);
+  }
+}
+
+/** Sync immediately for structural changes (add/delete sections, line items) */
+function immediateSyncAfterSet(state: SettingsState) {
+  if (state._orgId) {
+    immediateSyncToSupabase(state._orgId, state.settings.pricing);
   }
 }
 
@@ -179,7 +216,7 @@ export const useSettingsStore = create<SettingsState>()(
             },
           };
         });
-        syncAfterSet(get());
+        immediateSyncAfterSet(get());
       },
 
       updateLineItem: (id, updates) => {
@@ -207,7 +244,7 @@ export const useSettingsStore = create<SettingsState>()(
             },
           },
         }));
-        syncAfterSet(get());
+        immediateSyncAfterSet(get());
       },
 
       addSection: (section) => {
@@ -235,7 +272,7 @@ export const useSettingsStore = create<SettingsState>()(
             },
           };
         });
-        syncAfterSet(get());
+        immediateSyncAfterSet(get());
       },
 
       updateSection: (id, updates) => {
@@ -266,7 +303,7 @@ export const useSettingsStore = create<SettingsState>()(
             },
           },
         }));
-        syncAfterSet(get());
+        immediateSyncAfterSet(get());
       },
 
       toggleHiddenLineItem: (lineItemId) => {
