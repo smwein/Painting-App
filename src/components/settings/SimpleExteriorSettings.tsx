@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -107,6 +107,19 @@ export function SimpleExteriorSettings() {
     deleteLineItem,
   } = useSettingsStore();
   const [formData, setFormData] = useState(settings.pricing);
+
+  // Sync formData when settings load from Supabase (async after mount)
+  useEffect(() => {
+    setFormData(settings.pricing);
+  }, [settings.pricing]);
+
+  // Sync exterior modifiers when settings load from Supabase
+  useEffect(() => {
+    if (settings.pricing.exteriorModifiers) {
+      setExteriorModifiers(settings.pricing.exteriorModifiers);
+    }
+  }, [settings.pricing.exteriorModifiers]);
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -274,7 +287,14 @@ export function SimpleExteriorSettings() {
   };
 
   const handleSave = () => {
-    updatePricing({ ...formData, exteriorModifiers });
+    updatePricing({
+      exteriorSqft: formData.exteriorSqft,
+      exteriorPaint: formData.exteriorPaint,
+      exteriorCoverage: formData.exteriorCoverage,
+      exteriorMultipliers: formData.exteriorMultipliers,
+      sqftLaborPct: formData.sqftLaborPct,
+      exteriorModifiers,
+    });
     alert('Simple Exterior settings saved successfully!');
   };
 

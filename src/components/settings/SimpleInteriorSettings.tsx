@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -108,6 +108,19 @@ export function SimpleInteriorSettings() {
     deleteLineItem,
   } = useSettingsStore();
   const [formData, setFormData] = useState(settings.pricing);
+
+  // Sync formData when settings load from Supabase (async after mount)
+  useEffect(() => {
+    setFormData(settings.pricing);
+  }, [settings.pricing]);
+
+  // Sync modifiers when settings load from Supabase
+  useEffect(() => {
+    if (settings.pricing.simpleInteriorModifiers) {
+      setSimpleModifiers(settings.pricing.simpleInteriorModifiers);
+    }
+  }, [settings.pricing.simpleInteriorModifiers]);
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -271,7 +284,15 @@ export function SimpleInteriorSettings() {
   };
 
   const handleSave = () => {
-    updatePricing({ ...formData, simpleInteriorModifiers: simpleModifiers });
+    updatePricing({
+      interiorSqft: formData.interiorSqft,
+      interiorSqftEmpty: formData.interiorSqftEmpty,
+      interiorPaint: formData.interiorPaint,
+      interiorCoverage: formData.interiorCoverage,
+      interiorMultipliers: formData.interiorMultipliers,
+      sqftLaborPct: formData.sqftLaborPct,
+      simpleInteriorModifiers: simpleModifiers,
+    });
     alert('Simple Interior settings saved successfully!');
   };
 
