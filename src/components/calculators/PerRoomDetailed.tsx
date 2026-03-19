@@ -25,13 +25,19 @@ interface PerRoomDetailedProps {
   onResultChange?: (result: any) => void;
 }
 
-const PAINT_TYPES: PaintType[] = ['ProMar', 'SuperPaint', 'Duration', 'Emerald'];
+const DEFAULT_PAINT_TYPES: PaintType[] = ['ProMar', 'SuperPaint', 'Duration', 'Emerald'];
 
 export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
   const { settings } = useSettingsStore();
   const pricing = settings.pricing;
 
   const allRoomTypes = getAllRoomTypes(pricing);
+
+  // Read paint types from settings (dynamic, not hardcoded)
+  const paintTypes = useMemo(() => {
+    const keys = Object.keys(pricing.interiorPaint);
+    return keys.length > 0 ? keys : DEFAULT_PAINT_TYPES;
+  }, [pricing.interiorPaint]);
 
   const multipliers = pricing.perRoomMultipliers ?? { wall: 1.0, ceiling: 0.31, trim: 0.11 };
 
@@ -48,7 +54,7 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
       ceilingSqft: Math.round(sf * multipliers.ceiling),
       trimLF: Math.round(sf * multipliers.trim),
       doors: type === 'bathroom' || type === 'closet' ? 1 : 2,
-      paintType: 'SuperPaint',
+      paintType: (paintTypes[0] ?? 'SuperPaint') as PaintType,
       houseCondition: 'furnished',
     };
   };
@@ -327,8 +333,8 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
                       value={room.paintType}
                       onChange={(e) => updateRoom(room.id, { paintType: e.target.value as PaintType })}
                     >
-                      {PAINT_TYPES.map((type) => (
-                        <option key={type} value={type}>{type} (${pricing.interiorPaint[type]}/gal)</option>
+                      {paintTypes.map((type) => (
+                        <option key={type} value={type}>{type} (${pricing.interiorPaint[type] ?? 0}/gal)</option>
                       ))}
                     </select>
                   </div>

@@ -81,6 +81,8 @@ export function PerRoomSettings() {
 
   const [newName, setNewName] = useState('');
   const [newDefaultSqft, setNewDefaultSqft] = useState(150);
+  const [newPaintName, setNewPaintName] = useState('');
+  const [newPaintPrice, setNewPaintPrice] = useState('');
 
   // Local state for furnished/empty rates (reuses Interior Detailed rates)
   const [furnishedRates, setFurnishedRates] = useState(
@@ -358,22 +360,61 @@ export function PerRoomSettings() {
     'pr-paint-prices': (
       <Card>
         <CardHeader>
-          <CardTitle>Paint Prices (per gallon)</CardTitle>
+          <CardTitle>Paint Types & Prices (per gallon)</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-xs text-gray-500 mb-3">
-            These prices are used when selecting paint type per room. Shared with Simple Interior settings.
+        <CardContent className="space-y-4">
+          <p className="text-xs text-gray-500">
+            These paint types appear in the per-room calculator dropdown. Shared with Simple Interior settings.
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="space-y-2">
             {Object.entries(paintPrices).map(([name, price]) => (
-              <Input
-                key={name}
-                label={name}
-                type="number" min="0" step="1"
-                value={price}
-                onChange={(e) => setPaintPrices((prev) => ({ ...prev, [name]: parseFloat(e.target.value) || 0 }))}
-              />
+              <div key={name} className="flex items-center gap-2">
+                <span className="flex-1 text-sm font-medium text-gray-700">{name}</span>
+                <input
+                  type="number" min="0" step="1"
+                  value={price}
+                  onChange={(e) => setPaintPrices((prev) => ({ ...prev, [name]: parseFloat(e.target.value) || 0 }))}
+                  className="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <span className="text-xs text-gray-500 w-10">$/gal</span>
+                <button
+                  onClick={() => setPaintPrices((prev) => {
+                    const updated = { ...prev };
+                    delete updated[name];
+                    return updated;
+                  })}
+                  className="text-red-400 hover:text-red-600 text-sm font-bold px-1"
+                  title="Remove paint type"
+                >{'\u2715'}</button>
+              </div>
             ))}
+          </div>
+          <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+            <input
+              type="text"
+              placeholder="Paint name"
+              value={newPaintName}
+              onChange={(e) => setNewPaintName(e.target.value)}
+              className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+            <input
+              type="number" min="0" step="1"
+              placeholder="Price"
+              value={newPaintPrice}
+              onChange={(e) => setNewPaintPrice(e.target.value)}
+              className="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+            <button
+              onClick={() => {
+                const name = newPaintName.trim();
+                const price = parseFloat(newPaintPrice);
+                if (!name || isNaN(price) || price <= 0) return;
+                setPaintPrices((prev) => ({ ...prev, [name]: price }));
+                setNewPaintName('');
+                setNewPaintPrice('');
+              }}
+              className="px-2 py-1 text-sm text-primary-700 border border-primary-300 rounded hover:bg-primary-50 font-medium"
+            >+ Add</button>
           </div>
         </CardContent>
       </Card>
