@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -30,6 +30,8 @@ import type { LineItemConfig } from '../../types/settings.types';
 const SECTION_IDS = [
   'pr-furnished',
   'pr-empty',
+  'pr-door-rate',
+  'pr-paint-prices',
   'pr-multipliers',
   'pr-coverage',
   'pr-builtin-rooms',
@@ -96,6 +98,24 @@ export function PerRoomSettings() {
   const [coverage, setCoverage] = useState(
     pricing.perRoomCoverage ?? { wallSqftPerGallon: 400, ceilingSqftPerGallon: 400, trimLfPerGallon: 200 }
   );
+
+  // Door rate from line items (used by per-room calculator)
+  const doorItem = pricing.lineItems.find((i) => i.id === 'int-door');
+  const [doorRate, setDoorRate] = useState(doorItem?.rate ?? 40);
+
+  // Interior paint prices (used by per-room calculator for paint type selection)
+  const [paintPrices, setPaintPrices] = useState(pricing.interiorPaint);
+
+  // Sync local state when settings load from Supabase
+  useEffect(() => {
+    setFurnishedRates(pricing.interiorDetailedFurnishedRates ?? { wallSqft: 1.0, ceilingSqft: 0.5, trimLF: 0.75 });
+    setEmptyRates(pricing.interiorDetailedEmptyRates ?? { wallSqft: 0.85, ceilingSqft: 0.42, trimLF: 0.64 });
+    setMultipliers(pricing.perRoomMultipliers ?? { wall: 1.0, ceiling: 0.31, trim: 0.11 });
+    setCoverage(pricing.perRoomCoverage ?? { wallSqftPerGallon: 400, ceilingSqftPerGallon: 400, trimLfPerGallon: 200 });
+    setPaintPrices(pricing.interiorPaint);
+    const door = pricing.lineItems.find((i) => i.id === 'int-door');
+    if (door) setDoorRate(door.rate);
+  }, [pricing]);
 
   // Add line item forms per section
   const [addItemForms, setAddItemForms] = useState<Record<string, AddItemForm>>({});
@@ -246,7 +266,12 @@ export function PerRoomSettings() {
       interiorDetailedEmptyRates: emptyRates,
       perRoomMultipliers: multipliers,
       perRoomCoverage: coverage,
+      interiorPaint: paintPrices,
     });
+    // Update door rate line item
+    if (doorItem) {
+      updateLineItem('int-door', { rate: doorRate });
+    }
     alert('Per Room settings saved successfully!');
   };
 
@@ -309,6 +334,47 @@ export function PerRoomSettings() {
             />
           </div>
           {renderCustomLineItems('pr-empty')}
+        </CardContent>
+      </Card>
+    ),
+    'pr-door-rate': (
+      <Card>
+        <CardHeader>
+          <CardTitle>Door Rate</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="w-48">
+            <Input
+              label="Price per Door"
+              type="number" min="0" step="1"
+              value={doorRate}
+              onChange={(e) => setDoorRate(parseFloat(e.target.value) || 0)}
+              helperText="Applied per door in each room"
+            />
+          </div>
+        </CardContent>
+      </Card>
+    ),
+    'pr-paint-prices': (
+      <Card>
+        <CardHeader>
+          <CardTitle>Paint Prices (per gallon)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs text-gray-500 mb-3">
+            These prices are used when selecting paint type per room. Shared with Simple Interior settings.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {Object.entries(paintPrices).map(([name, price]) => (
+              <Input
+                key={name}
+                label={name}
+                type="number" min="0" step="1"
+                value={price}
+                onChange={(e) => setPaintPrices((prev) => ({ ...prev, [name]: parseFloat(e.target.value) || 0 }))}
+              />
+            ))}
+          </div>
         </CardContent>
       </Card>
     ),
