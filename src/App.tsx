@@ -19,6 +19,7 @@ const AcceptInvite = lazy(() => import('./pages/AcceptInvite').then(m => ({ defa
 const Terms = lazy(() => import('./pages/Terms').then(m => ({ default: m.Terms })));
 const Privacy = lazy(() => import('./pages/Privacy').then(m => ({ default: m.Privacy })));
 const Support = lazy(() => import('./pages/Support').then(m => ({ default: m.Support })));
+const Admin = lazy(() => import('./pages/Admin').then(m => ({ default: m.Admin })));
 
 function AppShell() {
   return (
@@ -69,6 +70,11 @@ function App() {
             <Route path="saved-bids" element={<SavedBids />} />
             <Route path="settings" element={<Settings />} />
           </Route>
+        </Route>
+
+        {/* Admin (super-admin only, no nav link) */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/admin" element={<Admin />} />
         </Route>
 
         {/* Catch-all */}
