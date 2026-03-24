@@ -204,6 +204,25 @@ export function Landing() {
         </div>
       </section>
 
+      {/* ──────── Demo Video ──────── */}
+      <section className="max-w-6xl mx-auto px-6 pt-24 pb-20">
+        <div className="reveal text-center mb-10">
+          <p className="font-display text-sm font-700 uppercase tracking-[0.2em] text-[#0ea5a0] mb-3">See It In Action</p>
+          <h2 className="font-display text-4xl sm:text-5xl font-900 uppercase leading-[0.95] text-[#0f1f2e]">
+            Watch the Demo
+          </h2>
+        </div>
+        <div className="reveal reveal-delay-1 relative w-full max-w-4xl mx-auto aspect-video bg-[#0f1f2e] shadow-xl shadow-black/10">
+          <iframe
+            src="https://www.youtube.com/embed/Rmb7rPXtBMk"
+            title="CoatCalc Demo"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 w-full h-full"
+          />
+        </div>
+      </section>
+
       {/* ──────── Pricing ──────── */}
       <section id="pricing" className="max-w-6xl mx-auto px-6 py-24">
         <div className="reveal grid md:grid-cols-2 gap-12 items-center">
