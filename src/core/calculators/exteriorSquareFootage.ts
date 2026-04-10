@@ -5,6 +5,7 @@ import type {
   MaterialBreakdown,
 } from '../../types/calculator.types';
 import type { PricingSettings } from '../../types/settings.types';
+import { calculateExteriorMaterials } from './utils/materialCalculations';
 
 /**
  * Calculate auto-measurements based on house square footage
@@ -43,11 +44,37 @@ export function calculateExteriorSquareFootage(
   }
   const baseCost = inputs.houseSquareFootage * totalRate;
 
-  // Split base cost into labor and materials using configured ratio
+  // Calculate auto-measurements for material estimation
+  const autoCalcs = calculateExteriorSqftAutoMeasurements(inputs.houseSquareFootage, pricing);
+
+  // If paint type is selected, calculate materials from actual paint pricing
+  // Otherwise fall back to percentage split
   const laborPct = pricing.sqftLaborPct ?? 85;
   const matPct = 100 - laborPct;
-  let laborCost = baseCost * (laborPct / 100);
-  let baseMatCost = baseCost * (matPct / 100);
+  let laborCost: number;
+  let baseMatCost: number;
+
+  const hasPaintType = inputs.paintType && pricing.exteriorPaint[inputs.paintType] !== undefined;
+  const paintMaterialCalc = hasPaintType
+    ? calculateExteriorMaterials(
+        {
+          wallSqft: autoCalcs.sidingSqft,
+          trimLF: autoCalcs.trimLF,
+          doors: 0,
+          paintType: inputs.paintType!,
+        },
+        pricing
+      )
+    : null;
+
+  if (paintMaterialCalc) {
+    baseMatCost = paintMaterialCalc.totalCost;
+    laborCost = baseCost - baseMatCost;
+    if (laborCost < 0) laborCost = baseCost * (laborPct / 100);
+  } else {
+    laborCost = baseCost * (laborPct / 100);
+    baseMatCost = baseCost * (matPct / 100);
+  }
 
   // Apply exterior modifiers (respecting scope: labor, materials, or both)
   if (inputs.exteriorModifiers && pricing.exteriorModifiers) {
@@ -59,9 +86,6 @@ export function calculateExteriorSquareFootage(
       }
     }
   }
-
-  // Calculate auto-measurements
-  const autoCalcs = calculateExteriorSqftAutoMeasurements(inputs.houseSquareFootage, pricing);
 
   // Sum custom section line items into materials
   const customItems: MaterialBreakdown['items'] = [];
@@ -76,8 +100,9 @@ export function calculateExteriorSquareFootage(
       customTotal += cost;
     }
   }
+  const paintItems = paintMaterialCalc ? paintMaterialCalc.items : [];
   const materials: MaterialBreakdown = {
-    items: customItems,
+    items: [...paintItems, ...customItems],
     totalCost: baseMatCost + customTotal,
   };
 

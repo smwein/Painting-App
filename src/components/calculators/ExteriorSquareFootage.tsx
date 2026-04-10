@@ -4,8 +4,9 @@ import { Input } from '../common/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
 import { CustomerInfoSection } from './shared/CustomerInfoSection';
 import { MarkupSelector } from './shared/MarkupSelector';
+import { PaintTypeSelector } from './shared/PaintTypeSelector';
 import { useSettingsStore } from '../../store/settingsStore';
-import type { ExteriorSqftInputs, MarkupPercentage } from '../../types/calculator.types';
+import type { ExteriorSqftInputs, ExteriorPaintType, MarkupPercentage } from '../../types/calculator.types';
 import type { CustomerInfo, Bid } from '../../types/bid.types';
 import { JobDurationEstimate } from '../results/JobDurationEstimate';
 import {
@@ -17,6 +18,7 @@ interface ExteriorSqftFormData {
   customer: CustomerInfo;
   houseSquareFootage: number;
   markup: number;
+  paintType: string;
 }
 
 interface ExteriorSquareFootageProps {
@@ -76,10 +78,12 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
       .sort((a, b) => a.section.order - b.section.order);
   }, [pricing.sections, pricing.lineItems]);
 
+  const defaultPaintType = Object.keys(pricing.exteriorPaint)[0] ?? '';
   const { register, watch, reset } = useForm<ExteriorSqftFormData>({
     defaultValues: {
       houseSquareFootage: 0,
       markup: 50,
+      paintType: defaultPaintType,
     },
   });
 
@@ -91,6 +95,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
         customer: loadedBid.customer,
         houseSquareFootage: inputs.houseSquareFootage,
         markup: inputs.markup,
+        paintType: inputs.paintType ?? defaultPaintType,
       });
       const opts = inputs.pricingOptions ?? (inputs.pricingOption ? [inputs.pricingOption] : ['full-exterior']);
       setSelectedOptions(opts);
@@ -115,6 +120,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
   const houseSquareFootage = watch('houseSquareFootage');
   const markup = watch('markup');
   const customer = watch('customer');
+  const paintType = watch('paintType');
 
   const result = useMemo(() => {
     if (!houseSquareFootage || houseSquareFootage <= 0 || selectedOptions.length === 0) return null;
@@ -123,6 +129,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
       houseSquareFootage,
       pricingOptions: selectedOptions,
       markup: markup as MarkupPercentage,
+      paintType: paintType as ExteriorPaintType,
       customItemValues,
     };
 
@@ -133,7 +140,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
     }
 
     return calculatedResult;
-  }, [houseSquareFootage, selectedOptions, markup, customItemValues, exteriorModifiers, customer, onResultChange, pricing]);
+  }, [houseSquareFootage, selectedOptions, markup, paintType, customItemValues, exteriorModifiers, customer, onResultChange, pricing]);
 
   const autoCalcs = useMemo(() => {
     if (!houseSquareFootage || houseSquareFootage <= 0) return null;
@@ -197,6 +204,8 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
           })}
         </CardContent>
       </Card>
+
+      <PaintTypeSelector register={register} isExterior fieldName="paintType" />
 
       <MarkupSelector register={register} />
 

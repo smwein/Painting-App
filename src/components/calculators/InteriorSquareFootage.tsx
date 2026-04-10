@@ -5,8 +5,9 @@ import { Select } from '../common/Select';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
 import { CustomerInfoSection } from './shared/CustomerInfoSection';
 import { MarkupSelector } from './shared/MarkupSelector';
+import { PaintTypeSelector } from './shared/PaintTypeSelector';
 import { useSettingsStore } from '../../store/settingsStore';
-import type { InteriorSqftInputs, InteriorSqftOption, MarkupPercentage, HouseCondition } from '../../types/calculator.types';
+import type { InteriorSqftInputs, InteriorSqftOption, MarkupPercentage, HouseCondition, PaintType } from '../../types/calculator.types';
 import type { CustomerInfo, Bid } from '../../types/bid.types';
 import { JobDurationEstimate } from '../results/JobDurationEstimate';
 import {
@@ -19,6 +20,7 @@ interface InteriorSqftFormData {
   houseSquareFootage: number;
   markup: number;
   houseCondition: HouseCondition;
+  paintType: string;
 }
 
 interface InteriorSquareFootageProps {
@@ -53,11 +55,13 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
       .sort((a, b) => a.section.order - b.section.order);
   }, [pricing.sections, pricing.lineItems]);
 
+  const defaultPaintType = Object.keys(pricing.interiorPaint)[0] ?? '';
   const { register, watch, reset } = useForm<InteriorSqftFormData>({
     defaultValues: {
       houseSquareFootage: 0,
       markup: 50,
       houseCondition: 'furnished',
+      paintType: defaultPaintType,
     },
   });
 
@@ -70,6 +74,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
         houseSquareFootage: inputs.houseSquareFootage,
         markup: inputs.markup,
         houseCondition: inputs.houseCondition ?? 'furnished',
+        paintType: inputs.paintType ?? defaultPaintType,
       });
       // Handle both old single-option and new multi-option format
       const opts = inputs.pricingOptions ?? (inputs.pricingOption ? [inputs.pricingOption] : ['complete']);
@@ -92,6 +97,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
   const markup = watch('markup');
   const customer = watch('customer');
   const houseCondition = watch('houseCondition');
+  const paintType = watch('paintType');
 
   const rates = houseCondition === 'empty'
     ? (pricing.interiorSqftEmpty ?? pricing.interiorSqft)
@@ -112,6 +118,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
       pricingOptions: selectedOptions,
       markup: markup as MarkupPercentage,
       houseCondition,
+      paintType: paintType as PaintType,
       customItemValues,
     };
 
@@ -122,7 +129,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
     }
 
     return calculatedResult;
-  }, [houseSquareFootage, selectedOptions, markup, houseCondition, customItemValues, interiorModifiers, customer, onResultChange, pricing]);
+  }, [houseSquareFootage, selectedOptions, markup, houseCondition, paintType, customItemValues, interiorModifiers, customer, onResultChange, pricing]);
 
   const autoCalcs = useMemo(() => {
     if (!houseSquareFootage || houseSquareFootage <= 0) return null;
@@ -198,6 +205,8 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
           })}
         </CardContent>
       </Card>
+
+      <PaintTypeSelector register={register} fieldName="paintType" />
 
       <MarkupSelector register={register} />
 

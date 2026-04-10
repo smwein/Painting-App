@@ -87,6 +87,9 @@ export function calculateInteriorDetailed(
     cabinetDoors: inputs.cabinetDoors,
     newCabinetDoors: inputs.newCabinetDoors,
     paintType: inputs.paintType,
+    wallPaintType: inputs.wallPaintType,
+    ceilingPaintType: inputs.ceilingPaintType,
+    trimPaintType: inputs.trimPaintType,
   }, pricing);
 
   // 3. Apply modifiers (multiplicative, scope-aware)

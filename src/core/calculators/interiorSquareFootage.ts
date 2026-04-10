@@ -5,6 +5,7 @@ import type {
   MaterialBreakdown,
 } from '../../types/calculator.types';
 import type { PricingSettings } from '../../types/settings.types';
+import { calculateInteriorMaterials } from './utils/materialCalculations';
 
 /**
  * Calculate auto-measurements based on house square footage
@@ -45,11 +46,39 @@ export function calculateInteriorSquareFootage(
   }
   const baseCost = inputs.houseSquareFootage * totalRate;
 
-  // Split base cost into labor and materials using configured ratio
+  // Calculate auto-measurements for material estimation
+  const autoCalcs = calculateInteriorSqftAutoMeasurements(inputs.houseSquareFootage, pricing);
+
+  // If paint type is selected, calculate materials from actual paint pricing
+  // Otherwise fall back to percentage split
   const laborPct = pricing.sqftLaborPct ?? 85;
   const matPct = 100 - laborPct;
-  let laborCost = baseCost * (laborPct / 100);
-  let baseMatCost = baseCost * (matPct / 100);
+  let laborCost: number;
+  let baseMatCost: number;
+
+  const hasPaintType = inputs.paintType && pricing.interiorPaint[inputs.paintType] !== undefined;
+  const paintMaterialCalc = hasPaintType
+    ? calculateInteriorMaterials(
+        {
+          wallSqft: autoCalcs.wallSqft,
+          ceilingSqft: autoCalcs.ceilingSqft,
+          trimLF: autoCalcs.trimLF,
+          cabinetDoors: 0,
+          newCabinetDoors: 0,
+          paintType: inputs.paintType!,
+        },
+        pricing
+      )
+    : null;
+
+  if (paintMaterialCalc) {
+    baseMatCost = paintMaterialCalc.totalCost;
+    laborCost = baseCost - baseMatCost;
+    if (laborCost < 0) laborCost = baseCost * (laborPct / 100);
+  } else {
+    laborCost = baseCost * (laborPct / 100);
+    baseMatCost = baseCost * (matPct / 100);
+  }
 
   // Apply simple modifiers (respecting scope: labor, materials, or both)
   if (inputs.simpleModifiers && pricing.simpleInteriorModifiers) {
@@ -73,9 +102,6 @@ export function calculateInteriorSquareFootage(
     }
   }
 
-  // Calculate auto-measurements
-  const autoCalcs = calculateInteriorSqftAutoMeasurements(inputs.houseSquareFootage, pricing);
-
   // Sum custom section line items into materials
   const customItems: MaterialBreakdown['items'] = [];
   let customTotal = 0;
@@ -89,8 +115,9 @@ export function calculateInteriorSquareFootage(
       customTotal += cost;
     }
   }
+  const paintItems = paintMaterialCalc ? paintMaterialCalc.items : [];
   const materials: MaterialBreakdown = {
-    items: customItems,
+    items: [...paintItems, ...customItems],
     totalCost: baseMatCost + customTotal,
   };
 

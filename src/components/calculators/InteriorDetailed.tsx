@@ -21,7 +21,7 @@ import { Input } from '../common/Input';
 import { Card, CardContent } from '../common/Card';
 import { CustomerInfoSection } from './shared/CustomerInfoSection';
 import { ModifierSection } from './shared/ModifierSection';
-import { PaintTypeSelector } from './shared/PaintTypeSelector';
+import { SurfacePaintTypeSelector } from './shared/SurfacePaintTypeSelector';
 import { MarkupSelector } from './shared/MarkupSelector';
 import { BidSummary } from '../results/BidSummary';
 import { PaintGallonsEstimate } from '../results/PaintGallonsEstimate';
@@ -73,6 +73,9 @@ interface InteriorDetailedFormData {
   miscWorkHours: number;
   miscellaneousDollars: number;
   paintType: string;
+  wallPaintType: string;
+  ceilingPaintType: string;
+  trimPaintType: string;
   markup: number;
   'modifiers.heavilyFurnished': boolean;
   'modifiers.emptyHouse': boolean;
@@ -197,6 +200,9 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
       miscWorkHours: 0,
       miscellaneousDollars: 0,
       paintType: 'SuperPaint',
+      wallPaintType: 'SuperPaint',
+      ceilingPaintType: 'SuperPaint',
+      trimPaintType: 'SuperPaint',
       markup: 50 as const,
       'modifiers.heavilyFurnished': false,
       'modifiers.emptyHouse': false,
@@ -229,6 +235,9 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
   const miscWorkHours = watch('miscWorkHours');
   const miscellaneousDollars = watch('miscellaneousDollars');
   const paintType = watch('paintType');
+  const wallPaintType = watch('wallPaintType');
+  const ceilingPaintType = watch('ceilingPaintType');
+  const trimPaintType = watch('trimPaintType');
   const markup = watch('markup');
   const modifierHeavilyFurnished = watch('modifiers.heavilyFurnished');
   const modifierEmptyHouse = watch('modifiers.emptyHouse');
@@ -298,6 +307,9 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
         miscWorkHours: inputs.miscWorkHours,
         miscellaneousDollars: inputs.miscellaneousDollars,
         paintType: inputs.paintType,
+        wallPaintType: inputs.wallPaintType ?? inputs.paintType,
+        ceilingPaintType: inputs.ceilingPaintType ?? inputs.paintType,
+        trimPaintType: inputs.trimPaintType ?? inputs.paintType,
         markup: inputs.markup,
         'modifiers.heavilyFurnished': inputs.modifiers.heavilyFurnished,
         'modifiers.emptyHouse': inputs.modifiers.emptyHouse,
@@ -334,6 +346,9 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
       miscWorkHours: miscWorkHours || 0,
       miscellaneousDollars: miscellaneousDollars || 0,
       paintType: paintType,
+      wallPaintType: wallPaintType,
+      ceilingPaintType: ceilingPaintType,
+      trimPaintType: trimPaintType,
       markup: markup as import('../../types/calculator.types').MarkupPercentage,
       houseCondition,
       modifiers: {
@@ -355,7 +370,8 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
     newCabinetDoors, newCabinetDrawers, colorsAboveThree, wallpaperRemovalSqft,
     primingLF, primingSqft, drywallReplacementSqft, popcornRemovalSqft,
     wallTextureRemovalSqft, trimReplacementLF, drywallRepairs, accentWalls,
-    miscWorkHours, miscellaneousDollars, paintType, markup,
+    miscWorkHours, miscellaneousDollars, paintType, wallPaintType,
+    ceilingPaintType, trimPaintType, markup,
     modifierHeavilyFurnished, modifierEmptyHouse, modifierExtensivePrep,
     modifierAdditionalCoat, modifierOneCoat, customValues,
     houseCondition, pricing, dynamicModifiers, useDynamicModifiers,
@@ -718,7 +734,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
         </div>
       )}
 
-      <PaintTypeSelector register={register} />
+      <SurfacePaintTypeSelector register={register} setValue={setValue} watch={watch} />
       <MarkupSelector register={register} />
       {useDynamicModifiers ? (
         <Card>

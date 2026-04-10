@@ -58,6 +58,9 @@ export interface RoomEntry {
   trimLF: number;
   doors: number;
   paintType: PaintType;
+  wallPaintType?: PaintType;
+  ceilingPaintType?: PaintType;
+  trimPaintType?: PaintType;
   houseCondition: 'furnished' | 'empty';
 }
 
@@ -123,6 +126,9 @@ export function calculatePerRoom(
       cabinetDoors: 0,
       newCabinetDoors: 0,
       paintType: room.paintType,
+      wallPaintType: room.wallPaintType,
+      ceilingPaintType: room.ceilingPaintType,
+      trimPaintType: room.trimPaintType,
     }, pricing);
 
     return {

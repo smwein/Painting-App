@@ -78,6 +78,8 @@ export function calculateExteriorDetailed(
     trimLF: inputs.trimFasciaSoffitLF,
     doors: inputs.doors,
     paintType: inputs.paintType,
+    wallPaintType: inputs.wallPaintType,
+    trimPaintType: inputs.trimPaintType,
   }, pricing);
 
   // 3. Apply modifiers (multiplicative, scope-aware)

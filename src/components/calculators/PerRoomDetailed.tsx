@@ -55,6 +55,9 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
       trimLF: Math.round(sf * multipliers.trim),
       doors: type === 'bathroom' || type === 'closet' ? 1 : 2,
       paintType: (paintTypes[0] ?? 'SuperPaint') as PaintType,
+      wallPaintType: (paintTypes[0] ?? 'SuperPaint') as PaintType,
+      ceilingPaintType: (paintTypes[0] ?? 'SuperPaint') as PaintType,
+      trimPaintType: (paintTypes[0] ?? 'SuperPaint') as PaintType,
       houseCondition: 'furnished',
     };
   };
@@ -326,17 +329,66 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
                     </div>
                   </div>
 
-                  <div className="w-48">
+                  <div className="col-span-full">
                     <label className="block text-xs font-medium text-gray-600 mb-1">Paint Type</label>
-                    <select
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-                      value={room.paintType}
-                      onChange={(e) => updateRoom(room.id, { paintType: e.target.value as PaintType })}
-                    >
-                      {paintTypes.map((type) => (
-                        <option key={type} value={type}>{type} (${pricing.interiorPaint[type] ?? 0}/gal)</option>
-                      ))}
-                    </select>
+                    <div className="grid grid-cols-4 gap-3">
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-0.5">Default</label>
+                        <select
+                          className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                          value={room.paintType}
+                          onChange={(e) => {
+                            const pt = e.target.value as PaintType;
+                            updateRoom(room.id, {
+                              paintType: pt,
+                              wallPaintType: pt,
+                              ceilingPaintType: pt,
+                              trimPaintType: pt,
+                            });
+                          }}
+                        >
+                          {paintTypes.map((type) => (
+                            <option key={type} value={type}>{type} (${pricing.interiorPaint[type] ?? 0}/gal)</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-0.5">Walls</label>
+                        <select
+                          className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                          value={room.wallPaintType ?? room.paintType}
+                          onChange={(e) => updateRoom(room.id, { wallPaintType: e.target.value as PaintType })}
+                        >
+                          {paintTypes.map((type) => (
+                            <option key={type} value={type}>{type} (${pricing.interiorPaint[type] ?? 0}/gal)</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-0.5">Ceilings</label>
+                        <select
+                          className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                          value={room.ceilingPaintType ?? room.paintType}
+                          onChange={(e) => updateRoom(room.id, { ceilingPaintType: e.target.value as PaintType })}
+                        >
+                          {paintTypes.map((type) => (
+                            <option key={type} value={type}>{type} (${pricing.interiorPaint[type] ?? 0}/gal)</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-0.5">Trim</label>
+                        <select
+                          className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                          value={room.trimPaintType ?? room.paintType}
+                          onChange={(e) => updateRoom(room.id, { trimPaintType: e.target.value as PaintType })}
+                        >
+                          {paintTypes.map((type) => (
+                            <option key={type} value={type}>{type} (${pricing.interiorPaint[type] ?? 0}/gal)</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Custom per-room sections */}

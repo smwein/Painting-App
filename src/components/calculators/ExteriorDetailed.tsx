@@ -21,7 +21,7 @@ import { Input } from '../common/Input';
 import { Card, CardContent } from '../common/Card';
 import { CustomerInfoSection } from './shared/CustomerInfoSection';
 import { ModifierSection } from './shared/ModifierSection';
-import { PaintTypeSelector } from './shared/PaintTypeSelector';
+import { SurfacePaintTypeSelector } from './shared/SurfacePaintTypeSelector';
 import { MarkupSelector } from './shared/MarkupSelector';
 import { BidSummary } from '../results/BidSummary';
 import { PaintGallonsEstimate } from '../results/PaintGallonsEstimate';
@@ -68,6 +68,8 @@ interface ExteriorDetailedFormData {
   miscWorkHours: number;
   miscellaneousDollars: number;
   paintType: string;
+  wallPaintType: string;
+  trimPaintType: string;
   markup: number;
   'modifiers.threeStory': boolean;
   'modifiers.extensivePrep': boolean;
@@ -183,6 +185,8 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
       miscWorkHours: 0,
       miscellaneousDollars: 0,
       paintType: 'SuperPaint',
+      wallPaintType: 'SuperPaint',
+      trimPaintType: 'SuperPaint',
       markup: 50 as const,
       'modifiers.threeStory': false,
       'modifiers.extensivePrep': false,
@@ -209,6 +213,8 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
   const miscWorkHours = watch('miscWorkHours');
   const miscellaneousDollars = watch('miscellaneousDollars');
   const paintType = watch('paintType');
+  const wallPaintType = watch('wallPaintType');
+  const trimPaintType = watch('trimPaintType');
   const markup = watch('markup');
   const modifierThreeStory = watch('modifiers.threeStory');
   const modifierExtensivePrep = watch('modifiers.extensivePrep');
@@ -264,6 +270,8 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
         miscWorkHours: inputs.miscWorkHours,
         miscellaneousDollars: inputs.miscellaneousDollars,
         paintType: inputs.paintType,
+        wallPaintType: inputs.wallPaintType ?? inputs.paintType,
+        trimPaintType: inputs.trimPaintType ?? inputs.paintType,
         markup: inputs.markup,
         'modifiers.threeStory': inputs.modifiers.threeStory,
         'modifiers.extensivePrep': inputs.modifiers.extensivePrep,
@@ -293,6 +301,8 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
       miscWorkHours: miscWorkHours || 0,
       miscellaneousDollars: miscellaneousDollars || 0,
       paintType: paintType,
+      wallPaintType: wallPaintType,
+      trimPaintType: trimPaintType,
       markup: markup as import('../../types/calculator.types').MarkupPercentage,
       modifiers: {
         threeStory: modifierThreeStory || false,
@@ -313,7 +323,8 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
     primingSqft, primingLF, sidingReplacementSqft, trimReplacementLF,
     soffitFasciaReplacementLF, bondoRepairs, deckStainingSqft,
     miscPressureWashingSqft, miscWorkHours, miscellaneousDollars,
-    paintType, markup, modifierThreeStory, modifierExtensivePrep,
+    paintType, wallPaintType, trimPaintType, markup,
+    modifierThreeStory, modifierExtensivePrep,
     modifierHardTerrain, modifierAdditionalCoat, modifierOneCoat,
     customValues, pricing, dynamicModifiers, useDynamicModifiers,
   ]);
@@ -662,7 +673,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
         </div>
       )}
 
-      <PaintTypeSelector register={register} isExterior={true} />
+      <SurfacePaintTypeSelector register={register} setValue={setValue} watch={watch} isExterior />
       <MarkupSelector register={register} />
       {useDynamicModifiers ? (
         <Card>

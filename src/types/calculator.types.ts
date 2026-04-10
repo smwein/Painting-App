@@ -53,6 +53,7 @@ export interface InteriorSqftInputs {
   pricingOptions: InteriorSqftOption[];
   markup: MarkupPercentage;
   houseCondition: HouseCondition;
+  paintType?: PaintType;
   customItemValues?: Record<string, number>;
 }
 
@@ -106,6 +107,9 @@ export interface InteriorDetailedInputs {
 
   // Paint & Markup
   paintType: PaintType;
+  wallPaintType?: PaintType;
+  ceilingPaintType?: PaintType;
+  trimPaintType?: PaintType;
   markup: MarkupPercentage;
 
   // House condition (affects wall/ceiling/trim rates)
@@ -132,6 +136,7 @@ export interface ExteriorSqftInputs {
   houseSquareFootage: number;
   pricingOptions: ExteriorSqftOption[];
   markup: MarkupPercentage;
+  paintType?: ExteriorPaintType;
   customItemValues?: Record<string, number>;
 }
 
@@ -170,6 +175,8 @@ export interface ExteriorDetailedInputs {
 
   // Paint & Markup
   paintType: ExteriorPaintType;
+  wallPaintType?: ExteriorPaintType;
+  trimPaintType?: ExteriorPaintType;
   markup: MarkupPercentage;
 
   // Modifiers
