@@ -324,7 +324,7 @@ export function PublicQuote() {
         )}
 
         {activeTab === 'services' && data.presentation?.services && (
-          <ServicesPage items={data.presentation.services.items} brandColor={brandColor} />
+          <ServicesPage items={data.presentation.services.items} />
         )}
 
         {activeTab === 'testimonials' && data.presentation?.testimonials && (

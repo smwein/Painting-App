@@ -2,10 +2,9 @@ import type { ServiceItem } from '../../types/settings.types';
 
 interface ServicesPageProps {
   items: ServiceItem[];
-  brandColor: string;
 }
 
-export function ServicesPage({ items, brandColor }: ServicesPageProps) {
+export function ServicesPage({ items }: ServicesPageProps) {
   if (items.length === 0) return null;
   return (
     <div style={{ display: 'grid', gridTemplateColumns: items.length === 1 ? '1fr' : 'repeat(2, 1fr)', gap: 12 }}>
