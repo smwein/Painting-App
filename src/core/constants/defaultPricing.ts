@@ -51,6 +51,16 @@ export function createDefaultPricingSettings(): PricingSettings {
       doorGallonsPerDoor: 0.10,
     },
 
+    // House material types with coverage rates
+    houseMaterials: [
+      { id: 'wood', name: 'Wood', coverageSqftPerGallon: 250, order: 1 },
+      { id: 'vinyl', name: 'Vinyl', coverageSqftPerGallon: 300, order: 2 },
+      { id: 'brick', name: 'Brick', coverageSqftPerGallon: 150, order: 3 },
+      { id: 'stucco', name: 'Stucco', coverageSqftPerGallon: 150, order: 4 },
+      { id: 'hardie', name: 'Hardie/Fiber Cement', coverageSqftPerGallon: 200, order: 5 },
+      { id: 'aluminum', name: 'Aluminum', coverageSqftPerGallon: 300, order: 6 },
+    ],
+
     // Auto-calc multipliers (from coverage.ts)
     interiorMultipliers: {
       wall: 3.2,

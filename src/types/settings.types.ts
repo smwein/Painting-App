@@ -29,6 +29,14 @@ export interface CrewRateConfig {
 // Scope of a modifier: labor only, materials only, or both
 export type ModifierScope = 'labor' | 'materials' | 'both';
 
+// House material configuration for exterior coverage rates
+export interface HouseMaterialConfig {
+  id: string;
+  name: string;
+  coverageSqftPerGallon: number;
+  order: number;
+}
+
 // Interior labor modifier values (configurable)
 export interface InteriorModifierValues {
   heavilyFurnished: number;
@@ -104,6 +112,9 @@ export interface PricingSettings {
     trimLfPerGallon: number;
     doorGallonsPerDoor: number;
   };
+
+  // House material types with per-material coverage rates
+  houseMaterials?: HouseMaterialConfig[];
 
   // Auto-calc multipliers
   interiorMultipliers: {

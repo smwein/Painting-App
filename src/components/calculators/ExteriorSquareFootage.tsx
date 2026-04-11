@@ -19,6 +19,7 @@ interface ExteriorSqftFormData {
   houseSquareFootage: number;
   markup: number;
   paintType: string;
+  houseMaterial: string;
 }
 
 interface ExteriorSquareFootageProps {
@@ -84,6 +85,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
       houseSquareFootage: 0,
       markup: 50,
       paintType: defaultPaintType,
+      houseMaterial: '',
     },
   });
 
@@ -96,6 +98,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
         houseSquareFootage: inputs.houseSquareFootage,
         markup: inputs.markup,
         paintType: inputs.paintType ?? defaultPaintType,
+        houseMaterial: inputs.houseMaterial ?? '',
       });
       const opts = inputs.pricingOptions ?? (inputs.pricingOption ? [inputs.pricingOption] : ['full-exterior']);
       setSelectedOptions(opts);
@@ -121,6 +124,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
   const markup = watch('markup');
   const customer = watch('customer');
   const paintType = watch('paintType');
+  const houseMaterial = watch('houseMaterial');
 
   const result = useMemo(() => {
     if (!houseSquareFootage || houseSquareFootage <= 0 || selectedOptions.length === 0) return null;
@@ -130,6 +134,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
       pricingOptions: selectedOptions,
       markup: markup as MarkupPercentage,
       paintType: paintType as ExteriorPaintType,
+      houseMaterial: houseMaterial || undefined,
       customItemValues,
     };
 
@@ -140,7 +145,7 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
     }
 
     return calculatedResult;
-  }, [houseSquareFootage, selectedOptions, markup, paintType, customItemValues, exteriorModifiers, customer, onResultChange, pricing]);
+  }, [houseSquareFootage, selectedOptions, markup, paintType, houseMaterial, customItemValues, exteriorModifiers, customer, onResultChange, pricing]);
 
   const autoCalcs = useMemo(() => {
     if (!houseSquareFootage || houseSquareFootage <= 0) return null;
@@ -204,6 +209,23 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
           })}
         </CardContent>
       </Card>
+
+      {pricing.houseMaterials && pricing.houseMaterials.length > 0 && (
+        <Card>
+          <CardContent>
+            <label className="block text-sm font-medium text-gray-700 mb-1">House Material</label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              {...register('houseMaterial')}
+            >
+              <option value="">Default ({pricing.exteriorCoverage.wallSqftPerGallon} sqft/gal)</option>
+              {[...pricing.houseMaterials].sort((a, b) => a.order - b.order).map((mat) => (
+                <option key={mat.id} value={mat.id}>{mat.name} ({mat.coverageSqftPerGallon} sqft/gal)</option>
+              ))}
+            </select>
+          </CardContent>
+        </Card>
+      )}
 
       <PaintTypeSelector register={register} isExterior fieldName="paintType" />
 

@@ -73,6 +73,11 @@ export function calculateExteriorDetailed(
   }
 
   // 2. Calculate materials FIRST (so modifiers can apply to them if scoped)
+  // Look up house material coverage rate if selected
+  const houseMaterialConfig = inputs.houseMaterial
+    ? pricing.houseMaterials?.find((m) => m.id === inputs.houseMaterial)
+    : undefined;
+
   const materials = calculateExteriorMaterials({
     wallSqft: inputs.wallSqft,
     trimLF: inputs.trimFasciaSoffitLF,
@@ -80,6 +85,7 @@ export function calculateExteriorDetailed(
     paintType: inputs.paintType,
     wallPaintType: inputs.wallPaintType,
     trimPaintType: inputs.trimPaintType,
+    wallCoverageOverride: houseMaterialConfig?.coverageSqftPerGallon,
   }, pricing);
 
   // 3. Apply modifiers (multiplicative, scope-aware)

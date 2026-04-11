@@ -55,6 +55,9 @@ export function calculateExteriorSquareFootage(
   let baseMatCost: number;
 
   const hasPaintType = inputs.paintType && pricing.exteriorPaint[inputs.paintType] !== undefined;
+  const houseMaterialConfig = inputs.houseMaterial
+    ? pricing.houseMaterials?.find((m) => m.id === inputs.houseMaterial)
+    : undefined;
   const paintMaterialCalc = hasPaintType
     ? calculateExteriorMaterials(
         {
@@ -62,6 +65,7 @@ export function calculateExteriorSquareFootage(
           trimLF: autoCalcs.trimLF,
           doors: 0,
           paintType: inputs.paintType!,
+          wallCoverageOverride: houseMaterialConfig?.coverageSqftPerGallon,
         },
         pricing
       )

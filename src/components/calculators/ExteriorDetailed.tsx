@@ -70,6 +70,7 @@ interface ExteriorDetailedFormData {
   paintType: string;
   wallPaintType: string;
   trimPaintType: string;
+  houseMaterial: string;
   markup: number;
   'modifiers.threeStory': boolean;
   'modifiers.extensivePrep': boolean;
@@ -187,6 +188,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
       paintType: 'SuperPaint',
       wallPaintType: 'SuperPaint',
       trimPaintType: 'SuperPaint',
+      houseMaterial: '',
       markup: 50 as const,
       'modifiers.threeStory': false,
       'modifiers.extensivePrep': false,
@@ -215,6 +217,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
   const paintType = watch('paintType');
   const wallPaintType = watch('wallPaintType');
   const trimPaintType = watch('trimPaintType');
+  const houseMaterial = watch('houseMaterial');
   const markup = watch('markup');
   const modifierThreeStory = watch('modifiers.threeStory');
   const modifierExtensivePrep = watch('modifiers.extensivePrep');
@@ -272,6 +275,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
         paintType: inputs.paintType,
         wallPaintType: inputs.wallPaintType ?? inputs.paintType,
         trimPaintType: inputs.trimPaintType ?? inputs.paintType,
+        houseMaterial: inputs.houseMaterial ?? '',
         markup: inputs.markup,
         'modifiers.threeStory': inputs.modifiers.threeStory,
         'modifiers.extensivePrep': inputs.modifiers.extensivePrep,
@@ -303,6 +307,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
       paintType: paintType,
       wallPaintType: wallPaintType,
       trimPaintType: trimPaintType,
+      houseMaterial: houseMaterial || undefined,
       markup: markup as import('../../types/calculator.types').MarkupPercentage,
       modifiers: {
         threeStory: modifierThreeStory || false,
@@ -323,7 +328,7 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
     primingSqft, primingLF, sidingReplacementSqft, trimReplacementLF,
     soffitFasciaReplacementLF, bondoRepairs, deckStainingSqft,
     miscPressureWashingSqft, miscWorkHours, miscellaneousDollars,
-    paintType, wallPaintType, trimPaintType, markup,
+    paintType, wallPaintType, trimPaintType, houseMaterial, markup,
     modifierThreeStory, modifierExtensivePrep,
     modifierHardTerrain, modifierAdditionalCoat, modifierOneCoat,
     customValues, pricing, dynamicModifiers, useDynamicModifiers,
@@ -701,6 +706,23 @@ export function ExteriorDetailed({ onResultChange, loadedBid }: ExteriorDetailed
             );
           })}
         </div>
+      )}
+
+      {pricing.houseMaterials && pricing.houseMaterials.length > 0 && (
+        <Card>
+          <CardContent>
+            <label className="block text-sm font-medium text-gray-700 mb-1">House Material</label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              {...register('houseMaterial')}
+            >
+              <option value="">Default ({pricing.exteriorCoverage.wallSqftPerGallon} sqft/gal)</option>
+              {[...pricing.houseMaterials].sort((a, b) => a.order - b.order).map((mat) => (
+                <option key={mat.id} value={mat.id}>{mat.name} ({mat.coverageSqftPerGallon} sqft/gal)</option>
+              ))}
+            </select>
+          </CardContent>
+        </Card>
       )}
 
       <SurfacePaintTypeSelector register={register} setValue={setValue} watch={watch} isExterior />

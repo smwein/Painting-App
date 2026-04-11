@@ -98,6 +98,7 @@ function SortableSettingsCard({ id, children }: { id: string; children: React.Re
 
 const EXT_DETAILED_SECTION_IDS = [
   'extd-multipliers',
+  'extd-house-materials',
   'extd-line-item-sections',
   'extd-modifiers',
   'extd-paint-prices',
@@ -132,6 +133,19 @@ export function ExteriorDetailedPricing() {
 
   // Auto-calc multipliers
   const [extMultipliers, setExtMultipliers] = useState(pricing.exteriorMultipliers);
+
+  // House materials local state
+  const [houseMaterials, setHouseMaterials] = useState(
+    pricing.houseMaterials ?? [
+      { id: 'wood', name: 'Wood', coverageSqftPerGallon: 250, order: 1 },
+      { id: 'vinyl', name: 'Vinyl', coverageSqftPerGallon: 300, order: 2 },
+      { id: 'brick', name: 'Brick', coverageSqftPerGallon: 150, order: 3 },
+      { id: 'stucco', name: 'Stucco', coverageSqftPerGallon: 150, order: 4 },
+      { id: 'hardie', name: 'Hardie/Fiber Cement', coverageSqftPerGallon: 200, order: 5 },
+      { id: 'aluminum', name: 'Aluminum', coverageSqftPerGallon: 300, order: 6 },
+    ]
+  );
+  const [newMaterial, setNewMaterial] = useState({ name: '', coverage: '' });
 
   // Paint prices local state
   const [exteriorPaint, setExteriorPaint] = useState(pricing.exteriorPaint);
@@ -192,6 +206,7 @@ export function ExteriorDetailedPricing() {
       exteriorModifiers: exteriorMods,
       exteriorPaint,
       exteriorMultipliers: extMultipliers,
+      houseMaterials,
     });
     alert('Exterior detailed pricing settings saved successfully!');
   };
@@ -465,6 +480,74 @@ export function ExteriorDetailedPricing() {
               onChange={(e) => setExtMultipliers((p) => ({ ...p, trim: parseFloat(e.target.value) || 0 }))}
               helperText={`Trim LF = House SF × ${extMultipliers.trim}`}
             />
+          </div>
+        </CardContent>
+      </Card>
+    ),
+    'extd-house-materials': (
+      <Card>
+        <CardHeader>
+          <CardTitle>House Materials (Coverage Rates)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-gray-500">
+            Configure how many square feet each gallon covers for different house materials. Materials with porous or rough surfaces (brick, stucco) use more paint per gallon.
+          </p>
+          {[...houseMaterials].sort((a, b) => a.order - b.order).map((mat) => (
+            <div key={mat.id} className="flex items-end gap-2">
+              <div className="flex-1">
+                <label className="block text-xs font-medium text-gray-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={mat.name}
+                  onChange={(e) => setHouseMaterials((prev) =>
+                    prev.map((m) => m.id === mat.id ? { ...m, name: e.target.value } : m)
+                  )}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+              <div className="w-36">
+                <label className="block text-xs font-medium text-gray-700 mb-1">Coverage (sqft/gal)</label>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={mat.coverageSqftPerGallon}
+                  onChange={(e) => setHouseMaterials((prev) =>
+                    prev.map((m) => m.id === mat.id ? { ...m, coverageSqftPerGallon: parseFloat(e.target.value) || 0 } : m)
+                  )}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+              <button
+                onClick={() => setHouseMaterials((prev) => prev.filter((m) => m.id !== mat.id))}
+                className="mb-0.5 text-red-400 hover:text-red-600 text-sm font-bold px-2 py-2 rounded hover:bg-red-50"
+                title="Delete material"
+              >{'\u2715'}</button>
+            </div>
+          ))}
+          <div className="flex items-end gap-2 pt-2 border-t border-gray-100">
+            <div className="flex-1">
+              <Input label="New Material Name" type="text" value={newMaterial.name}
+                onChange={(e) => setNewMaterial((p) => ({ ...p, name: e.target.value }))} placeholder="e.g., Stone" />
+            </div>
+            <div className="w-36">
+              <Input label="Coverage (sqft/gal)" type="number" min="1" step="1" value={newMaterial.coverage}
+                onChange={(e) => setNewMaterial((p) => ({ ...p, coverage: e.target.value }))} placeholder="200" />
+            </div>
+            <Button onClick={() => {
+              const coverageNum = parseFloat(newMaterial.coverage);
+              if (!newMaterial.name.trim() || isNaN(coverageNum) || coverageNum <= 0) {
+                alert('Please enter a valid material name and coverage rate.');
+                return;
+              }
+              const maxOrder = Math.max(...houseMaterials.map((m) => m.order), 0);
+              setHouseMaterials((prev) => [
+                ...prev,
+                { id: `mat-${Date.now()}`, name: newMaterial.name.trim(), coverageSqftPerGallon: coverageNum, order: maxOrder + 1 },
+              ]);
+              setNewMaterial({ name: '', coverage: '' });
+            }} variant="outline" size="sm" className="mb-0.5">+ Add</Button>
           </div>
         </CardContent>
       </Card>

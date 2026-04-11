@@ -139,6 +139,7 @@ export interface ExteriorSqftInputs {
   pricingOptions: ExteriorSqftOption[];
   markup: MarkupPercentage;
   paintType?: ExteriorPaintType;
+  houseMaterial?: string;
   customItemValues?: Record<string, number>;
 }
 
@@ -179,6 +180,7 @@ export interface ExteriorDetailedInputs {
   paintType: ExteriorPaintType;
   wallPaintType?: ExteriorPaintType;
   trimPaintType?: ExteriorPaintType;
+  houseMaterial?: string;
   markup: MarkupPercentage;
 
   // Modifiers

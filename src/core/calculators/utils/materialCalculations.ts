@@ -34,6 +34,7 @@ interface ExteriorMaterialInputs {
   paintType: ExteriorPaintType;
   wallPaintType?: ExteriorPaintType;
   trimPaintType?: ExteriorPaintType;
+  wallCoverageOverride?: number; // sqft per gallon override from house material
 }
 
 /**
@@ -131,8 +132,9 @@ export function calculateExteriorMaterials(
   const trimPrice = pricing.exteriorPaint[trimPaint] ?? defaultPrice;
 
   // Calculate gallons needed for walls/siding
+  const wallCoverage = inputs.wallCoverageOverride ?? pricing.exteriorCoverage.wallSqftPerGallon;
   if (inputs.wallSqft > 0) {
-    const wallGallons = Math.ceil(inputs.wallSqft / pricing.exteriorCoverage.wallSqftPerGallon);
+    const wallGallons = Math.ceil(inputs.wallSqft / wallCoverage);
     items.push({
       name: `${wallPaint} - Siding`,
       quantity: wallGallons,
