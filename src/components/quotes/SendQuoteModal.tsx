@@ -26,10 +26,25 @@ export function SendQuoteModal({
 
   const [email, setEmail] = useState(customerEmail);
   const [name, setName] = useState(customerName);
-  const [enabledPages] = useState<string[]>(defaultPages);
+  const [enabledPages, setEnabledPages] = useState<string[]>(defaultPages);
   const [expiresInDays, setExpiresInDays] = useState(30);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const ALL_PAGES: Array<{ id: string; label: string }> = [
+    { id: 'about', label: 'About Us' },
+    { id: 'services', label: 'Services' },
+    { id: 'testimonials', label: 'Testimonials' },
+    { id: 'gallery', label: 'Gallery' },
+    { id: 'process', label: 'Our Process' },
+    { id: 'terms', label: 'Terms & Conditions' },
+  ];
+
+  const togglePage = (pageId: string) => {
+    setEnabledPages((prev) =>
+      prev.includes(pageId) ? prev.filter((p) => p !== pageId) : [...prev, pageId]
+    );
+  };
 
   const handleSend = async () => {
     if (!email.trim() || !name.trim()) {
@@ -97,6 +112,24 @@ export function SendQuoteModal({
               <option value={60}>60 days</option>
               <option value={90}>90 days</option>
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Include Pages</label>
+            <p className="text-xs text-gray-500 mb-2">Estimate page is always included.</p>
+            <div className="space-y-1.5">
+              {ALL_PAGES.map((page) => (
+                <label key={page.id} className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={enabledPages.includes(page.id)}
+                    onChange={() => togglePage(page.id)}
+                    className="rounded border-gray-300 text-teal-500 focus:ring-teal-500"
+                  />
+                  {page.label}
+                </label>
+              ))}
+            </div>
           </div>
 
           {error && (
