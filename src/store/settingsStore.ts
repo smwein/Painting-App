@@ -86,6 +86,11 @@ function ensureNewPricingFields(settings: CompanySettings): CompanySettings {
     changed = true;
   }
 
+  if (p.presentation === undefined) {
+    updates.presentation = defaults.presentation;
+    changed = true;
+  }
+
   if (!changed) return settings;
   return {
     ...settings,

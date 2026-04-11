@@ -446,6 +446,11 @@ export function createDefaultPricingSettings(): PricingSettings {
       },
     ],
 
+    presentation: {
+      brandColor: '#2563eb',
+      defaultPages: ['estimate'],
+    },
+
     // Dynamic sections
     sections: [
       // Interior Detailed Sections

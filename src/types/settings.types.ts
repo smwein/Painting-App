@@ -1,3 +1,8 @@
+export interface PresentationSettings {
+  brandColor: string;
+  defaultPages: string[];
+}
+
 // Line item configuration for dynamic calculators
 export interface LineItemConfig {
   id: string;
@@ -183,6 +188,9 @@ export interface PricingSettings {
     interiorDetailed?: string[];
     exteriorDetailed?: string[];
   };
+
+  // Presentation / public quote page settings
+  presentation?: PresentationSettings;
 
   // Dynamic configuration
   lineItems: LineItemConfig[];
