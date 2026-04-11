@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBidStore } from '../store/bidStore';
 import { useAuthStore } from '../store/authStore';
 import { Card, CardContent } from '../components/common/Card';
 import { Button } from '../components/common/Button';
+import { SendQuoteModal } from '../components/quotes/SendQuoteModal';
+import { fetchQuotesForOrg } from '../services/quoteService';
+import type { PublicQuote } from '../types/quote.types';
 import { format } from 'date-fns';
 
 const CALCULATOR_OPTIONS = [
@@ -23,6 +26,17 @@ export function SavedBids() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [quoteMap, setQuoteMap] = useState<Map<string, PublicQuote>>(new Map());
+  const [sendModalBid, setSendModalBid] = useState<{ id: string; name: string; email: string } | null>(null);
+
+  useEffect(() => {
+    if (!user?.organizationId) return;
+    fetchQuotesForOrg(user.organizationId).then((quotes) => {
+      const map = new Map<string, PublicQuote>();
+      quotes.forEach((q) => map.set(q.bidId, q));
+      setQuoteMap(map);
+    }).catch(console.error);
+  }, [user?.organizationId]);
 
   const filteredBids = allBids.filter((bid) => {
     const matchesSearch = !searchQuery || bid.customerName.toLowerCase().includes(searchQuery.toLowerCase());
@@ -138,6 +152,22 @@ export function SavedBids() {
                         <span className="px-2 py-1 bg-teal-50 text-teal-700">
                           {getCalculatorLabel(bid.calculatorType)}
                         </span>
+                        {(() => {
+                          const quote = quoteMap.get(bid.id);
+                          if (!quote) return null;
+                          const colors: Record<string, string> = {
+                            sent: 'bg-blue-100 text-blue-700',
+                            viewed: 'bg-yellow-100 text-yellow-700',
+                            accepted: 'bg-green-100 text-green-700',
+                            declined: 'bg-red-100 text-red-700',
+                            expired: 'bg-gray-100 text-gray-500',
+                          };
+                          return (
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[quote.status] ?? ''}`}>
+                              {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
+                            </span>
+                          );
+                        })()}
                         <span>
                           {format(new Date(bid.createdAt), 'MMM d, yyyy')}
                         </span>
@@ -148,6 +178,17 @@ export function SavedBids() {
                         ${bid.total.toFixed(2)}
                       </div>
                       <div className="mt-2 flex items-center gap-3 justify-end">
+                        {!quoteMap.has(bid.id) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSendModalBid({ id: bid.id, name: bid.customerName, email: '' });
+                            }}
+                            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                          >
+                            Send
+                          </button>
+                        )}
                         <button
                           onClick={(e) => handleClone(e, bid.id)}
                           className="text-sm text-teal-600 hover:text-teal-700 font-medium"
@@ -168,6 +209,26 @@ export function SavedBids() {
             </div>
           ))}
         </div>
+      )}
+
+      {sendModalBid && user?.organizationId && (
+        <SendQuoteModal
+          bidId={sendModalBid.id}
+          customerName={sendModalBid.name}
+          customerEmail={sendModalBid.email}
+          organizationId={user.organizationId}
+          onClose={() => setSendModalBid(null)}
+          onSent={(url) => {
+            setSendModalBid(null);
+            alert(`Estimate sent! Link: ${url}`);
+            // Refresh quote statuses
+            fetchQuotesForOrg(user.organizationId!).then((quotes) => {
+              const map = new Map<string, PublicQuote>();
+              quotes.forEach((q) => map.set(q.bidId, q));
+              setQuoteMap(map);
+            }).catch(console.error);
+          }}
+        />
       )}
     </div>
   );
