@@ -11,6 +11,20 @@ interface InteriorMaterialInputs {
   wallPaintType?: PaintType;
   ceilingPaintType?: PaintType;
   trimPaintType?: PaintType;
+  coats?: number;
+}
+
+/**
+ * Calculate multi-coat multiplier.
+ * Each additional coat uses 30% less material than the previous one.
+ * 1 coat = 1.0x, 2 coats = 1.7x, 3 coats = 2.19x, etc.
+ */
+function coatMultiplier(coats: number): number {
+  let total = 0;
+  for (let i = 0; i < coats; i++) {
+    total += Math.pow(0.7, i);
+  }
+  return total;
 }
 
 interface ExteriorMaterialInputs {
@@ -31,6 +45,9 @@ export function calculateInteriorMaterials(
 ): MaterialBreakdown {
   const items: MaterialItem[] = [];
   const defaultPrice = pricing.interiorPaint[inputs.paintType];
+  const coats = inputs.coats ?? 1;
+  const multiplier = coatMultiplier(coats);
+  const coatLabel = coats > 1 ? ` (${coats} coats)` : '';
 
   // Per-surface paint types (fall back to single paintType)
   const wallPaint = inputs.wallPaintType ?? inputs.paintType;
@@ -42,9 +59,10 @@ export function calculateInteriorMaterials(
 
   // Calculate gallons needed for walls
   if (inputs.wallSqft > 0) {
-    const wallGallons = Math.ceil(inputs.wallSqft / pricing.interiorCoverage.wallSqftPerGallon);
+    const baseGallons = inputs.wallSqft / pricing.interiorCoverage.wallSqftPerGallon;
+    const wallGallons = Math.ceil(baseGallons * multiplier);
     items.push({
-      name: `${wallPaint} - Walls`,
+      name: `${wallPaint} - Walls${coatLabel}`,
       quantity: wallGallons,
       pricePerGallon: wallPrice,
       cost: wallGallons * wallPrice,
@@ -53,9 +71,10 @@ export function calculateInteriorMaterials(
 
   // Calculate gallons needed for ceilings
   if (inputs.ceilingSqft > 0) {
-    const ceilingGallons = Math.ceil(inputs.ceilingSqft / pricing.interiorCoverage.ceilingSqftPerGallon);
+    const baseGallons = inputs.ceilingSqft / pricing.interiorCoverage.ceilingSqftPerGallon;
+    const ceilingGallons = Math.ceil(baseGallons * multiplier);
     items.push({
-      name: `${ceilingPaint} - Ceilings`,
+      name: `${ceilingPaint} - Ceilings${coatLabel}`,
       quantity: ceilingGallons,
       pricePerGallon: ceilingPrice,
       cost: ceilingGallons * ceilingPrice,
@@ -64,9 +83,10 @@ export function calculateInteriorMaterials(
 
   // Calculate gallons needed for trim
   if (inputs.trimLF > 0) {
-    const trimGallons = Math.ceil(inputs.trimLF / pricing.interiorCoverage.trimLfPerGallon);
+    const baseGallons = inputs.trimLF / pricing.interiorCoverage.trimLfPerGallon;
+    const trimGallons = Math.ceil(baseGallons * multiplier);
     items.push({
-      name: `${trimPaint} - Trim`,
+      name: `${trimPaint} - Trim${coatLabel}`,
       quantity: trimGallons,
       pricePerGallon: trimPrice,
       cost: trimGallons * trimPrice,
@@ -76,9 +96,10 @@ export function calculateInteriorMaterials(
   // Calculate gallons needed for cabinets (uses trim paint type)
   const totalCabinetDoors = inputs.cabinetDoors + inputs.newCabinetDoors;
   if (totalCabinetDoors > 0) {
-    const cabinetGallons = Math.ceil(totalCabinetDoors * pricing.interiorCoverage.cabinetGallonsPerDoor);
+    const baseGallons = totalCabinetDoors * pricing.interiorCoverage.cabinetGallonsPerDoor;
+    const cabinetGallons = Math.ceil(baseGallons * multiplier);
     items.push({
-      name: `${trimPaint} - Cabinets`,
+      name: `${trimPaint} - Cabinets${coatLabel}`,
       quantity: cabinetGallons,
       pricePerGallon: trimPrice,
       cost: cabinetGallons * trimPrice,

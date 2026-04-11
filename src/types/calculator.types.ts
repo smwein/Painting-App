@@ -54,6 +54,7 @@ export interface InteriorSqftInputs {
   markup: MarkupPercentage;
   houseCondition: HouseCondition;
   paintType?: PaintType;
+  coats?: number;
   customItemValues?: Record<string, number>;
 }
 
@@ -110,6 +111,7 @@ export interface InteriorDetailedInputs {
   wallPaintType?: PaintType;
   ceilingPaintType?: PaintType;
   trimPaintType?: PaintType;
+  coats?: number;
   markup: MarkupPercentage;
 
   // House condition (affects wall/ceiling/trim rates)

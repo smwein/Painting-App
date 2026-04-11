@@ -58,6 +58,7 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
       wallPaintType: (paintTypes[0] ?? 'SuperPaint') as PaintType,
       ceilingPaintType: (paintTypes[0] ?? 'SuperPaint') as PaintType,
       trimPaintType: (paintTypes[0] ?? 'SuperPaint') as PaintType,
+      coats: 1,
       houseCondition: 'furnished',
     };
   };
@@ -388,6 +389,18 @@ export function PerRoomDetailed({ onResultChange }: PerRoomDetailedProps) {
                           ))}
                         </select>
                       </div>
+                    </div>
+                    <div className="mt-2 w-32">
+                      <label className="block text-xs text-gray-500 mb-0.5">Coats</label>
+                      <select
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        value={room.coats ?? 1}
+                        onChange={(e) => updateRoom(room.id, { coats: parseInt(e.target.value) })}
+                      >
+                        <option value={1}>1 Coat</option>
+                        <option value={2}>2 Coats</option>
+                        <option value={3}>3 Coats</option>
+                      </select>
                     </div>
                   </div>
 

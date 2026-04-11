@@ -21,6 +21,7 @@ interface InteriorSqftFormData {
   markup: number;
   houseCondition: HouseCondition;
   paintType: string;
+  coats: number;
 }
 
 interface InteriorSquareFootageProps {
@@ -62,6 +63,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
       markup: 50,
       houseCondition: 'furnished',
       paintType: defaultPaintType,
+      coats: 1,
     },
   });
 
@@ -75,6 +77,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
         markup: inputs.markup,
         houseCondition: inputs.houseCondition ?? 'furnished',
         paintType: inputs.paintType ?? defaultPaintType,
+        coats: inputs.coats ?? 1,
       });
       // Handle both old single-option and new multi-option format
       const opts = inputs.pricingOptions ?? (inputs.pricingOption ? [inputs.pricingOption] : ['complete']);
@@ -98,6 +101,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
   const customer = watch('customer');
   const houseCondition = watch('houseCondition');
   const paintType = watch('paintType');
+  const coats = watch('coats');
 
   const rates = houseCondition === 'empty'
     ? (pricing.interiorSqftEmpty ?? pricing.interiorSqft)
@@ -119,6 +123,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
       markup: markup as MarkupPercentage,
       houseCondition,
       paintType: paintType as PaintType,
+      coats: coats || 1,
       customItemValues,
     };
 
@@ -129,7 +134,7 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
     }
 
     return calculatedResult;
-  }, [houseSquareFootage, selectedOptions, markup, houseCondition, paintType, customItemValues, interiorModifiers, customer, onResultChange, pricing]);
+  }, [houseSquareFootage, selectedOptions, markup, houseCondition, paintType, coats, customItemValues, interiorModifiers, customer, onResultChange, pricing]);
 
   const autoCalcs = useMemo(() => {
     if (!houseSquareFootage || houseSquareFootage <= 0) return null;
@@ -207,6 +212,20 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
       </Card>
 
       <PaintTypeSelector register={register} fieldName="paintType" />
+
+      <Card>
+        <CardContent>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Number of Coats</label>
+          <select
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            {...register('coats', { valueAsNumber: true })}
+          >
+            <option value={1}>1 Coat</option>
+            <option value={2}>2 Coats</option>
+            <option value={3}>3 Coats</option>
+          </select>
+        </CardContent>
+      </Card>
 
       <MarkupSelector register={register} />
 

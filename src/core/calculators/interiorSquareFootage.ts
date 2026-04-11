@@ -66,6 +66,7 @@ export function calculateInteriorSquareFootage(
           cabinetDoors: 0,
           newCabinetDoors: 0,
           paintType: inputs.paintType!,
+          coats: inputs.coats,
         },
         pricing
       )

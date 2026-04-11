@@ -76,6 +76,7 @@ interface InteriorDetailedFormData {
   wallPaintType: string;
   ceilingPaintType: string;
   trimPaintType: string;
+  coats: number;
   markup: number;
   'modifiers.heavilyFurnished': boolean;
   'modifiers.emptyHouse': boolean;
@@ -203,6 +204,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
       wallPaintType: 'SuperPaint',
       ceilingPaintType: 'SuperPaint',
       trimPaintType: 'SuperPaint',
+      coats: 1,
       markup: 50 as const,
       'modifiers.heavilyFurnished': false,
       'modifiers.emptyHouse': false,
@@ -238,6 +240,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
   const wallPaintType = watch('wallPaintType');
   const ceilingPaintType = watch('ceilingPaintType');
   const trimPaintType = watch('trimPaintType');
+  const coats = watch('coats');
   const markup = watch('markup');
   const modifierHeavilyFurnished = watch('modifiers.heavilyFurnished');
   const modifierEmptyHouse = watch('modifiers.emptyHouse');
@@ -310,6 +313,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
         wallPaintType: inputs.wallPaintType ?? inputs.paintType,
         ceilingPaintType: inputs.ceilingPaintType ?? inputs.paintType,
         trimPaintType: inputs.trimPaintType ?? inputs.paintType,
+        coats: inputs.coats ?? 1,
         markup: inputs.markup,
         'modifiers.heavilyFurnished': inputs.modifiers.heavilyFurnished,
         'modifiers.emptyHouse': inputs.modifiers.emptyHouse,
@@ -349,6 +353,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
       wallPaintType: wallPaintType,
       ceilingPaintType: ceilingPaintType,
       trimPaintType: trimPaintType,
+      coats: coats || 1,
       markup: markup as import('../../types/calculator.types').MarkupPercentage,
       houseCondition,
       modifiers: {
@@ -371,7 +376,7 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
     primingLF, primingSqft, drywallReplacementSqft, popcornRemovalSqft,
     wallTextureRemovalSqft, trimReplacementLF, drywallRepairs, accentWalls,
     miscWorkHours, miscellaneousDollars, paintType, wallPaintType,
-    ceilingPaintType, trimPaintType, markup,
+    ceilingPaintType, trimPaintType, coats, markup,
     modifierHeavilyFurnished, modifierEmptyHouse, modifierExtensivePrep,
     modifierAdditionalCoat, modifierOneCoat, customValues,
     houseCondition, pricing, dynamicModifiers, useDynamicModifiers,
@@ -763,6 +768,21 @@ export function InteriorDetailed({ onResultChange, loadedBid }: InteriorDetailed
       )}
 
       <SurfacePaintTypeSelector register={register} setValue={setValue} watch={watch} />
+
+      <Card>
+        <CardContent>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Number of Coats</label>
+          <select
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            {...register('coats', { valueAsNumber: true })}
+          >
+            <option value={1}>1 Coat</option>
+            <option value={2}>2 Coats</option>
+            <option value={3}>3 Coats</option>
+          </select>
+        </CardContent>
+      </Card>
+
       <MarkupSelector register={register} />
       {useDynamicModifiers ? (
         <Card>

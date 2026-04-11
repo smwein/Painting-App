@@ -90,6 +90,7 @@ export function calculateInteriorDetailed(
     wallPaintType: inputs.wallPaintType,
     ceilingPaintType: inputs.ceilingPaintType,
     trimPaintType: inputs.trimPaintType,
+    coats: inputs.coats,
   }, pricing);
 
   // 3. Apply modifiers (multiplicative, scope-aware)
