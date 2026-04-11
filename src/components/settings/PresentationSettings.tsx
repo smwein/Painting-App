@@ -35,8 +35,8 @@ const textareaClasses =
 
 function getDefaultPresentation(): PresentationSettingsType {
   return {
-    brandColor: '#0d9488',
-    defaultPages: ['about', 'services', 'testimonials', 'gallery', 'process', 'terms'],
+    brandColor: '#2563eb',
+    defaultPages: ['estimate'],
     aboutUs: { heading: '', bodyText: '', stats: [] },
     services: { items: [] },
     testimonials: { items: [] },

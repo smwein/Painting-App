@@ -9,17 +9,20 @@ ON storage.objects FOR SELECT
 TO public
 USING (bucket_id = 'quote-assets');
 
--- Authenticated users can upload to their org's folder
+-- Authenticated users can upload to their own org's folder
 CREATE POLICY "Authenticated users can upload to quote-assets"
 ON storage.objects FOR INSERT
 TO authenticated
 WITH CHECK (
   bucket_id = 'quote-assets'
-  AND (storage.foldername(name))[1] IS NOT NULL
+  AND (storage.foldername(name))[1]::uuid IN (SELECT user_org_ids())
 );
 
--- Authenticated users can delete their org's files
+-- Authenticated users can delete from their own org's folder
 CREATE POLICY "Authenticated users can delete from quote-assets"
 ON storage.objects FOR DELETE
 TO authenticated
-USING (bucket_id = 'quote-assets');
+USING (
+  bucket_id = 'quote-assets'
+  AND (storage.foldername(name))[1]::uuid IN (SELECT user_org_ids())
+);
