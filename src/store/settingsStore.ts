@@ -81,6 +81,11 @@ function ensureNewPricingFields(settings: CompanySettings): CompanySettings {
     changed = true;
   }
 
+  if (p.houseMaterials === undefined) {
+    updates.houseMaterials = defaults.houseMaterials;
+    changed = true;
+  }
+
   if (!changed) return settings;
   return {
     ...settings,
