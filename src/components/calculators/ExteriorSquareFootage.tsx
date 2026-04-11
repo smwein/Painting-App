@@ -210,23 +210,6 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
         </CardContent>
       </Card>
 
-      {pricing.houseMaterials && pricing.houseMaterials.length > 0 && (
-        <Card>
-          <CardContent>
-            <label className="block text-sm font-medium text-gray-700 mb-1">House Material</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              {...register('houseMaterial')}
-            >
-              <option value="">Default ({pricing.exteriorCoverage.wallSqftPerGallon} sqft/gal)</option>
-              {[...pricing.houseMaterials].sort((a, b) => a.order - b.order).map((mat) => (
-                <option key={mat.id} value={mat.id}>{mat.name} ({mat.coverageSqftPerGallon} sqft/gal)</option>
-              ))}
-            </select>
-          </CardContent>
-        </Card>
-      )}
-
       <PaintTypeSelector register={register} isExterior fieldName="paintType" />
 
       <MarkupSelector register={register} />
