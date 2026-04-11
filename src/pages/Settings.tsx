@@ -10,6 +10,7 @@ import { JobEstimationSettings } from '../components/settings/JobEstimationSetti
 import { PerRoomSettings } from '../components/settings/PerRoomSettings';
 import { TeamSettings } from '../components/settings/TeamSettings';
 import { BillingSettings } from '../components/settings/BillingSettings';
+import { PresentationSettings } from '../components/settings/PresentationSettings';
 import { useOrganization } from '../context/OrganizationContext';
 
 type SettingsTab =
@@ -23,7 +24,8 @@ type SettingsTab =
   | 'per-room'
   | 'crew-rates'
   | 'team'
-  | 'billing';
+  | 'billing'
+  | 'presentation';
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('company');
@@ -42,6 +44,12 @@ export function Settings() {
             onClick={() => setActiveTab('company')}
           >
             Company Info
+          </TabButton>
+          <TabButton
+            active={activeTab === 'presentation'}
+            onClick={() => setActiveTab('presentation')}
+          >
+            Presentation
           </TabButton>
           <TabButton
             active={activeTab === 'simple-interior'}
@@ -111,6 +119,7 @@ export function Settings() {
       {/* Tab Content */}
       <div>
         {activeTab === 'company' && <CompanyInfoSettings />}
+        {activeTab === 'presentation' && <PresentationSettings />}
         {activeTab === 'simple-interior' && <SimpleInteriorSettings />}
         {activeTab === 'simple-exterior' && <SimpleExteriorSettings />}
         {activeTab === 'interior-detailed-pricing' && <InteriorDetailedPricing />}
