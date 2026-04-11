@@ -149,8 +149,8 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
 
   const gallonEstimate = useMemo(() => {
     if (!autoCalcs) return null;
-    const wallGallons = autoCalcs.sidingSqft / pricing.exteriorCoverage.wallSqftPerGallon;
-    const trimGallons = autoCalcs.trimLF / pricing.exteriorCoverage.trimLfPerGallon;
+    const wallGallons = Math.ceil(autoCalcs.sidingSqft / pricing.exteriorCoverage.wallSqftPerGallon);
+    const trimGallons = Math.ceil(autoCalcs.trimLF / pricing.exteriorCoverage.trimLfPerGallon);
     return { wallGallons, trimGallons, total: wallGallons + trimGallons };
   }, [autoCalcs, pricing]);
 
@@ -306,15 +306,15 @@ export function ExteriorSquareFootage({ onResultChange, loadedBid }: ExteriorSqu
           <CardContent className="grid grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-xs text-gray-600 mb-1">Siding Paint</div>
-              <div className="text-xl font-bold text-yellow-700">{gallonEstimate.wallGallons.toFixed(1)} gal</div>
+              <div className="text-xl font-bold text-yellow-700">{gallonEstimate.wallGallons} gal</div>
             </div>
             <div className="text-center">
               <div className="text-xs text-gray-600 mb-1">Trim Paint</div>
-              <div className="text-xl font-bold text-yellow-700">{gallonEstimate.trimGallons.toFixed(1)} gal</div>
+              <div className="text-xl font-bold text-yellow-700">{gallonEstimate.trimGallons} gal</div>
             </div>
             <div className="text-center">
               <div className="text-xs text-gray-600 mb-1">Total</div>
-              <div className="text-xl font-bold text-yellow-800">{gallonEstimate.total.toFixed(1)} gal</div>
+              <div className="text-xl font-bold text-yellow-800">{gallonEstimate.total} gal</div>
             </div>
           </CardContent>
         </Card>

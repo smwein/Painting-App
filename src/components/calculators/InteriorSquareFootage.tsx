@@ -143,9 +143,9 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
 
   const gallonEstimate = useMemo(() => {
     if (!autoCalcs) return null;
-    const wallGallons = autoCalcs.wallSqft / pricing.interiorCoverage.wallSqftPerGallon;
-    const ceilingGallons = autoCalcs.ceilingSqft / pricing.interiorCoverage.ceilingSqftPerGallon;
-    const trimGallons = autoCalcs.trimLF / pricing.interiorCoverage.trimLfPerGallon;
+    const wallGallons = Math.ceil(autoCalcs.wallSqft / pricing.interiorCoverage.wallSqftPerGallon);
+    const ceilingGallons = Math.ceil(autoCalcs.ceilingSqft / pricing.interiorCoverage.ceilingSqftPerGallon);
+    const trimGallons = Math.ceil(autoCalcs.trimLF / pricing.interiorCoverage.trimLfPerGallon);
     return { wallGallons, ceilingGallons, trimGallons, total: wallGallons + ceilingGallons + trimGallons };
   }, [autoCalcs, pricing]);
 
@@ -326,19 +326,19 @@ export function InteriorSquareFootage({ onResultChange, loadedBid }: InteriorSqu
           <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-xs text-gray-600 mb-1">Wall Paint</div>
-              <div className="text-xl font-bold text-yellow-700">{gallonEstimate.wallGallons.toFixed(1)} gal</div>
+              <div className="text-xl font-bold text-yellow-700">{gallonEstimate.wallGallons} gal</div>
             </div>
             <div className="text-center">
               <div className="text-xs text-gray-600 mb-1">Ceiling Paint</div>
-              <div className="text-xl font-bold text-yellow-700">{gallonEstimate.ceilingGallons.toFixed(1)} gal</div>
+              <div className="text-xl font-bold text-yellow-700">{gallonEstimate.ceilingGallons} gal</div>
             </div>
             <div className="text-center">
               <div className="text-xs text-gray-600 mb-1">Trim Paint</div>
-              <div className="text-xl font-bold text-yellow-700">{gallonEstimate.trimGallons.toFixed(1)} gal</div>
+              <div className="text-xl font-bold text-yellow-700">{gallonEstimate.trimGallons} gal</div>
             </div>
             <div className="text-center">
               <div className="text-xs text-gray-600 mb-1">Total</div>
-              <div className="text-xl font-bold text-yellow-800">{gallonEstimate.total.toFixed(1)} gal</div>
+              <div className="text-xl font-bold text-yellow-800">{gallonEstimate.total} gal</div>
             </div>
           </CardContent>
         </Card>
