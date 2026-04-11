@@ -3,7 +3,14 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import type { PublicQuote } from '../types/quote.types';
 import type { Bid } from '../types/bid.types';
+import type { PresentationSettings } from '../types/settings.types';
 import { notifyQuoteEvent } from '../services/quoteService';
+import { AboutUsPage } from '../components/quote-pages/AboutUsPage';
+import { ServicesPage } from '../components/quote-pages/ServicesPage';
+import { TestimonialsPage } from '../components/quote-pages/TestimonialsPage';
+import { GalleryPage } from '../components/quote-pages/GalleryPage';
+import { ProcessPage } from '../components/quote-pages/ProcessPage';
+import { TermsPage } from '../components/quote-pages/TermsPage';
 
 interface QuoteData {
   quote: PublicQuote;
@@ -13,6 +20,7 @@ interface QuoteData {
   companyEmail: string;
   companyLogo?: string;
   brandColor: string;
+  presentation?: PresentationSettings;
 }
 
 function mapQuoteRow(row: any): PublicQuote {
@@ -44,6 +52,7 @@ export function PublicQuote() {
   const [signatureName, setSignatureName] = useState('');
   const [accepting, setAccepting] = useState(false);
   const [accepted, setAccepted] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('estimate');
 
   const loadQuote = useCallback(async () => {
     if (!token) return;
@@ -77,6 +86,7 @@ export function PublicQuote() {
           companyEmail: settings?.email ?? '',
           companyLogo: settings?.logo,
           brandColor: settings?.pricing?.presentation?.brandColor ?? '#2563eb',
+          presentation: settings?.pricing?.presentation,
         });
         return;
       }
@@ -115,6 +125,7 @@ export function PublicQuote() {
         companyEmail: settings?.email ?? '',
         companyLogo: settings?.logo,
         brandColor: settings?.pricing?.presentation?.brandColor ?? '#2563eb',
+        presentation: settings?.pricing?.presentation,
       });
 
       if (quote.status === 'accepted') {
@@ -182,6 +193,18 @@ export function PublicQuote() {
 
   const { quote, bid, companyName, companyPhone, companyEmail, companyLogo, brandColor } = data;
 
+  const TAB_LABELS: Record<string, string> = {
+    estimate: 'Estimate',
+    about: 'About Us',
+    services: 'Services',
+    testimonials: 'Testimonials',
+    gallery: 'Gallery',
+    process: 'Our Process',
+    terms: 'Terms',
+  };
+
+  const tabs = ['estimate', ...quote.enabledPages.filter((p) => p !== 'estimate')];
+
   const lineItems: Array<{ name: string }> = [];
   if (bid.result.materials.items.length > 0) {
     bid.result.materials.items.forEach((item) => {
@@ -203,69 +226,121 @@ export function PublicQuote() {
             </div>
           </div>
         </div>
-        <div style={{ fontSize: 13, fontWeight: 500, color: brandColor, borderBottom: `2px solid ${brandColor}`, paddingBottom: 2 }}>
-          Estimate
-        </div>
+        {tabs.length > 1 ? (
+          <div style={{ display: 'flex', gap: 4, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: 13,
+                  fontWeight: activeTab === tab ? 600 : 400,
+                  color: activeTab === tab ? brandColor : '#64748b',
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: `2px solid ${activeTab === tab ? brandColor : 'transparent'}`,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {TAB_LABELS[tab] || tab}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div style={{ fontSize: 13, fontWeight: 500, color: brandColor, borderBottom: `2px solid ${brandColor}`, paddingBottom: 2 }}>
+            Estimate
+          </div>
+        )}
       </header>
 
       <main style={{ maxWidth: 640, margin: '0 auto', padding: '24px 16px' }}>
-        <div style={{ background: 'white', borderRadius: 10, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 16 }}>
-          <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Estimate for</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}>{quote.customerName}</div>
-          {bid.customer?.address && (
-            <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{bid.customer.address}</div>
-          )}
-          {bid.customer?.jobDate && (
-            <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>
-              Job Date: {new Date(bid.customer.jobDate).toLocaleDateString()}
+        {activeTab === 'estimate' && (
+          <>
+            <div style={{ background: 'white', borderRadius: 10, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 16 }}>
+              <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Estimate for</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}>{quote.customerName}</div>
+              {bid.customer?.address && (
+                <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{bid.customer.address}</div>
+              )}
+              {bid.customer?.jobDate && (
+                <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>
+                  Job Date: {new Date(bid.customer.jobDate).toLocaleDateString()}
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        <div style={{ background: 'white', borderRadius: 10, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 16 }}>
-          <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Scope of Work</div>
-          <div style={{ fontSize: 14, fontWeight: 500, color: '#475569', marginBottom: 8 }}>Professional painting services</div>
-          {lineItems.map((item, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < lineItems.length - 1 ? '1px solid #f1f5f9' : 'none', fontSize: 13 }}>
-              <span style={{ color: '#475569' }}>{'\u2022'} {item.name}</span>
+            <div style={{ background: 'white', borderRadius: 10, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 16 }}>
+              <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Scope of Work</div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: '#475569', marginBottom: 8 }}>Professional painting services</div>
+              {lineItems.map((item, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < lineItems.length - 1 ? '1px solid #f1f5f9' : 'none', fontSize: 13 }}>
+                  <span style={{ color: '#475569' }}>{'\u2022'} {item.name}</span>
+                </div>
+              ))}
+              {bid.result.materials.items.length === 0 && (
+                <div style={{ fontSize: 13, color: '#475569' }}>{'\u2022'} All materials and supplies included</div>
+              )}
             </div>
-          ))}
-          {bid.result.materials.items.length === 0 && (
-            <div style={{ fontSize: 13, color: '#475569' }}>{'\u2022'} All materials and supplies included</div>
-          )}
-        </div>
 
-        <div style={{ background: brandColor, borderRadius: 10, padding: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)' }}>Project Total</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: 'white' }}>${bid.result.total.toFixed(2)}</div>
-          </div>
-          {accepted ? (
-            <div style={{ background: 'rgba(255,255,255,0.2)', color: 'white', padding: '12px 24px', borderRadius: 8, fontWeight: 700, fontSize: 14 }}>
-              {'\u2713'} Accepted
+            <div style={{ background: brandColor, borderRadius: 10, padding: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)' }}>Project Total</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: 'white' }}>${bid.result.total.toFixed(2)}</div>
+              </div>
+              {accepted ? (
+                <div style={{ background: 'rgba(255,255,255,0.2)', color: 'white', padding: '12px 24px', borderRadius: 8, fontWeight: 700, fontSize: 14 }}>
+                  {'\u2713'} Accepted
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAcceptModal(true)}
+                  style={{ background: 'white', color: brandColor, padding: '12px 24px', borderRadius: 8, fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' }}
+                >
+                  Accept Estimate
+                </button>
+              )}
             </div>
-          ) : (
-            <button
-              onClick={() => setShowAcceptModal(true)}
-              style={{ background: 'white', color: brandColor, padding: '12px 24px', borderRadius: 8, fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' }}
-            >
-              Accept Estimate
-            </button>
-          )}
-        </div>
 
-        {accepted && (quote.signatureText || signatureName) && (
-          <div style={{ background: 'white', borderRadius: 10, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginTop: 16, textAlign: 'center' }}>
-            <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Accepted by</div>
-            <div style={{ fontFamily: "'Dancing Script', cursive", fontSize: 32, color: '#1e293b' }}>
-              {quote.signatureText || signatureName}
-            </div>
-            {quote.acceptedAt && (
-              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
-                {new Date(quote.acceptedAt).toLocaleDateString()}
+            {accepted && (quote.signatureText || signatureName) && (
+              <div style={{ background: 'white', borderRadius: 10, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginTop: 16, textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Accepted by</div>
+                <div style={{ fontFamily: "'Dancing Script', cursive", fontSize: 32, color: '#1e293b' }}>
+                  {quote.signatureText || signatureName}
+                </div>
+                {quote.acceptedAt && (
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
+                    {new Date(quote.acceptedAt).toLocaleDateString()}
+                  </div>
+                )}
               </div>
             )}
-          </div>
+          </>
+        )}
+
+        {activeTab === 'about' && data.presentation?.aboutUs && (
+          <AboutUsPage aboutUs={data.presentation.aboutUs} brandColor={brandColor} />
+        )}
+
+        {activeTab === 'services' && data.presentation?.services && (
+          <ServicesPage items={data.presentation.services.items} brandColor={brandColor} />
+        )}
+
+        {activeTab === 'testimonials' && data.presentation?.testimonials && (
+          <TestimonialsPage items={data.presentation.testimonials.items} brandColor={brandColor} />
+        )}
+
+        {activeTab === 'gallery' && data.presentation?.gallery && (
+          <GalleryPage items={data.presentation.gallery.items} />
+        )}
+
+        {activeTab === 'process' && data.presentation?.process && (
+          <ProcessPage steps={data.presentation.process.steps} brandColor={brandColor} />
+        )}
+
+        {activeTab === 'terms' && data.presentation?.terms && (
+          <TermsPage content={data.presentation.terms.content} />
         )}
 
         <div style={{ textAlign: 'center', padding: '32px 0 16px', fontSize: 12, color: '#94a3b8' }}>
