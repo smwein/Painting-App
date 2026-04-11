@@ -34,6 +34,7 @@ export interface Bid {
   createdAt: Date;
   updatedAt: Date;
   created_by?: string;
+  locked?: boolean;
 }
 
 // Bid list item for display

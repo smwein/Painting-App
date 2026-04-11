@@ -20,6 +20,7 @@ export async function fetchBids(orgId: string, userId?: string): Promise<Bid[]> 
     ...(row.bid_data as unknown as Omit<Bid, 'id' | 'createdAt' | 'updatedAt'>),
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
+    locked: row.locked ?? false,
   }));
 }
 

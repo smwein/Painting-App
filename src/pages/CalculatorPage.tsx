@@ -7,6 +7,7 @@ import { ExteriorDetailed } from '../components/calculators/ExteriorDetailed';
 import { PerRoomDetailed } from '../components/calculators/PerRoomDetailed';
 import { ExportButtons } from '../components/results/ExportButtons';
 import { SendQuoteModal } from '../components/quotes/SendQuoteModal';
+import { unlockBid } from '../services/quoteService';
 import { useBidStore } from '../store/bidStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useAuthStore } from '../store/authStore';
@@ -23,6 +24,7 @@ export function CalculatorPage() {
   const user = useAuthStore((s) => s.user);
   const [currentBidData, setCurrentBidData] = useState<any>(null);
   const [showSendModal, setShowSendModal] = useState(false);
+  const [isLocked, setIsLocked] = useState(loadedBid?.locked ?? false);
 
   // Get loaded bid from navigation state (if navigating from saved bids)
   const loadedBid = location.state?.loadedBid as Bid | undefined;
@@ -161,7 +163,33 @@ export function CalculatorPage() {
         </h2>
       </div>
 
-      {renderCalculator()}
+      {isLocked && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-yellow-600 text-lg">{'\uD83D\uDD12'}</span>
+            <span className="text-sm text-yellow-800 font-medium">
+              This bid has been sent to the customer. It is locked to prevent accidental changes.
+            </span>
+          </div>
+          <button
+            onClick={async () => {
+              if (confirm('Changes will be visible to the customer immediately. Unlock this bid?')) {
+                if (loadedBid?.id) {
+                  await unlockBid(loadedBid.id);
+                  setIsLocked(false);
+                }
+              }
+            }}
+            className="text-sm text-yellow-700 hover:text-yellow-900 font-medium underline"
+          >
+            Unlock to Edit
+          </button>
+        </div>
+      )}
+
+      <div style={isLocked ? { pointerEvents: 'none', opacity: 0.6 } : undefined}>
+        {renderCalculator()}
+      </div>
 
       {hasValidBid && (
         <ExportButtons
