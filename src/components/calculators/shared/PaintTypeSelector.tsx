@@ -28,23 +28,17 @@ export function PaintTypeSelector({
       <CardHeader>
         <CardTitle>Paint Type</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
-        {paintOptions.map((option) => (
-          <label
-            key={option.value}
-            className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-          >
-            <input
-              type="radio"
-              value={option.value}
-              className="w-5 h-5 text-primary-600 border-gray-300 focus:ring-2 focus:ring-primary-500"
-              {...register(fieldName, { required: true })}
-            />
-            <span className="text-sm font-medium text-gray-700">
+      <CardContent>
+        <select
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          {...register(fieldName, { required: true })}
+        >
+          {paintOptions.map((option) => (
+            <option key={option.value} value={option.value}>
               {option.label}
-            </span>
-          </label>
-        ))}
+            </option>
+          ))}
+        </select>
       </CardContent>
     </Card>
   );
