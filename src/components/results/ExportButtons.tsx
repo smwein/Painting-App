@@ -5,10 +5,11 @@ interface ExportButtonsProps {
   onSave: () => void;
   onExportPDF: () => void;
   onExportCustomerPDF: () => void;
+  onSendToCustomer?: () => void;
   disabled?: boolean;
 }
 
-export function ExportButtons({ onSave, onExportPDF, onExportCustomerPDF, disabled }: ExportButtonsProps) {
+export function ExportButtons({ onSave, onExportPDF, onExportCustomerPDF, onSendToCustomer, disabled }: ExportButtonsProps) {
   return (
     <Card className="bg-white shadow-lg">
       <CardContent className="p-4">
@@ -45,15 +46,29 @@ export function ExportButtons({ onSave, onExportPDF, onExportCustomerPDF, disabl
             <div className="text-xs font-semibold text-gray-500 uppercase mb-2">
               For Customer
             </div>
-            <Button
-              onClick={onExportCustomerPDF}
-              disabled={disabled}
-              variant="primary"
-              fullWidth
-              size="lg"
-            >
-              📄 Generate Customer Copy
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button
+                onClick={onExportCustomerPDF}
+                disabled={disabled}
+                variant="outline"
+                fullWidth
+                className="sm:flex-1"
+              >
+                📄 Customer PDF
+              </Button>
+              {onSendToCustomer && (
+                <Button
+                  onClick={onSendToCustomer}
+                  disabled={disabled}
+                  variant="primary"
+                  fullWidth
+                  className="sm:flex-1"
+                  size="lg"
+                >
+                  📧 Send to Customer
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>

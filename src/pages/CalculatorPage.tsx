@@ -6,8 +6,10 @@ import { ExteriorSquareFootage } from '../components/calculators/ExteriorSquareF
 import { ExteriorDetailed } from '../components/calculators/ExteriorDetailed';
 import { PerRoomDetailed } from '../components/calculators/PerRoomDetailed';
 import { ExportButtons } from '../components/results/ExportButtons';
+import { SendQuoteModal } from '../components/quotes/SendQuoteModal';
 import { useBidStore } from '../store/bidStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { useAuthStore } from '../store/authStore';
 import { downloadBidPDF, downloadCustomerPDF } from '../utils/exportPDF';
 import type { Bid } from '../types/bid.types';
 import type { CalculatorType } from '../types/calculator.types';
@@ -18,7 +20,9 @@ export function CalculatorPage() {
   const location = useLocation();
   const { saveBid } = useBidStore();
   const { settings } = useSettingsStore();
+  const user = useAuthStore((s) => s.user);
   const [currentBidData, setCurrentBidData] = useState<any>(null);
+  const [showSendModal, setShowSendModal] = useState(false);
 
   // Get loaded bid from navigation state (if navigating from saved bids)
   const loadedBid = location.state?.loadedBid as Bid | undefined;
@@ -164,7 +168,28 @@ export function CalculatorPage() {
           onSave={handleSave}
           onExportPDF={handleExportPDF}
           onExportCustomerPDF={handleExportCustomerPDF}
+          onSendToCustomer={() => {
+            if (!loadedBid?.id) {
+              alert('Please save the bid first before sending to the customer.');
+              return;
+            }
+            setShowSendModal(true);
+          }}
           disabled={!hasValidBid}
+        />
+      )}
+
+      {showSendModal && loadedBid && user?.organizationId && (
+        <SendQuoteModal
+          bidId={loadedBid.id}
+          customerName={currentBidData?.customer?.name ?? ''}
+          customerEmail={currentBidData?.customer?.email ?? ''}
+          organizationId={user.organizationId}
+          onClose={() => setShowSendModal(false)}
+          onSent={(url) => {
+            setShowSendModal(false);
+            alert(`Estimate sent! Link: ${url}`);
+          }}
         />
       )}
     </div>
