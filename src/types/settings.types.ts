@@ -1,6 +1,45 @@
+export interface AboutUsSettings {
+  heading: string;
+  bodyText: string;
+  imageUrl?: string;
+  stats: Array<{ label: string; value: string }>;
+}
+
+export interface ServiceItem {
+  name: string;
+  description: string;
+  imageUrl?: string;
+}
+
+export interface TestimonialItem {
+  name: string;
+  quote: string;
+  rating: number;
+  photoUrl?: string;
+}
+
+export interface GalleryItem {
+  projectName: string;
+  beforeUrl?: string;
+  afterUrl?: string;
+  description: string;
+}
+
+export interface ProcessStep {
+  name: string;
+  description: string;
+}
+
 export interface PresentationSettings {
   brandColor: string;
   defaultPages: string[];
+
+  aboutUs: AboutUsSettings;
+  services: { items: ServiceItem[] };
+  testimonials: { items: TestimonialItem[] };
+  gallery: { items: GalleryItem[] };
+  process: { steps: ProcessStep[] };
+  terms: { content: string };
 }
 
 // Line item configuration for dynamic calculators
