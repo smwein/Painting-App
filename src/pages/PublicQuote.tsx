@@ -68,7 +68,7 @@ export function PublicQuote() {
           .select('settings_json')
           .eq('organization_id', quote.organizationId)
           .single();
-        const settings = settingsRow?.settings_json;
+        const settings = settingsRow?.settings_json as Record<string, any> | undefined;
         setData({
           quote,
           bid: {} as Bid,
@@ -105,7 +105,7 @@ export function PublicQuote() {
         .eq('organization_id', quote.organizationId)
         .single();
 
-      const settings = settingsRow?.settings_json;
+      const settings = settingsRow?.settings_json as Record<string, any> | undefined;
 
       setData({
         quote,

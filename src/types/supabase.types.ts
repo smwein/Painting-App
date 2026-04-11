@@ -112,6 +112,7 @@ export interface Database {
           customer_name: string;
           bid_data: Record<string, unknown>;
           status: BidStatus;
+          locked: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -123,6 +124,7 @@ export interface Database {
           customer_name?: string;
           bid_data: Record<string, unknown>;
           status?: BidStatus;
+          locked?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -134,6 +136,7 @@ export interface Database {
           customer_name?: string;
           bid_data?: Record<string, unknown>;
           status?: BidStatus;
+          locked?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -143,6 +146,75 @@ export interface Database {
             columns: ['organization_id'];
             isOneToOne: false;
             referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      public_quotes: {
+        Row: {
+          id: string;
+          organization_id: string;
+          bid_id: string;
+          public_token: string;
+          customer_email: string;
+          customer_name: string;
+          status: string;
+          enabled_pages: string[];
+          accepted_at: string | null;
+          signature_text: string | null;
+          viewed_at: string | null;
+          view_count: number;
+          expires_at: string;
+          sent_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          bid_id: string;
+          public_token: string;
+          customer_email: string;
+          customer_name: string;
+          status?: string;
+          enabled_pages?: string[];
+          accepted_at?: string | null;
+          signature_text?: string | null;
+          viewed_at?: string | null;
+          view_count?: number;
+          expires_at: string;
+          sent_by: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          bid_id?: string;
+          public_token?: string;
+          customer_email?: string;
+          customer_name?: string;
+          status?: string;
+          enabled_pages?: string[];
+          accepted_at?: string | null;
+          signature_text?: string | null;
+          viewed_at?: string | null;
+          view_count?: number;
+          expires_at?: string;
+          sent_by?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'public_quotes_organization_id_fkey';
+            columns: ['organization_id'];
+            isOneToOne: false;
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'public_quotes_bid_id_fkey';
+            columns: ['bid_id'];
+            isOneToOne: false;
+            referencedRelation: 'bids';
             referencedColumns: ['id'];
           },
         ];

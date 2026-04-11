@@ -22,12 +22,12 @@ export function CalculatorPage() {
   const { saveBid } = useBidStore();
   const { settings } = useSettingsStore();
   const user = useAuthStore((s) => s.user);
+  // Get loaded bid from navigation state (if navigating from saved bids)
+  const loadedBid = location.state?.loadedBid as Bid | undefined;
+
   const [currentBidData, setCurrentBidData] = useState<any>(null);
   const [showSendModal, setShowSendModal] = useState(false);
   const [isLocked, setIsLocked] = useState(loadedBid?.locked ?? false);
-
-  // Get loaded bid from navigation state (if navigating from saved bids)
-  const loadedBid = location.state?.loadedBid as Bid | undefined;
 
   const getCalculatorTitle = () => {
     switch (type) {
