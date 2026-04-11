@@ -449,6 +449,17 @@ export function createDefaultPricingSettings(): PricingSettings {
     presentation: {
       brandColor: '#2563eb',
       defaultPages: ['estimate'],
+
+      aboutUs: {
+        heading: 'About Our Company',
+        bodyText: '',
+        stats: [],
+      },
+      services: { items: [] },
+      testimonials: { items: [] },
+      gallery: { items: [] },
+      process: { steps: [] },
+      terms: { content: '' },
     },
 
     // Dynamic sections
