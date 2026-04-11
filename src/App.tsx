@@ -20,6 +20,7 @@ const Terms = lazy(() => import('./pages/Terms').then(m => ({ default: m.Terms }
 const Privacy = lazy(() => import('./pages/Privacy').then(m => ({ default: m.Privacy })));
 const Support = lazy(() => import('./pages/Support').then(m => ({ default: m.Support })));
 const Admin = lazy(() => import('./pages/Admin').then(m => ({ default: m.Admin })));
+const PublicQuote = lazy(() => import('./pages/PublicQuote').then(m => ({ default: m.PublicQuote })));
 
 function AppShell() {
   return (
@@ -53,6 +54,7 @@ function App() {
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/support" element={<Support />} />
+        <Route path="/quote/:token" element={<PublicQuote />} />
 
         {/* Auth required but no org needed */}
         <Route element={<ProtectedRoute />}>
