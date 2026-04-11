@@ -89,6 +89,18 @@ function ensureNewPricingFields(settings: CompanySettings): CompanySettings {
   if (p.presentation === undefined) {
     updates.presentation = defaults.presentation;
     changed = true;
+  } else if (p.presentation.aboutUs === undefined) {
+    // Existing org has brandColor/defaultPages from Phase 1 but no page content
+    updates.presentation = {
+      ...p.presentation,
+      aboutUs: defaults.presentation!.aboutUs,
+      services: defaults.presentation!.services,
+      testimonials: defaults.presentation!.testimonials,
+      gallery: defaults.presentation!.gallery,
+      process: defaults.presentation!.process,
+      terms: defaults.presentation!.terms,
+    };
+    changed = true;
   }
 
   if (!changed) return settings;
