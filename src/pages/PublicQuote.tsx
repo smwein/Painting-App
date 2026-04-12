@@ -85,8 +85,8 @@ export function PublicQuote() {
           companyPhone: settings?.phone ?? '',
           companyEmail: settings?.email ?? '',
           companyLogo: settings?.logo,
-          brandColor: settings?.pricing?.presentation?.brandColor ?? '#2563eb',
-          presentation: settings?.pricing?.presentation,
+          brandColor: settings?.presentation?.brandColor ?? '#2563eb',
+          presentation: settings?.presentation,
         });
         return;
       }
@@ -124,8 +124,8 @@ export function PublicQuote() {
         companyPhone: settings?.phone ?? '',
         companyEmail: settings?.email ?? '',
         companyLogo: settings?.logo,
-        brandColor: settings?.pricing?.presentation?.brandColor ?? '#2563eb',
-        presentation: settings?.pricing?.presentation,
+        brandColor: settings?.presentation?.brandColor ?? '#2563eb',
+        presentation: settings?.presentation,
       });
 
       if (quote.status === 'accepted') {
