@@ -71,12 +71,13 @@ export function calculateExteriorSquareFootage(
       )
     : null;
 
+  // Always use the percentage split for labor
+  laborCost = baseCost * (laborPct / 100);
+
   if (paintMaterialCalc) {
+    // When paint type is selected, use actual paint cost instead of percentage estimate
     baseMatCost = paintMaterialCalc.totalCost;
-    laborCost = baseCost - baseMatCost;
-    if (laborCost < 0) laborCost = baseCost * (laborPct / 100);
   } else {
-    laborCost = baseCost * (laborPct / 100);
     baseMatCost = baseCost * (matPct / 100);
   }
 
