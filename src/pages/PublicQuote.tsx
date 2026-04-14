@@ -53,6 +53,7 @@ export function PublicQuote() {
   const [accepting, setAccepting] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('estimate');
+  const [tabDropdownOpen, setTabDropdownOpen] = useState(false);
 
   const loadQuote = useCallback(async () => {
     if (!token) return;
@@ -227,27 +228,90 @@ export function PublicQuote() {
           </div>
         </div>
         {tabs.length > 1 ? (
-          <div style={{ display: 'flex', gap: 4, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            {tabs.map((tab) => (
+          <>
+            {/* Desktop: horizontal tabs */}
+            <div className="quote-tabs-desktop" style={{ display: 'flex', gap: 4, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: 13,
+                    fontWeight: activeTab === tab ? 600 : 400,
+                    color: activeTab === tab ? brandColor : '#64748b',
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: `2px solid ${activeTab === tab ? brandColor : 'transparent'}`,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {TAB_LABELS[tab] || tab}
+                </button>
+              ))}
+            </div>
+            {/* Mobile: dropdown */}
+            <div className="quote-tabs-mobile" style={{ position: 'relative', display: 'none' }}>
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => setTabDropdownOpen(!tabDropdownOpen)}
                 style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
                   padding: '6px 12px',
                   fontSize: 13,
-                  fontWeight: activeTab === tab ? 600 : 400,
-                  color: activeTab === tab ? brandColor : '#64748b',
+                  fontWeight: 600,
+                  color: brandColor,
                   background: 'none',
-                  border: 'none',
-                  borderBottom: `2px solid ${activeTab === tab ? brandColor : 'transparent'}`,
+                  border: `1px solid ${brandColor}`,
+                  borderRadius: 6,
                   cursor: 'pointer',
-                  whiteSpace: 'nowrap',
                 }}
               >
-                {TAB_LABELS[tab] || tab}
+                {TAB_LABELS[activeTab] || activeTab}
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: tabDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                  <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
-            ))}
-          </div>
+              {tabDropdownOpen && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: 4,
+                  background: 'white',
+                  borderRadius: 8,
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                  border: '1px solid #e2e8f0',
+                  zIndex: 40,
+                  minWidth: 160,
+                  overflow: 'hidden',
+                }}>
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => { setActiveTab(tab); setTabDropdownOpen(false); }}
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        padding: '10px 16px',
+                        fontSize: 13,
+                        fontWeight: activeTab === tab ? 600 : 400,
+                        color: activeTab === tab ? brandColor : '#475569',
+                        background: activeTab === tab ? '#f8fafc' : 'white',
+                        border: 'none',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {TAB_LABELS[tab] || tab}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
         ) : (
           <div style={{ fontSize: 13, fontWeight: 500, color: brandColor, borderBottom: `2px solid ${brandColor}`, paddingBottom: 2 }}>
             Estimate
@@ -393,6 +457,14 @@ export function PublicQuote() {
       )}
 
       <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet" />
+      <style>{`
+        @media (max-width: 479px) {
+          .quote-tabs-desktop { display: none !important; }
+          .quote-tabs-mobile { display: block !important; }
+          .quote-services-grid { grid-template-columns: 1fr !important; }
+          .quote-gallery-images img { max-height: 120px !important; }
+        }
+      `}</style>
     </div>
   );
 }
