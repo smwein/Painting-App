@@ -5,7 +5,8 @@ import { useAuthStore } from '../store/authStore';
 import { Card, CardContent } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { SendQuoteModal } from '../components/quotes/SendQuoteModal';
-import { fetchQuotesForOrg } from '../services/quoteService';
+import { QuoteSentModal } from '../components/quotes/QuoteSentModal';
+import { fetchQuotesForOrg, sendQuote } from '../services/quoteService';
 import type { PublicQuote } from '../types/quote.types';
 import { format, formatDistanceToNow } from 'date-fns';
 
@@ -38,6 +39,10 @@ export function SavedBids() {
   const [statusFilter, setStatusFilter] = useState('');
   const [quoteMap, setQuoteMap] = useState<Map<string, PublicQuote>>(new Map());
   const [sendModalBid, setSendModalBid] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [sentQuoteUrl, setSentQuoteUrl] = useState<string | null>(null);
+  const [resendingBidId, setResendingBidId] = useState<string | null>(null);
+  const [resendFeedback, setResendFeedback] = useState<{ bidId: string; type: 'success' | 'error' } | null>(null);
+  const [copiedBidId, setCopiedBidId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.organizationId) return;
@@ -118,6 +123,56 @@ export function SavedBids() {
   const getCalculatorLabel = (type: string) => {
     const option = CALCULATOR_OPTIONS.find((o) => o.value === type);
     return option?.label || type;
+  };
+
+  const handleResend = async (e: React.MouseEvent, bid: typeof allBids[0]) => {
+    e.stopPropagation();
+    const quote = quoteMap.get(bid.id);
+    if (!quote || !user?.organizationId) return;
+
+    setResendingBidId(bid.id);
+    setResendFeedback(null);
+    try {
+      await sendQuote({
+        bidId: bid.id,
+        customerEmail: quote.customerEmail,
+        customerName: quote.customerName,
+        enabledPages: quote.enabledPages,
+        expiresAt: quote.expiresAt,
+        organizationId: user.organizationId,
+      });
+      setResendFeedback({ bidId: bid.id, type: 'success' });
+      fetchQuotesForOrg(user.organizationId).then((quotes) => {
+        const map = new Map<string, PublicQuote>();
+        quotes.forEach((q) => map.set(q.bidId, q));
+        setQuoteMap(map);
+      }).catch(console.error);
+    } catch {
+      setResendFeedback({ bidId: bid.id, type: 'error' });
+    } finally {
+      setResendingBidId(null);
+      setTimeout(() => setResendFeedback(null), 2000);
+    }
+  };
+
+  const handleCopyLink = async (e: React.MouseEvent, bidId: string) => {
+    e.stopPropagation();
+    const quote = quoteMap.get(bidId);
+    if (!quote) return;
+
+    const url = `${window.location.origin}/quote/${quote.publicToken}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const input = document.createElement('input');
+      input.value = url;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+    }
+    setCopiedBidId(bidId);
+    setTimeout(() => setCopiedBidId(null), 2000);
   };
 
   return (
@@ -274,7 +329,7 @@ export function SavedBids() {
           onClose={() => setSendModalBid(null)}
           onSent={(url) => {
             setSendModalBid(null);
-            alert(`Estimate sent! Link: ${url}`);
+            setSentQuoteUrl(url);
             // Refresh quote statuses
             fetchQuotesForOrg(user.organizationId!).then((quotes) => {
               const map = new Map<string, PublicQuote>();
@@ -282,6 +337,13 @@ export function SavedBids() {
               setQuoteMap(map);
             }).catch(console.error);
           }}
+        />
+      )}
+
+      {sentQuoteUrl && (
+        <QuoteSentModal
+          quoteUrl={sentQuoteUrl}
+          onClose={() => setSentQuoteUrl(null)}
         />
       )}
     </div>
