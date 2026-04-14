@@ -7,7 +7,16 @@ import { Button } from '../components/common/Button';
 import { SendQuoteModal } from '../components/quotes/SendQuoteModal';
 import { fetchQuotesForOrg } from '../services/quoteService';
 import type { PublicQuote } from '../types/quote.types';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
+
+const STATUS_OPTIONS = [
+  { value: '', label: 'All Statuses' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'sent', label: 'Sent' },
+  { value: 'viewed', label: 'Viewed' },
+  { value: 'accepted', label: 'Accepted' },
+  { value: 'expired', label: 'Expired' },
+];
 
 const CALCULATOR_OPTIONS = [
   { value: '', label: 'All Types' },
@@ -26,6 +35,7 @@ export function SavedBids() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [quoteMap, setQuoteMap] = useState<Map<string, PublicQuote>>(new Map());
   const [sendModalBid, setSendModalBid] = useState<{ id: string; name: string; email: string } | null>(null);
 
@@ -41,7 +51,11 @@ export function SavedBids() {
   const filteredBids = allBids.filter((bid) => {
     const matchesSearch = !searchQuery || bid.customerName.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = !typeFilter || bid.calculatorType === typeFilter;
-    return matchesSearch && matchesType;
+    if (!statusFilter) return matchesSearch && matchesType;
+    const quote = quoteMap.get(bid.id);
+    if (statusFilter === 'draft') return matchesSearch && matchesType && !quote;
+    if (!quote) return false;
+    return matchesSearch && matchesType && getEffectiveStatus(quote) === statusFilter;
   });
 
   const handleDelete = (e: React.MouseEvent, id: string, customerName: string) => {
@@ -77,6 +91,30 @@ export function SavedBids() {
     }
   };
 
+  const getEffectiveStatus = (quote: PublicQuote): string => {
+    if (quote.status === 'accepted') return 'accepted';
+    if (new Date(quote.expiresAt) < new Date()) return 'expired';
+    return quote.status;
+  };
+
+  const getActivityText = (quote: PublicQuote): string => {
+    const status = getEffectiveStatus(quote);
+    if (status === 'accepted' && quote.acceptedAt) {
+      return `Accepted ${formatDistanceToNow(new Date(quote.acceptedAt), { addSuffix: true })}`;
+    }
+    if (status === 'expired') {
+      return `Expired ${format(new Date(quote.expiresAt), 'MMM d')}`;
+    }
+    if (status === 'viewed' && quote.viewedAt) {
+      const viewText = `Viewed ${formatDistanceToNow(new Date(quote.viewedAt), { addSuffix: true })}`;
+      return quote.viewCount > 1 ? `${viewText} (${quote.viewCount} views)` : viewText;
+    }
+    if (status === 'sent') {
+      return `Sent ${formatDistanceToNow(new Date(quote.createdAt), { addSuffix: true })}`;
+    }
+    return '';
+  };
+
   const getCalculatorLabel = (type: string) => {
     const option = CALCULATOR_OPTIONS.find((o) => o.value === type);
     return option?.label || type;
@@ -108,6 +146,15 @@ export function SavedBids() {
             className="px-4 py-2.5 border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 font-body"
           >
             {CALCULATOR_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2.5 border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 font-body"
+          >
+            {STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
@@ -155,6 +202,7 @@ export function SavedBids() {
                         {(() => {
                           const quote = quoteMap.get(bid.id);
                           if (!quote) return null;
+                          const status = getEffectiveStatus(quote);
                           const colors: Record<string, string> = {
                             sent: 'bg-blue-100 text-blue-700',
                             viewed: 'bg-yellow-100 text-yellow-700',
@@ -162,10 +210,16 @@ export function SavedBids() {
                             declined: 'bg-red-100 text-red-700',
                             expired: 'bg-gray-100 text-gray-500',
                           };
+                          const activity = getActivityText(quote);
                           return (
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[quote.status] ?? ''}`}>
-                              {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
-                            </span>
+                            <>
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] ?? ''}`}>
+                                {status.charAt(0).toUpperCase() + status.slice(1)}
+                              </span>
+                              {activity && (
+                                <span className="text-xs text-gray-400">{activity}</span>
+                              )}
+                            </>
                           );
                         })()}
                         <span>
