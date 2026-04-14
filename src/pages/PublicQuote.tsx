@@ -171,7 +171,7 @@ export function PublicQuote() {
         <div style={{ background: 'white', borderRadius: 12, padding: 40, maxWidth: 480, textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <h2 style={{ fontSize: 22, fontWeight: 700, color: '#1e293b', margin: '0 0 8px' }}>Estimate Expired</h2>
           <p style={{ color: '#64748b', fontSize: 15, margin: '0 0 24px' }}>
-            This estimate has expired. Please contact {data.companyName} for an updated quote.
+            This estimate expired on {new Date(data.quote.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}. Please contact {data.companyName} for an updated quote.
           </p>
           {data.companyPhone && <p style={{ color: '#475569', fontSize: 14, margin: '4px 0' }}>{data.companyPhone}</p>}
           {data.companyEmail && <p style={{ color: '#475569', fontSize: 14, margin: '4px 0' }}>{data.companyEmail}</p>}
