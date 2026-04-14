@@ -287,7 +287,7 @@ export function SavedBids() {
                         ${bid.total.toFixed(2)}
                       </div>
                       <div className="mt-2 flex items-center gap-3 justify-end">
-                        {!quoteMap.has(bid.id) && (
+                        {!quoteMap.has(bid.id) ? (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -297,6 +297,28 @@ export function SavedBids() {
                           >
                             Send
                           </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={(e) => handleResend(e, bid)}
+                              disabled={resendingBidId === bid.id}
+                              className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
+                            >
+                              {resendingBidId === bid.id
+                                ? 'Sending...'
+                                : resendFeedback?.bidId === bid.id
+                                  ? resendFeedback.type === 'success'
+                                    ? 'Resent!'
+                                    : 'Failed'
+                                  : 'Resend'}
+                            </button>
+                            <button
+                              onClick={(e) => handleCopyLink(e, bid.id)}
+                              className="text-sm text-teal-600 hover:text-teal-700 font-medium"
+                            >
+                              {copiedBidId === bid.id ? 'Copied!' : 'Copy Link'}
+                            </button>
+                          </>
                         )}
                         <button
                           onClick={(e) => handleClone(e, bid.id)}
