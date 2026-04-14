@@ -11,7 +11,7 @@ export function GalleryPage({ items }: GalleryPageProps) {
       {items.map((item, i) => (
         <div key={i} style={{ background: 'white', borderRadius: 10, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
           {(item.beforeUrl || item.afterUrl) && (
-            <div style={{ display: 'grid', gridTemplateColumns: item.beforeUrl && item.afterUrl ? '1fr 1fr' : '1fr' }}>
+            <div className="quote-gallery-images" style={{ display: 'grid', gridTemplateColumns: item.beforeUrl && item.afterUrl ? '1fr 1fr' : '1fr' }}>
               {item.beforeUrl && (
                 <div style={{ position: 'relative' }}>
                   <img src={item.beforeUrl} alt="Before" style={{ width: '100%', height: 180, objectFit: 'cover' }} />

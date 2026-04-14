@@ -7,7 +7,7 @@ interface ServicesPageProps {
 export function ServicesPage({ items }: ServicesPageProps) {
   if (items.length === 0) return null;
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: items.length === 1 ? '1fr' : 'repeat(2, 1fr)', gap: 12 }}>
+    <div className="quote-services-grid" style={{ display: 'grid', gridTemplateColumns: items.length === 1 ? '1fr' : 'repeat(2, 1fr)', gap: 12 }}>
       {items.map((item, i) => (
         <div key={i} style={{ background: 'white', borderRadius: 10, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
           {item.imageUrl && (
