@@ -9,6 +9,8 @@ import { QuoteSentModal } from '../components/quotes/QuoteSentModal';
 import { fetchQuotesForOrg, sendQuote } from '../services/quoteService';
 import type { PublicQuote } from '../types/quote.types';
 import { format, formatDistanceToNow } from 'date-fns';
+import { useOrganization } from '../context/OrganizationContext';
+import { UpgradeNudge } from '../components/common/UpgradeNudge';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -33,6 +35,9 @@ export function SavedBids() {
   const { user } = useAuthStore();
   const { getAllBids, deleteBid, loadBid } = useBidStore();
   const allBids = getAllBids(user?.role);
+
+  const { isProTier } = useOrganization();
+  const [showUpgradeNudge, setShowUpgradeNudge] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -288,15 +293,27 @@ export function SavedBids() {
                       </div>
                       <div className="mt-2 flex items-center gap-3 justify-end">
                         {!quoteMap.has(bid.id) ? (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSendModalBid({ id: bid.id, name: bid.customerName, email: '' });
-                            }}
-                            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                          >
-                            Send
-                          </button>
+                          isProTier ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSendModalBid({ id: bid.id, name: bid.customerName, email: '' });
+                              }}
+                              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                            >
+                              Send
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowUpgradeNudge(true);
+                              }}
+                              className="text-sm text-gray-400 hover:text-gray-500 font-medium"
+                            >
+                              Send &#x1f512;
+                            </button>
+                          )
                         ) : (
                           <>
                             <button
@@ -367,6 +384,20 @@ export function SavedBids() {
           quoteUrl={sentQuoteUrl}
           onClose={() => setSentQuoteUrl(null)}
         />
+      )}
+
+      {showUpgradeNudge && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
+            <UpgradeNudge feature="Emailing quotes to customers" />
+            <button
+              onClick={() => setShowUpgradeNudge(false)}
+              className="w-full mt-3 text-sm text-gray-500 hover:text-gray-700"
+            >
+              Maybe later
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
