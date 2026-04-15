@@ -1,4 +1,5 @@
 export type PlanStatus = 'trialing' | 'active' | 'past_due' | 'canceled';
+export type PlanTier = 'basic' | 'pro';
 export type MembershipRole = 'owner' | 'admin' | 'estimator';
 export type BidStatus = 'draft' | 'sent' | 'accepted' | 'declined';
 export type InvitationRole = 'admin' | 'estimator';
@@ -14,6 +15,7 @@ export interface Database {
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
           plan_status: PlanStatus;
+          plan_tier: PlanTier;
           trial_ends_at: string;
           created_at: string;
         };
@@ -24,6 +26,7 @@ export interface Database {
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           plan_status?: PlanStatus;
+          plan_tier?: PlanTier;
           trial_ends_at?: string;
           created_at?: string;
         };
@@ -34,6 +37,7 @@ export interface Database {
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           plan_status?: PlanStatus;
+          plan_tier?: PlanTier;
           trial_ends_at?: string;
           created_at?: string;
         };
@@ -299,6 +303,7 @@ export interface Database {
     };
     Enums: {
       plan_status: PlanStatus;
+      plan_tier: PlanTier;
       membership_role: MembershipRole;
       bid_status: BidStatus;
       invitation_role: InvitationRole;
