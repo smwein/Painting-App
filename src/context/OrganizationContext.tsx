@@ -3,13 +3,14 @@ import { supabase } from '../config/supabase';
 import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useBidStore } from '../store/bidStore';
-import type { MembershipRole, PlanStatus } from '../types/supabase.types';
+import type { MembershipRole, PlanStatus, PlanTier } from '../types/supabase.types';
 
 interface Organization {
   id: string;
   name: string;
   slug: string;
   planStatus: PlanStatus;
+  planTier: PlanTier;
   trialEndsAt: string;
 }
 
@@ -17,12 +18,14 @@ interface OrganizationContextValue {
   org: Organization | null;
   role: MembershipRole | null;
   loading: boolean;
+  isProTier: boolean;
 }
 
 const OrganizationContext = createContext<OrganizationContextValue>({
   org: null,
   role: null,
   loading: true,
+  isProTier: false,
 });
 
 export function useOrganization() {
@@ -54,13 +57,14 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       if (membership?.organizations) {
         const o = membership.organizations as unknown as {
           id: string; name: string; slug: string;
-          plan_status: PlanStatus; trial_ends_at: string;
+          plan_status: PlanStatus; plan_tier: PlanTier; trial_ends_at: string;
         };
         setOrg({
           id: o.id,
           name: o.name,
           slug: o.slug,
           planStatus: o.plan_status,
+          planTier: o.plan_tier ?? 'basic',
           trialEndsAt: o.trial_ends_at,
         });
         setRole(membership.role as MembershipRole);
@@ -76,8 +80,10 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     fetchOrg();
   }, [user]);
 
+  const isProTier = org?.planTier === 'pro' || org?.planStatus === 'trialing';
+
   return (
-    <OrganizationContext.Provider value={{ org, role, loading }}>
+    <OrganizationContext.Provider value={{ org, role, loading, isProTier }}>
       {children}
     </OrganizationContext.Provider>
   );
