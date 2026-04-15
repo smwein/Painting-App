@@ -33,7 +33,9 @@ const pricingFeatures = [
   'PDF bid export',
   'Team accounts & roles',
   'Unlimited bids',
-  'Saved bid history',
+  'Email quotes to customers',
+  'Public quote pages & tracking',
+  'Presentation builder',
 ];
 
 /* ── Scroll reveal hook ── */
@@ -230,11 +232,11 @@ export function Landing() {
           <div>
             <p className="font-display text-sm font-700 uppercase tracking-[0.2em] text-[#0ea5a0] mb-3">Pricing</p>
             <h2 className="font-display text-4xl sm:text-5xl font-900 uppercase leading-[0.95] text-[#0f1f2e] mb-6">
-              One Plan.<br />No Surprises.
+              Simple Pricing.<br />No Surprises.
             </h2>
             <p className="text-gray-500 leading-relaxed mb-8">
-              Everything included from day one. No feature gates, no per-user charges.
-              Your whole crew gets access for one flat price.
+              Two plans, no per-user charges.
+              Your whole crew gets access from day one.
             </p>
             <ul className="space-y-3">
               {pricingFeatures.map((f) => (
@@ -254,12 +256,12 @@ export function Landing() {
           <div className="relative">
             <div className="absolute -inset-3 bg-[#0ea5a0]/5 -rotate-2" />
             <div className="relative bg-[#0f1f2e] p-8 sm:p-10">
-              <p className="font-display text-sm font-700 uppercase tracking-[0.2em] text-[#0ea5a0] mb-1">Pro Plan</p>
+              <p className="font-display text-sm font-700 uppercase tracking-[0.2em] text-[#0ea5a0] mb-1">Starting at</p>
               <div className="flex items-baseline gap-2 mb-1">
                 <span className="font-display text-6xl font-900 text-white">$29</span>
                 <span className="font-display text-xl font-600 text-white/40">/mo</span>
               </div>
-              <p className="text-sm text-white/40 mb-8">per company &middot; billed monthly</p>
+              <p className="text-sm text-white/40 mb-8">Basic $29 &middot; Pro $49 &middot; billed monthly</p>
 
               <Link
                 to="/signup"

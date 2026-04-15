@@ -47,7 +47,7 @@ export function Terms() {
           4. Billing & Payments
         </h2>
         <p className="text-sm text-gray-600 leading-relaxed mb-4">
-          CoatCalc Pro is billed at $29 per month, processed securely through Stripe. New accounts receive a 14-day free trial with no credit card required. You may cancel your subscription at any time through the billing portal. Refunds are not provided for partial billing periods.
+          CoatCalc offers two plans: Basic at $29 per month and Pro at $49 per month, both processed securely through Stripe. New accounts receive a 14-day free trial with full Pro features and no credit card required. You may cancel or change your plan at any time through the billing portal. Refunds are not provided for partial billing periods.
         </p>
 
         <h2 className="font-display text-lg font-800 uppercase tracking-wide text-[#0f1f2e] mt-8 mb-3">
