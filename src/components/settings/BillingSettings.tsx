@@ -3,7 +3,7 @@ import { useOrganization } from '../../context/OrganizationContext';
 import { createCheckoutSession, createPortalSession } from '../../services/billingService';
 
 export function BillingSettings() {
-  const { org, isProTier } = useOrganization();
+  const { org } = useOrganization();
   const [loading, setLoading] = useState(false);
 
   if (!org) return null;
