@@ -5,11 +5,21 @@ import Stripe from 'https://esm.sh/stripe@14?target=deno';
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, { apiVersion: '2024-04-10' });
 const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
 
-// Use service role for webhook — not user-scoped
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
+
+// Map Stripe price IDs to plan tiers
+const PRICE_TO_TIER: Record<string, string> = {
+  [Deno.env.get('STRIPE_PRICE_ID_BASIC') ?? '']: 'basic',
+  [Deno.env.get('STRIPE_PRICE_ID_PRO') ?? '']: 'pro',
+};
+
+function getTierFromSubscription(sub: Stripe.Subscription): string {
+  const priceId = sub.items.data[0]?.price?.id ?? '';
+  return PRICE_TO_TIER[priceId] ?? 'basic';
+}
 
 serve(async (req) => {
   const body = await req.text();
@@ -25,15 +35,27 @@ serve(async (req) => {
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session;
-      const orgId = session.subscription
-        ? (await stripe.subscriptions.retrieve(session.subscription as string)).metadata.organization_id
-        : null;
+      if (session.subscription) {
+        const sub = await stripe.subscriptions.retrieve(session.subscription as string);
+        const orgId = sub.metadata.organization_id;
+        if (orgId) {
+          await supabase.from('organizations').update({
+            stripe_customer_id: session.customer as string,
+            stripe_subscription_id: session.subscription as string,
+            plan_status: 'active',
+            plan_tier: getTierFromSubscription(sub),
+          }).eq('id', orgId);
+        }
+      }
+      break;
+    }
 
+    case 'customer.subscription.updated': {
+      const sub = event.data.object as Stripe.Subscription;
+      const orgId = sub.metadata.organization_id;
       if (orgId) {
         await supabase.from('organizations').update({
-          stripe_customer_id: session.customer as string,
-          stripe_subscription_id: session.subscription as string,
-          plan_status: 'active',
+          plan_tier: getTierFromSubscription(sub),
         }).eq('id', orgId);
       }
       break;
