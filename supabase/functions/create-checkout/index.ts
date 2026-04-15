@@ -3,7 +3,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@14?target=deno';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, { apiVersion: '2024-04-10' });
-const PRICE_ID = Deno.env.get('STRIPE_PRICE_ID')!;
+
+const PRICE_IDS: Record<string, string> = {
+  basic: Deno.env.get('STRIPE_PRICE_ID_BASIC')!,
+  pro: Deno.env.get('STRIPE_PRICE_ID_PRO')!,
+};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://www.coatcalc.com',
@@ -16,6 +20,17 @@ serve(async (req) => {
   }
 
   try {
+    const { tier = 'basic' } = await req.json().catch(() => ({}));
+
+    if (tier !== 'basic' && tier !== 'pro') {
+      return new Response(JSON.stringify({ error: 'Invalid tier' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const priceId = PRICE_IDS[tier];
+
     const authHeader = req.headers.get('Authorization')!;
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -26,7 +41,6 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return new Response('Unauthorized', { status: 401 });
 
-    // Get org for this user
     const { data: membership } = await supabase
       .from('memberships')
       .select('organization_id, role, organizations(name, stripe_customer_id)')
@@ -40,7 +54,6 @@ serve(async (req) => {
 
     const org = membership.organizations as unknown as { name: string; stripe_customer_id: string | null };
 
-    // Create or reuse Stripe customer
     let customerId = org.stripe_customer_id;
     if (!customerId) {
       const customer = await stripe.customers.create({
@@ -56,11 +69,10 @@ serve(async (req) => {
         .eq('id', membership.organization_id);
     }
 
-    // Create checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
-      line_items: [{ price: PRICE_ID, quantity: 1 }],
+      line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${req.headers.get('origin')}/app?billing=success`,
       cancel_url: `${req.headers.get('origin')}/app?billing=canceled`,
       subscription_data: {
