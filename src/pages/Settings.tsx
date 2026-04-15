@@ -12,6 +12,7 @@ import { TeamSettings } from '../components/settings/TeamSettings';
 import { BillingSettings } from '../components/settings/BillingSettings';
 import { PresentationSettings } from '../components/settings/PresentationSettings';
 import { useOrganization } from '../context/OrganizationContext';
+import { UpgradeNudge } from '../components/common/UpgradeNudge';
 
 type SettingsTab =
   | 'company'
@@ -29,7 +30,7 @@ type SettingsTab =
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('company');
-  const { role } = useOrganization();
+  const { role, isProTier } = useOrganization();
   const isOwner = role === 'owner';
 
   return (
@@ -49,7 +50,7 @@ export function Settings() {
             active={activeTab === 'presentation'}
             onClick={() => setActiveTab('presentation')}
           >
-            Presentation
+            Presentation {!isProTier && '\u{1f512}'}
           </TabButton>
           <TabButton
             active={activeTab === 'simple-interior'}
@@ -119,7 +120,9 @@ export function Settings() {
       {/* Tab Content */}
       <div>
         {activeTab === 'company' && <CompanyInfoSettings />}
-        {activeTab === 'presentation' && <PresentationSettings />}
+        {activeTab === 'presentation' && (
+          isProTier ? <PresentationSettings /> : <UpgradeNudge feature="The Presentation Builder" />
+        )}
         {activeTab === 'simple-interior' && <SimpleInteriorSettings />}
         {activeTab === 'simple-exterior' && <SimpleExteriorSettings />}
         {activeTab === 'interior-detailed-pricing' && <InteriorDetailedPricing />}
