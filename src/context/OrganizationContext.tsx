@@ -12,6 +12,8 @@ interface Organization {
   planStatus: PlanStatus;
   planTier: PlanTier;
   trialEndsAt: string;
+  retentionOfferUsedAt: string | null;
+  cancelAtPeriodEnd: boolean;
 }
 
 interface OrganizationContextValue {
@@ -58,6 +60,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         const o = membership.organizations as unknown as {
           id: string; name: string; slug: string;
           plan_status: PlanStatus; plan_tier: PlanTier; trial_ends_at: string;
+          retention_offer_used_at: string | null; cancel_at_period_end: boolean;
         };
         setOrg({
           id: o.id,
@@ -66,6 +69,8 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
           planStatus: o.plan_status,
           planTier: o.plan_tier ?? 'basic',
           trialEndsAt: o.trial_ends_at,
+          retentionOfferUsedAt: o.retention_offer_used_at ?? null,
+          cancelAtPeriodEnd: o.cancel_at_period_end ?? false,
         });
         setRole(membership.role as MembershipRole);
 

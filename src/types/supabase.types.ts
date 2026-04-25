@@ -3,6 +3,13 @@ export type PlanTier = 'basic' | 'pro';
 export type MembershipRole = 'owner' | 'admin' | 'estimator';
 export type BidStatus = 'draft' | 'sent' | 'accepted' | 'declined';
 export type InvitationRole = 'admin' | 'estimator';
+export type CancellationReason =
+  | 'too_expensive'
+  | 'missing_features'
+  | 'switching_tools'
+  | 'seasonal'
+  | 'other';
+export type CancellationOutcome = 'downgrade' | 'accepted_offer' | 'canceled';
 
 export interface Database {
   public: {
@@ -18,6 +25,8 @@ export interface Database {
           plan_tier: PlanTier;
           trial_ends_at: string;
           created_at: string;
+          retention_offer_used_at: string | null;
+          cancel_at_period_end: boolean;
         };
         Insert: {
           id?: string;
@@ -29,6 +38,8 @@ export interface Database {
           plan_tier?: PlanTier;
           trial_ends_at?: string;
           created_at?: string;
+          retention_offer_used_at?: string | null;
+          cancel_at_period_end?: boolean;
         };
         Update: {
           id?: string;
@@ -40,6 +51,8 @@ export interface Database {
           plan_tier?: PlanTier;
           trial_ends_at?: string;
           created_at?: string;
+          retention_offer_used_at?: string | null;
+          cancel_at_period_end?: boolean;
         };
         Relationships: [];
       };
@@ -263,6 +276,36 @@ export interface Database {
             referencedColumns: ['id'];
           },
         ];
+      };
+      cancellation_events: {
+        Row: {
+          id: string;
+          organization_id: string;
+          user_id: string;
+          reason: CancellationReason;
+          outcome: CancellationOutcome;
+          plan_tier_at_event: PlanTier;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          user_id: string;
+          reason: CancellationReason;
+          outcome: CancellationOutcome;
+          plan_tier_at_event: PlanTier;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          user_id?: string;
+          reason?: CancellationReason;
+          outcome?: CancellationOutcome;
+          plan_tier_at_event?: PlanTier;
+          created_at?: string;
+        };
+        Relationships: [];
       };
     };
     Views: {};
