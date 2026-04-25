@@ -180,6 +180,46 @@ export function Admin() {
               <StatCard label="New Orgs (30d)" value={stats.activity.newOrgsLast30Days} />
             </div>
 
+            {/* Signup Attribution */}
+            <div>
+              <h2 className="font-display text-xl font-800 uppercase tracking-wide text-[#0f1f2e] mb-4">
+                Signups by Source
+              </h2>
+              <div className="overflow-x-auto bg-white">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-[#0f1f2e] text-white text-left">
+                      <th className="px-3 py-2 font-display font-700 uppercase text-xs tracking-wide">Source</th>
+                      <th className="px-3 py-2 font-display font-700 uppercase text-xs tracking-wide">Campaign</th>
+                      <th className="px-3 py-2 font-display font-700 uppercase text-xs tracking-wide text-right">Signups</th>
+                      <th className="px-3 py-2 font-display font-700 uppercase text-xs tracking-wide text-right">Trialing</th>
+                      <th className="px-3 py-2 font-display font-700 uppercase text-xs tracking-wide text-right">Paid</th>
+                      <th className="px-3 py-2 font-display font-700 uppercase text-xs tracking-wide text-right">Canceled</th>
+                      <th className="px-3 py-2 font-display font-700 uppercase text-xs tracking-wide text-right">Conv.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(stats.attribution ?? []).length === 0 ? (
+                      <tr><td colSpan={7} className="px-3 py-4 text-sm text-gray-400 text-center">No signups yet</td></tr>
+                    ) : (stats.attribution ?? []).map((a, i) => {
+                      const conv = a.signups > 0 ? Math.round((a.active / a.signups) * 100) : 0;
+                      return (
+                        <tr key={`${a.source}-${a.campaign ?? ''}`} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                          <td className="px-3 py-2.5 font-600">{a.source}</td>
+                          <td className="px-3 py-2.5 text-gray-500">{a.campaign ?? '—'}</td>
+                          <td className="px-3 py-2.5 text-right font-600">{a.signups}</td>
+                          <td className="px-3 py-2.5 text-right text-[#d4a24e]">{a.trialing}</td>
+                          <td className="px-3 py-2.5 text-right text-[#0ea5a0] font-600">{a.active}</td>
+                          <td className="px-3 py-2.5 text-right text-gray-400">{a.canceled}</td>
+                          <td className="px-3 py-2.5 text-right text-gray-500">{conv}%</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             {/* Expiring Trials */}
             {stats.expiringTrials.length > 0 && (
               <div className="bg-[#d4a24e]/10 border-l-4 border-[#d4a24e] p-4">

@@ -31,6 +31,14 @@ export interface AdminStats {
     name: string;
     trialEndsAt: string;
   }>;
+  attribution?: Array<{
+    source: string;
+    campaign: string | null;
+    signups: number;
+    trialing: number;
+    active: number;
+    canceled: number;
+  }>;
 }
 
 export async function fetchAdminStats(): Promise<AdminStats> {

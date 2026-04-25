@@ -44,6 +44,7 @@ serve(async (req) => {
       orgsLast30Res,
       totalUsersRes,
       expiringTrialsRes,
+      attributionRes,
     ] = await Promise.all([
       admin.rpc('admin_company_stats'),
       admin.from('bids').select('calculator_type').then(({ data }) => {
@@ -72,7 +73,27 @@ serve(async (req) => {
       admin.from('organizations').select('id, name, trial_ends_at')
         .eq('plan_status', 'trialing')
         .lte('trial_ends_at', new Date(Date.now() + 7 * 86400000).toISOString()),
+      admin.from('organizations').select('signup_source, signup_campaign, plan_status'),
     ]);
+
+    // Group org signups by source/campaign
+    type AttribRow = { signup_source: string | null; signup_campaign: string | null; plan_status: string };
+    const attribBuckets = new Map<string, { source: string; campaign: string | null; signups: number; trialing: number; active: number; canceled: number }>();
+    for (const row of (attributionRes.data ?? []) as AttribRow[]) {
+      const source = row.signup_source ?? '(direct)';
+      const campaign = row.signup_campaign;
+      const key = `${source}|${campaign ?? ''}`;
+      let bucket = attribBuckets.get(key);
+      if (!bucket) {
+        bucket = { source, campaign, signups: 0, trialing: 0, active: 0, canceled: 0 };
+        attribBuckets.set(key, bucket);
+      }
+      bucket.signups++;
+      if (row.plan_status === 'trialing') bucket.trialing++;
+      else if (row.plan_status === 'active') bucket.active++;
+      else if (row.plan_status === 'canceled') bucket.canceled++;
+    }
+    const attribution = Array.from(attribBuckets.values()).sort((a, b) => b.signups - a.signups);
 
     const companies = companiesRes.data ?? [];
     const totalOrgs = companies.length;
@@ -111,6 +132,7 @@ serve(async (req) => {
         name: t.name,
         trialEndsAt: t.trial_ends_at,
       })),
+      attribution,
     };
 
     return new Response(JSON.stringify(response), {
