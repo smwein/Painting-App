@@ -52,6 +52,39 @@ serve(async (req) => {
       updates.status = 'accepted';
       updates.accepted_at = new Date().toISOString();
       if (signatureText) updates.signature_text = signatureText;
+
+      // Stamp the accepted_total based on whether the discount is still active server-side.
+      // Source of truth at acceptance time — never trust client clock.
+      const { data: bid } = await supabase
+        .from('bids')
+        .select('bid_data')
+        .eq('id', quote.bid_id)
+        .single();
+
+      const bd = bid?.bid_data as Record<string, unknown> | null | undefined;
+      const totals = bd?.totals as Record<string, unknown> | undefined;
+      const subtotal = Number(
+        (totals?.total ?? totals?.grandTotal ?? bd?.total ?? bd?.grandTotal) ?? 0
+      ) || 0;
+
+      let acceptedTotal = subtotal;
+
+      if (
+        quote.discount_type &&
+        quote.discount_value !== null &&
+        quote.discount_expires_at &&
+        new Date(quote.discount_expires_at).getTime() > Date.now()
+      ) {
+        const value = Number(quote.discount_value);
+        const raw =
+          quote.discount_type === 'percent'
+            ? subtotal * (value / 100)
+            : value;
+        const discountAmount = Math.min(raw, subtotal);
+        acceptedTotal = Math.round((subtotal - discountAmount) * 100) / 100;
+      }
+
+      updates.accepted_total = acceptedTotal;
     }
 
     // Update the quote
@@ -107,9 +140,15 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        ...(event === 'accepted' && updates.accepted_total !== undefined
+          ? { acceptedTotal: updates.accepted_total }
+          : {}),
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (err) {
     return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
