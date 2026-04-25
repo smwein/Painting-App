@@ -12,6 +12,7 @@ const SavedBids = lazy(() => import('./pages/SavedBids').then(m => ({ default: m
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
 const CalculatorPage = lazy(() => import('./pages/CalculatorPage').then(m => ({ default: m.CalculatorPage })));
 const Landing = lazy(() => import('./pages/Landing').then(m => ({ default: m.Landing })));
+const PaintersLanding = lazy(() => import('./pages/PaintersLanding').then(m => ({ default: m.PaintersLanding })));
 const NewLogin = lazy(() => import('./pages/NewLogin').then(m => ({ default: m.NewLogin })));
 const SignUp = lazy(() => import('./pages/SignUp').then(m => ({ default: m.SignUp })));
 const Onboarding = lazy(() => import('./pages/Onboarding').then(m => ({ default: m.Onboarding })));
@@ -50,6 +51,7 @@ function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Landing />} />
+        <Route path="/painters" element={<PaintersLanding />} />
         <Route path="/login" element={<NewLogin />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/invite/:token" element={<AcceptInvite />} />

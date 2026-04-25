@@ -1,23 +1,33 @@
 # Launch Tracking — Partner Mastermind
 
-## Partner's tracking link
+## Partner's link (clean version)
 
-Send your partner this exact URL for his mastermind post + Loom videos:
+Send your partner this URL for his mastermind post + Loom videos:
 
+```
+https://www.coatcalc.com/painters
+```
+
+Looks like a "for painters" landing page. Behind the scenes it tags the visitor with `source=mastermind, medium=loom, campaign=partner-launch` and redirects to the homepage. Nothing in the URL hints at attribution — your partner doesn't look like an affiliate, just a guy sharing a tool he uses.
+
+The raw UTM URL still works too if you want it:
 ```
 https://www.coatcalc.com/?utm_source=mastermind&utm_medium=loom&utm_campaign=partner-launch
 ```
 
-Anyone who lands on the site via this link will have `mastermind` recorded as their first-touch source. The attribution survives the trial signup flow and gets written to the `organizations` table when they finish onboarding.
+### Adding more channels
 
-If you spin up additional channels later, just swap the params:
+For new channels, you've got two options:
+
+**Quick (UTM URL):** drop in different params.
 
 | Channel | URL |
 |---|---|
-| Mastermind (Loom) | `?utm_source=mastermind&utm_medium=loom&utm_campaign=partner-launch` |
 | Facebook group post | `?utm_source=facebook&utm_medium=group&utm_campaign=<group-name>` |
 | Direct email | `?utm_source=email&utm_medium=outreach&utm_campaign=<batch-name>` |
 | Reddit | `?utm_source=reddit&utm_medium=post&utm_campaign=<sub>` |
+
+**Clean (vanity path):** add a new route in `src/App.tsx` + a redirect component like `PaintersLanding.tsx`. Worth it if the channel's going to be high-volume or shared publicly (e.g. business cards, podcast mentions).
 
 ## How it works
 

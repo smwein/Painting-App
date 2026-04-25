@@ -55,3 +55,20 @@ export function getAttribution(): Attribution {
   if (typeof window === 'undefined') return EMPTY;
   return readStored();
 }
+
+// First-touch — used by vanity-path redirects (e.g. /painters) so we can tag
+// attribution without exposing utm_* params in the shared URL.
+export function setAttributionIfEmpty(next: Omit<Attribution, 'referrer'>): void {
+  if (typeof window === 'undefined') return;
+  const existing = readStored();
+  if (existing.source) return;
+
+  const docReferrer = document.referrer || '';
+  const referrer = docReferrer && !docReferrer.includes(window.location.host) ? docReferrer : null;
+
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...next, referrer }));
+  } catch {
+    // localStorage unavailable — silently skip.
+  }
+}
