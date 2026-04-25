@@ -39,7 +39,8 @@ serve(async (req) => {
     }
 
     // Auth
-    const authHeader = req.headers.get('Authorization')!;
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) return json(401, { error: 'Unauthorized' });
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_ANON_KEY')!,
@@ -93,6 +94,9 @@ serve(async (req) => {
         items: [{ id: itemId, price: BASIC_PRICE_ID }],
         proration_behavior: 'create_prorations',
       });
+      await admin.from('organizations')
+        .update({ plan_tier: 'basic' })
+        .eq('id', orgId);
       await admin.from('cancellation_events').insert({
         organization_id: orgId,
         user_id: user.id,

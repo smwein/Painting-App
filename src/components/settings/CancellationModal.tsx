@@ -1,5 +1,5 @@
 // src/components/settings/CancellationModal.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useOrganization } from '../../context/OrganizationContext';
 import { submitCancellation } from '../../services/cancellationService';
 import type { CancellationReason } from '../../types/supabase.types';
@@ -32,6 +32,14 @@ export function CancellationModal({ open, onClose, onChanged }: Props) {
   const [proDowngradeDeclined, setProDowngradeDeclined] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setStep(org?.cancelAtPeriodEnd ? 'resume' : 'reason');
+    setReason(null);
+    setProDowngradeDeclined(false);
+    setError(null);
+  }, [open, org?.cancelAtPeriodEnd]);
 
   if (!open || !org) return null;
 
