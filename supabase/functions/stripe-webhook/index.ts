@@ -56,6 +56,7 @@ serve(async (req) => {
       if (orgId) {
         await supabase.from('organizations').update({
           plan_tier: getTierFromSubscription(sub),
+          cancel_at_period_end: sub.cancel_at_period_end,
         }).eq('id', orgId);
       }
       break;
@@ -89,7 +90,10 @@ serve(async (req) => {
       const sub = event.data.object as Stripe.Subscription;
       const orgId = sub.metadata.organization_id;
       if (orgId) {
-        await supabase.from('organizations').update({ plan_status: 'canceled' }).eq('id', orgId);
+        await supabase.from('organizations').update({
+          plan_status: 'canceled',
+          cancel_at_period_end: false,
+        }).eq('id', orgId);
       }
       break;
     }
