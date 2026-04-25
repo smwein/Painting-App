@@ -213,6 +213,7 @@ export function CalculatorPage() {
           customerName={currentBidData?.customer?.name ?? ''}
           customerEmail={currentBidData?.customer?.email ?? ''}
           organizationId={user.organizationId}
+          bidTotal={currentBidData?.result?.total ?? 0}
           onClose={() => setShowSendModal(false)}
           onSent={(url) => {
             setShowSendModal(false);

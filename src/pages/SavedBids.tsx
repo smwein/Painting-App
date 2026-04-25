@@ -43,7 +43,7 @@ export function SavedBids() {
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [quoteMap, setQuoteMap] = useState<Map<string, PublicQuote>>(new Map());
-  const [sendModalBid, setSendModalBid] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [sendModalBid, setSendModalBid] = useState<{ id: string; name: string; email: string; total: number } | null>(null);
   const [sentQuoteUrl, setSentQuoteUrl] = useState<string | null>(null);
   const [resendingBidId, setResendingBidId] = useState<string | null>(null);
   const [resendFeedback, setResendFeedback] = useState<{ bidId: string; type: 'success' | 'error' } | null>(null);
@@ -297,7 +297,7 @@ export function SavedBids() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setSendModalBid({ id: bid.id, name: bid.customerName, email: '' });
+                                setSendModalBid({ id: bid.id, name: bid.customerName, email: '', total: bid.total });
                               }}
                               className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                             >
@@ -365,6 +365,7 @@ export function SavedBids() {
           customerName={sendModalBid.name}
           customerEmail={sendModalBid.email}
           organizationId={user.organizationId}
+          bidTotal={sendModalBid.total}
           onClose={() => setSendModalBid(null)}
           onSent={(url) => {
             setSendModalBid(null);
