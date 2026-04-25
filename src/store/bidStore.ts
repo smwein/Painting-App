@@ -16,7 +16,7 @@ interface BidState {
   loadFromSupabase: (orgId: string, role?: string, userId?: string) => Promise<void>;
 
   // CRUD operations
-  saveBid: (bid: Omit<Bid, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  saveBid: (bid: Omit<Bid, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Bid>;
   loadBid: (id: string) => Bid | null;
   updateBid: (id: string, updates: Partial<Omit<Bid, 'id' | 'createdAt'>>) => void;
   deleteBid: (id: string) => void;
@@ -45,11 +45,12 @@ export const useBidStore = create<BidState>()(
         }
       },
 
-      saveBid: (bidData) => {
+      saveBid: async (bidData) => {
         const { _orgId, _userId } = get();
+        const localId = crypto.randomUUID();
         const newBid: Bid = {
           ...bidData,
-          id: crypto.randomUUID(),
+          id: localId,
           createdAt: new Date(),
           updatedAt: new Date(),
           created_by: _userId || undefined,
@@ -60,20 +61,22 @@ export const useBidStore = create<BidState>()(
           currentBid: newBid,
         }));
 
-        // Sync to Supabase
+        // Sync to Supabase, then update the local bid with the Supabase-generated id.
+        // Awaiting here means callers (e.g. CalculatorPage's Send-to-Customer flow) get
+        // back the bid carrying the real Supabase id and can immediately reference it.
         if (_orgId && _userId) {
-          bidService.saveBid(_orgId, _userId, bidData).then((remoteId) => {
-            // Update local bid with the Supabase-generated ID
-            set((state) => ({
-              bids: state.bids.map((b) =>
-                b.id === newBid.id ? { ...b, id: remoteId } : b
-              ),
-              currentBid: state.currentBid?.id === newBid.id
+          const remoteId = await bidService.saveBid(_orgId, _userId, bidData);
+          set((state) => ({
+            bids: state.bids.map((b) => (b.id === localId ? { ...b, id: remoteId } : b)),
+            currentBid:
+              state.currentBid?.id === localId
                 ? { ...state.currentBid, id: remoteId }
                 : state.currentBid,
-            }));
-          }).catch(console.error);
+          }));
+          return { ...newBid, id: remoteId };
         }
+
+        return newBid;
       },
 
       loadBid: (id) => {

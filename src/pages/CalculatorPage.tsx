@@ -28,6 +28,12 @@ export function CalculatorPage() {
   const [currentBidData, setCurrentBidData] = useState<any>(null);
   const [showSendModal, setShowSendModal] = useState(false);
   const [isLocked, setIsLocked] = useState(loadedBid?.locked ?? false);
+  const [savedBidId, setSavedBidId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // The bid id that "Send Quote" should reference: either the bid loaded from
+  // navigation state, or the bid the user just saved this session.
+  const sendableBidId = loadedBid?.id ?? savedBidId;
 
   const getCalculatorTitle = () => {
     switch (type) {
@@ -50,7 +56,7 @@ export function CalculatorPage() {
     setCurrentBidData(bidData);
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!currentBidData || !currentBidData.customer || !currentBidData.result) {
       alert('Please fill in customer information and complete the bid calculation first.');
       return;
@@ -68,8 +74,17 @@ export function CalculatorPage() {
       result: currentBidData.result,
     };
 
-    saveBid(bidToSave);
-    alert('Bid saved successfully!');
+    setSaving(true);
+    try {
+      const saved = await saveBid(bidToSave);
+      setSavedBidId(saved.id);
+      alert('Bid saved successfully!');
+    } catch (err) {
+      console.error('saveBid failed', err);
+      alert('Failed to save bid. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleExportPDF = () => {
@@ -197,7 +212,8 @@ export function CalculatorPage() {
           onExportPDF={handleExportPDF}
           onExportCustomerPDF={handleExportCustomerPDF}
           onSendToCustomer={() => {
-            if (!loadedBid?.id) {
+            if (saving) return;
+            if (!sendableBidId) {
               alert('Please save the bid first before sending to the customer.');
               return;
             }
@@ -207,9 +223,9 @@ export function CalculatorPage() {
         />
       )}
 
-      {showSendModal && loadedBid && user?.organizationId && (
+      {showSendModal && sendableBidId && user?.organizationId && (
         <SendQuoteModal
-          bidId={loadedBid.id}
+          bidId={sendableBidId}
           customerName={currentBidData?.customer?.name ?? ''}
           customerEmail={currentBidData?.customer?.email ?? ''}
           organizationId={user.organizationId}
