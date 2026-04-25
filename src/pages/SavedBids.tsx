@@ -11,6 +11,7 @@ import type { PublicQuote } from '../types/quote.types';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useOrganization } from '../context/OrganizationContext';
 import { UpgradeNudge } from '../components/common/UpgradeNudge';
+import { isDiscountActive } from '../utils/discount';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -278,6 +279,26 @@ export function SavedBids() {
                               </span>
                               {activity && (
                                 <span className="text-xs text-gray-400">{activity}</span>
+                              )}
+                              {quote?.discountExpiresAt && quote?.discountType && quote?.discountValue && (
+                                <span
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 4,
+                                    padding: '2px 8px',
+                                    borderRadius: 4,
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                    background: isDiscountActive(quote.discountExpiresAt) ? 'rgba(14, 165, 160, 0.15)' : 'rgba(148, 163, 184, 0.2)',
+                                    color: isDiscountActive(quote.discountExpiresAt) ? '#0ea5a0' : '#64748b',
+                                    marginLeft: 6,
+                                  }}
+                                >
+                                  🏷️ {quote.discountType === 'percent' ? `${quote.discountValue}% off` : `$${quote.discountValue} off`}
+                                  {' · '}
+                                  {isDiscountActive(quote.discountExpiresAt) ? 'expires soon' : 'expired'}
+                                </span>
                               )}
                             </>
                           );
