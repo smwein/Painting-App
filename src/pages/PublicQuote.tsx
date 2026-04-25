@@ -5,6 +5,8 @@ import type { PublicQuote } from '../types/quote.types';
 import type { Bid } from '../types/bid.types';
 import type { PresentationSettings } from '../types/settings.types';
 import { notifyQuoteEvent } from '../services/quoteService';
+import { CountdownBanner } from '../components/quotes/CountdownBanner';
+import { applyDiscount, isDiscountActive } from '../utils/discount';
 import { AboutUsPage } from '../components/quote-pages/AboutUsPage';
 import { ServicesPage } from '../components/quote-pages/ServicesPage';
 import { TestimonialsPage } from '../components/quote-pages/TestimonialsPage';
@@ -40,6 +42,10 @@ function mapQuoteRow(row: any): PublicQuote {
     expiresAt: row.expires_at,
     sentBy: row.sent_by,
     createdAt: row.created_at,
+    discountType: row.discount_type,
+    discountValue: row.discount_value,
+    discountExpiresAt: row.discount_expires_at,
+    acceptedTotal: row.accepted_total,
   };
 }
 
@@ -54,6 +60,20 @@ export function PublicQuote() {
   const [accepted, setAccepted] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('estimate');
   const [tabDropdownOpen, setTabDropdownOpen] = useState(false);
+  const [discountTick, setDiscountTick] = useState(0);
+
+  const discountConfig =
+    data?.quote?.discountType && data?.quote?.discountValue
+      ? { type: data.quote.discountType, value: data.quote.discountValue }
+      : null;
+
+  const subtotal = data?.bid?.result?.total ?? 0;
+  const discountLive = !!discountConfig && isDiscountActive(data?.quote?.discountExpiresAt);
+  const { discountAmount, finalTotal } = discountLive && discountConfig
+    ? applyDiscount(subtotal, discountConfig)
+    : { discountAmount: 0, finalTotal: subtotal };
+
+  void discountTick; // re-render trigger when banner ticks past expiry
 
   const loadQuote = useCallback(async () => {
     if (!token) return;
@@ -215,6 +235,14 @@ export function PublicQuote() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+      {data?.quote?.discountExpiresAt && data?.quote?.discountType && data?.quote?.discountValue && (
+        <CountdownBanner
+          discountExpiresAt={data.quote.discountExpiresAt}
+          discountType={data.quote.discountType}
+          discountValue={data.quote.discountValue}
+          onExpire={() => setDiscountTick((t) => t + 1)}
+        />
+      )}
       <header style={{ background: 'white', borderBottom: `2px solid ${brandColor}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {companyLogo && (
@@ -348,23 +376,38 @@ export function PublicQuote() {
               )}
             </div>
 
-            <div style={{ background: brandColor, borderRadius: 10, padding: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-              <div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)' }}>Project Total</div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: 'white' }}>${bid.result.total.toFixed(2)}</div>
-              </div>
-              {accepted ? (
-                <div style={{ background: 'rgba(255,255,255,0.2)', color: 'white', padding: '12px 24px', borderRadius: 8, fontWeight: 700, fontSize: 14 }}>
-                  {'\u2713'} Accepted
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowAcceptModal(true)}
-                  style={{ background: 'white', color: brandColor, padding: '12px 24px', borderRadius: 8, fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' }}
-                >
-                  Accept Estimate
-                </button>
+            <div style={{ background: brandColor, borderRadius: 10, padding: 20 }}>
+              {discountLive && discountAmount > 0 && (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.85)', fontSize: 14, marginBottom: 4 }}>
+                    <span>Subtotal</span>
+                    <span>${subtotal.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fde68a', fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
+                    <span>Limited-time discount</span>
+                    <span>\u2212${discountAmount.toFixed(2)}</span>
+                  </div>
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.3)', marginBottom: 8 }} />
+                </>
               )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)' }}>Project Total</div>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: 'white' }}>${finalTotal.toFixed(2)}</div>
+                </div>
+                {accepted ? (
+                  <div style={{ background: 'rgba(255,255,255,0.2)', color: 'white', padding: '12px 24px', borderRadius: 8, fontWeight: 700, fontSize: 14 }}>
+                    {'\u2713'} Accepted
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowAcceptModal(true)}
+                    style={{ background: 'white', color: brandColor, padding: '12px 24px', borderRadius: 8, fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' }}
+                  >
+                    Accept Estimate
+                  </button>
+                )}
+              </div>
             </div>
 
             {accepted && (quote.signatureText || signatureName) && (
