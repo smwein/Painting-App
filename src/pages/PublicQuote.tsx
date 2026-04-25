@@ -385,7 +385,7 @@ export function PublicQuote() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fde68a', fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
                     <span>Limited-time discount</span>
-                    <span>\u2212${discountAmount.toFixed(2)}</span>
+                    <span>−${discountAmount.toFixed(2)}</span>
                   </div>
                   <div style={{ borderTop: '1px solid rgba(255,255,255,0.3)', marginBottom: 8 }} />
                 </>
