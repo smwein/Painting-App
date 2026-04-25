@@ -18,6 +18,10 @@ function mapRow(row: any): PublicQuote {
     expiresAt: row.expires_at,
     sentBy: row.sent_by,
     createdAt: row.created_at,
+    discountType: row.discount_type ?? null,
+    discountValue: row.discount_value !== null && row.discount_value !== undefined ? Number(row.discount_value) : null,
+    discountExpiresAt: row.discount_expires_at ?? null,
+    acceptedTotal: row.accepted_total !== null && row.accepted_total !== undefined ? Number(row.accepted_total) : null,
   };
 }
 
@@ -79,6 +83,11 @@ export async function sendQuote(params: {
   enabledPages: string[];
   expiresAt: string;
   organizationId: string;
+  discount?: {
+    type: 'percent' | 'fixed';
+    value: number;
+    expiresAt: string;
+  } | null;
 }): Promise<{ publicToken: string; quoteUrl: string }> {
   const { data, error } = await supabase.functions.invoke('send-quote', {
     body: params,

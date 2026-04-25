@@ -14,4 +14,8 @@ export interface PublicQuote {
   expiresAt: string;
   sentBy: string;
   createdAt: string;
+  discountType?: 'percent' | 'fixed' | null;
+  discountValue?: number | null;
+  discountExpiresAt?: string | null;
+  acceptedTotal?: number | null;
 }
