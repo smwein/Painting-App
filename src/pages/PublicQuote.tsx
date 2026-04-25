@@ -42,10 +42,16 @@ function mapQuoteRow(row: any): PublicQuote {
     expiresAt: row.expires_at,
     sentBy: row.sent_by,
     createdAt: row.created_at,
-    discountType: row.discount_type,
-    discountValue: row.discount_value,
-    discountExpiresAt: row.discount_expires_at,
-    acceptedTotal: row.accepted_total,
+    discountType: row.discount_type ?? null,
+    discountValue:
+      row.discount_value !== null && row.discount_value !== undefined
+        ? Number(row.discount_value)
+        : null,
+    discountExpiresAt: row.discount_expires_at ?? null,
+    acceptedTotal:
+      row.accepted_total !== null && row.accepted_total !== undefined
+        ? Number(row.accepted_total)
+        : null,
   };
 }
 

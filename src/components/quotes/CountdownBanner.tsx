@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { formatCountdown, isDiscountActive } from '../../utils/discount';
 
 interface CountdownBannerProps {
@@ -20,8 +20,15 @@ export function CountdownBanner({ discountExpiresAt, discountType, discountValue
   const remainingMs = Math.max(0, expiry - now);
   const active = isDiscountActive(discountExpiresAt) && remainingMs > 0;
 
+  // Only fire onExpire on the active → inactive transition. Mounting with an
+  // already-expired offer should NOT fire it (the offer was never active in
+  // this view, so there's nothing to "expire").
+  const wasActiveRef = useRef(active);
   useEffect(() => {
-    if (!active && onExpire) onExpire();
+    if (wasActiveRef.current && !active && onExpire) {
+      onExpire();
+    }
+    wasActiveRef.current = active;
   }, [active, onExpire]);
 
   if (active) {

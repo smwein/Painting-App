@@ -80,7 +80,9 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      const isPro = org.plan_tier === 'pro' || org.plan_status === 'trialing';
+      const isPro =
+        org.plan_tier === 'pro' &&
+        (org.plan_status === 'active' || org.plan_status === 'trialing');
       if (!isPro) {
         return new Response(JSON.stringify({ error: 'Discounts are a Pro feature' }), {
           status: 403,
