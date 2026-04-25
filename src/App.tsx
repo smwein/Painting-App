@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { SubscriptionGate } from './components/auth/SubscriptionGate';
 import { OrganizationProvider } from './context/OrganizationContext';
 import { useSupabaseAuthStore } from './store/supabaseAuthStore';
+import { captureAttribution } from './utils/attribution';
 
 const Home = lazy(() => import('./pages/Home').then(m => ({ default: m.Home })));
 const SavedBids = lazy(() => import('./pages/SavedBids').then(m => ({ default: m.SavedBids })));
@@ -38,6 +39,7 @@ function App() {
   const initialize = useSupabaseAuthStore((s) => s.initialize);
 
   useEffect(() => {
+    captureAttribution();
     const unsubscribe = initialize();
     return unsubscribe;
   }, [initialize]);

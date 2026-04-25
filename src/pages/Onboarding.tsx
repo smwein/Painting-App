@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
 import { createDefaultPricingSettings } from '../core/constants/defaultPricing';
+import { getAttribution } from '../utils/attribution';
 import type { InvitationRole } from '../types/supabase.types';
 
 function generateSlug(name: string): string {
@@ -103,11 +104,16 @@ export function Onboarding() {
         logo,
       };
 
+      const attribution = getAttribution();
       const { error: rpcError } = await supabase.rpc('create_organization_for_user', {
         org_id: newOrgId,
         org_name: form.companyName.trim(),
         org_slug: generateSlug(form.companyName),
         default_pricing: pricingWithCompanyInfo as unknown as Record<string, unknown>,
+        signup_source: attribution.source,
+        signup_medium: attribution.medium,
+        signup_campaign: attribution.campaign,
+        signup_referrer: attribution.referrer,
       });
 
       if (rpcError) throw rpcError;
