@@ -39,12 +39,32 @@ serve(async (req) => {
         const sub = await stripe.subscriptions.retrieve(session.subscription as string);
         const orgId = sub.metadata.organization_id;
         if (orgId) {
+          const tier = getTierFromSubscription(sub);
           await supabase.from('organizations').update({
             stripe_customer_id: session.customer as string,
             stripe_subscription_id: session.subscription as string,
             plan_status: 'active',
-            plan_tier: getTierFromSubscription(sub),
+            plan_tier: tier,
           }).eq('id', orgId);
+
+          // Push notification: new paid customer
+          const { data: org } = await supabase
+            .from('organizations')
+            .select('name')
+            .eq('id', orgId)
+            .single();
+          const companyName = org?.name ?? 'Unknown company';
+          const customerEmail =
+            session.customer_email ?? session.customer_details?.email ?? '(no email)';
+          fetch('https://ntfy.sh/Coatcalc-signup', {
+            method: 'POST',
+            body: `${companyName}\n${tier} plan · ${customerEmail}`,
+            headers: {
+              Title: '💰 New paid customer',
+              Tags: 'moneybag',
+              Priority: '4',
+            },
+          }).catch(() => {});
         }
       }
       break;

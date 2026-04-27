@@ -50,8 +50,12 @@ serve(async (req) => {
       }),
       fetch('https://ntfy.sh/Coatcalc-signup', {
         method: 'POST',
-        body: `New signup: ${companyName} (${userEmail})`,
-        headers: { Title: 'New CoatCalc Signup' },
+        body: `${companyName}\n${userEmail}`,
+        headers: {
+          Title: '🌱 New trial signup',
+          Tags: 'seedling',
+          Priority: '3',
+        },
       }).catch(() => {}),
     ]);
 
